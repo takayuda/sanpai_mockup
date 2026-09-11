@@ -445,7 +445,7 @@ const blank = () => ({
   startH:'', startM:'', endH:'', endM:'',
   addr:'', siteId:'', saveSite:false, siteName:'',
   lines:[emptyLine()],
-  vClass:'', vCount:'', driver:'', driverTel:'', plate:''
+  vClass:'', plate:''
 });
 const clone = o => JSON.parse(JSON.stringify(o));
 function setPath(obj,path,v){
@@ -460,7 +460,7 @@ const state = {
   reservations:[
     {no:'R-2026-0148', processorId:'p1', method:'drop', dateLabel:'2026年8月28日（金） 9:00 〜 12:00', status:'approved',
      lines:[{item:'廃プラスチック類', qty:'320', unit:'kg', memo:'フレコンバッグ4袋'}],
-     vClass:'2tトラック（平ボディ）', vCount:'1', driver:'佐藤 健', driverTel:'090-0000-0000', plate:'大宮 100 あ 12-34'},
+     vClass:'2tトラック（平ボディ）', plate:'大宮 100 あ 12-34'},
     {no:'R-2026-0152', processorId:'p2', method:'pickup', dateLabel:'2026年8月31日（月） 10:00 〜 11:30', status:'pending',
      lines:[{item:'木くず', qty:'1.2', unit:'t', memo:'搬出口は建物裏手'},{item:'金属くず', qty:'80', unit:'kg', memo:''},{item:'混合廃棄物', qty:'2', unit:'m3', memo:''}],
      addr:'埼玉県さいたま市大宮区桜木町0-0-0', siteName:'大宮第一現場'},
@@ -617,26 +617,16 @@ function viewInput(){
 
   if(d.method==='drop'){
     html += `<div class="card">
-      <h2>車両・ドライバー</h2>
+      <h2>車両</h2>
+      <p class="hint">1回の予約につき1台です。複数台で搬入する場合は、台数ぶん予約を作成してください。</p>
       <div class="row">
         <div class="field" style="flex:2 1 260px;">
           <label class="label" for="elVClass">車格<span class="req">必須</span></label>
           <select id="elVClass" data-bind="vClass">${opts(MASTER.vehicleClasses,d.vClass)}</select></div>
-        <div class="field" style="flex:1 1 120px;">
-          <label class="label" for="elVCount">台数<span class="req">必須</span></label>
-          <input type="text" inputmode="numeric" id="elVCount" data-bind="vCount" value="${esc(d.vCount)}" placeholder="1"></div>
+        <div class="field" style="flex:2 1 260px;">
+          <label class="label" for="elPlate">車両ナンバー<span class="req">必須</span></label>
+          <input type="text" id="elPlate" data-bind="plate" value="${esc(d.plate)}" placeholder="例：大宮 100 あ 12-34"></div>
       </div>
-      <div class="row">
-        <div class="field" style="flex:1 1 240px;">
-          <label class="label" for="elDriver">ドライバー名<span class="req">必須</span></label>
-          <input type="text" id="elDriver" data-bind="driver" value="${esc(d.driver)}" placeholder="例：佐藤 健"></div>
-        <div class="field" style="flex:1 1 240px;">
-          <label class="label" for="elTel">ドライバー連絡先<span class="req">必須</span></label>
-          <input type="tel" id="elTel" data-bind="driverTel" value="${esc(d.driverTel)}" placeholder="例：090-0000-0000"></div>
-      </div>
-      <div class="field">
-        <label class="label" for="elPlate">車両ナンバー<span class="req">必須</span></label>
-        <input type="text" id="elPlate" data-bind="plate" value="${esc(d.plate)}" placeholder="例：大宮 100 あ 12-34"></div>
     </div>`;
   }
 
@@ -700,11 +690,8 @@ function viewConfirm(){
         d.date?slotButtons():`<p class="hint" style="margin:0;">先に搬入日を選んでください。</p>`)}
     </table></div>
     ${itemsBlock()}
-    <div class="reviewgroup"><div class="reviewhead">車両・ドライバー</div><table class="reviewtable">
+    <div class="reviewgroup"><div class="reviewhead">車両</div><table class="reviewtable">
       ${rrow('vClass','車格', d.vClass, edSelect('vClass',MASTER.vehicleClasses,d.vClass))}
-      ${rrow('vCount','台数', d.vCount?d.vCount+' 台':'', edText('vCount',d.vCount,'1'))}
-      ${rrow('driver','ドライバー名', d.driver, edText('driver',d.driver,'例：佐藤 健'))}
-      ${rrow('driverTel','ドライバー連絡先', d.driverTel, edText('driverTel',d.driverTel,'例：090-0000-0000'))}
       ${rrow('plate','車両ナンバー', d.plate, edText('plate',d.plate,'例：大宮 100 あ 12-34'))}
     </table></div>`;
   }else if(d.method==='pickup'){
@@ -788,7 +775,7 @@ function viewDetailDialog(){
           ${line('日時', r.dateLabel)}
           ${r.method==='pickup'?line('引取場所',(r.siteName?r.siteName+'／':'')+(r.addr||'')):''}
           ${r.lines.map((ln,i)=>line(`品目 ${i+1}`, `${ln.item}　${ln.qty} ${ln.unit}${ln.memo?'　／　'+ln.memo:''}`)).join('')}
-          ${r.method==='drop'?line('車格',r.vClass)+line('台数',r.vCount?r.vCount+' 台':'')+line('ドライバー名',r.driver)+line('ドライバー連絡先',r.driverTel)+line('車両ナンバー',r.plate):''}
+          ${r.method==='drop'?line('車格',r.vClass)+line('車両ナンバー',r.plate):''}
         </table></div>
       </div>
       <div class="dialog-foot"><button type="button" class="btn btn-secondary" data-act="closeDetail">閉じる</button></div>
@@ -811,10 +798,6 @@ function validate(){
     if(d.method==='drop'){
       if(d.date && !d.slotId) e.push('時間枠を選択してください。');
       if(!d.vClass) e.push('車格を選択してください。');
-      if(!String(d.vCount).trim()) e.push('台数を入力してください。');
-      else if(!/^\d+$/.test(String(d.vCount).trim())) e.push('台数は半角数字で入力してください。');
-      if(!d.driver.trim()) e.push('ドライバー名を入力してください。');
-      if(!d.driverTel.trim()) e.push('ドライバー連絡先を入力してください。');
       if(!d.plate.trim()) e.push('車両ナンバーを入力してください。');
     }else{
       if(!d.startH||!d.startM) e.push('引取希望時間の開始を選択してください。');
@@ -930,7 +913,7 @@ function submit(){
     ? `${fmtFull(d.date)} ${SLOT_DEFS.find(s=>s.id===d.slotId)?.label||''}`
     : `${fmtFull(d.date)} ${timeStr(d.startH,d.startM)} 〜 ${timeStr(d.endH,d.endM)}`;
   const rec={no, processorId:d.processorId, method:d.method, dateLabel, lines:clone(d.lines), status:'pending'};
-  if(d.method==='drop') Object.assign(rec,{vClass:d.vClass,vCount:d.vCount,driver:d.driver,driverTel:d.driverTel,plate:d.plate});
+  if(d.method==='drop') Object.assign(rec,{vClass:d.vClass,plate:d.plate});
   else{
     let siteName=(SITES.find(s=>s.id===d.siteId)||{}).name||'';
     if(d.saveSite && d.siteName.trim()){
@@ -1022,16 +1005,17 @@ const ME = {name:'田中 誠', role:'受入担当'};
    - is_delivery … 持込の受入可否 / is_pickup … 引取（集荷）対応可否
    - begin_time〜end_time … 引取対応時間（営業時間・単一設定）
    - slots …  受入時間枠（複数設定可）
+   - deadline_days / deadline_time … 取引先が予約できる締切（既定：前日17時）
    ========================================================================= */
 let PLANTS = [
   {id:'pl1', name:'本社工場（さいたま中間処理場）', is_delivery:true, is_pickup:true,
-   begin_time:'08:00', end_time:'17:00',
+   begin_time:'08:00', end_time:'17:00', deadline_days:1, deadline_time:'17:00',
    postalcode:'331-0812', pref:'埼玉県', address:'さいたま市北区宮原町0-0-0', phone:'048-000-1000',
    closed_dows:[0],
    slots:[{id:'s1', name:'午前', from:'09:00', to:'12:00'},
           {id:'s2', name:'午後', from:'13:00', to:'16:00'}]},
   {id:'pl2', name:'川口ヤード', is_delivery:true, is_pickup:false,
-   begin_time:'08:30', end_time:'17:30',
+   begin_time:'08:30', end_time:'17:30', deadline_days:1, deadline_time:'16:00',
    postalcode:'332-0034', pref:'埼玉県', address:'川口市並木0-0-0', phone:'048-000-2000',
    closed_dows:[0],
    slots:[{id:'s3', name:'午前', from:'08:30', to:'11:30'},
@@ -1104,6 +1088,7 @@ let UNITS = [
 /* =========================================================================
    pickups：予約・依頼　/　pickup_items：予約明細
    type      … drop（持込）/ pickup（引取）
+   引取は集荷先（site_name / site_addr）を持つ。持込は車両ナンバーを持つ
    status    … pending 申請中 / approved 承認済 / rejected 差戻し
                 done 計量済 / canceled 取消
    ※受付番号は排出元ポータルの仕様に合わせ「申請時」に採番する
@@ -1121,51 +1106,56 @@ function addPickup(p, lines) {
 /* --- 承認待ち --- */
 addPickup({id:'R-2026-0152', type:'pickup', status:'pending', company_id:'c1', plant_id:'pl1',
   date:B(1), begin_time:'10:00', end_time:'11:30',
+  site_name:'大宮第一現場', site_addr:'埼玉県さいたま市大宮区桜木町0-0-0',
   applied_at:D(-1)+' 16:42', via:'取引先ポータル', note:'搬出口は建物裏手'},
   [{item_id:'i2', unit_id:'u2', qty:1.2}, {item_id:'i3', unit_id:'u1', qty:80}, {item_id:'i7', unit_id:'u3', qty:2}]);
 
 addPickup({id:'R-2026-0158', type:'drop', status:'pending', company_id:'c1', plant_id:'pl1',
   date:B(2), begin_time:'09:00', end_time:'12:00',
-  car_number:'大宮 100 あ 12-34', driver_name:'佐藤 健', driver_tel:'090-0000-0000',
+  car_number:'大宮 100 あ 12-34',
   applied_at:D(0)+' 08:12', via:'取引先ポータル', note:'フレコン8袋'},
   [{item_id:'i1', unit_id:'u2', qty:1.2}]);
 
 addPickup({id:'R-2026-0159', type:'drop', status:'pending', company_id:'c2', plant_id:'pl1',
   date:B(2), begin_time:'09:00', end_time:'12:00',
-  car_number:'大宮 100 か 55-66', driver_name:'鈴木 一郎', driver_tel:'090-1111-1111',
+  car_number:'大宮 100 か 55-66',
   applied_at:D(0)+' 08:40', via:'取引先ポータル', note:'解体系の混廃'},
   [{item_id:'i7', unit_id:'u3', qty:8}]);
 
 addPickup({id:'R-2026-0160', type:'pickup', status:'pending', company_id:'c3', plant_id:'pl1',
   date:B(3), begin_time:'09:00', end_time:'12:00',
+  site_name:'浦和第二工区', site_addr:'埼玉県さいたま市浦和区仲町0-0-0',
   applied_at:D(0)+' 09:05', via:'取引先ポータル', note:'脱水済み'},
   [{item_id:'i5', unit_id:'u2', qty:3.5}]);
 
 addPickup({id:'R-2026-0161', type:'drop', status:'pending', company_id:'c5', plant_id:'pl1',
   date:B(4), begin_time:'13:00', end_time:'16:00',
-  car_number:'所沢 400 さ 78-90', driver_name:'高橋 誠', driver_tel:'090-2222-2222',
+  car_number:'所沢 400 さ 78-90',
   applied_at:D(0)+' 09:31', via:'取引先ポータル', note:''},
   [{item_id:'i1', unit_id:'u2', qty:0.6}]);
 
 addPickup({id:'R-2026-0162', type:'pickup', status:'pending', company_id:'c5', plant_id:'pl1',
   date:B(1), begin_time:'13:00', end_time:'16:00',
+  site_name:'与野解体現場', site_addr:'埼玉県さいたま市中央区本町東0-0-0',
   applied_at:D(0)+' 10:02', via:'電話（代行作成）', note:'解体ガラ混じり'},
   [{item_id:'i2', unit_id:'u2', qty:2.0}, {item_id:'i7', unit_id:'u3', qty:4}]);
 
 addPickup({id:'R-2026-0163', type:'drop', status:'pending', company_id:'c1', plant_id:'pl2',
   date:B(5), begin_time:'08:30', end_time:'11:30',
-  car_number:'大宮 100 あ 12-34', driver_name:'佐藤 健', driver_tel:'090-0000-0000',
+  car_number:'大宮 100 あ 12-34',
   applied_at:D(0)+' 10:20', via:'取引先ポータル', note:'鉄スクラップ（有価物）'},
   [{item_id:'i3', unit_id:'u2', qty:1.8}]);
 
 addPickup({id:'R-2026-0172', type:'pickup', status:'pending', company_id:'c1', plant_id:'pl2',
   date:B(2), begin_time:'14:00', end_time:'16:00',
+  site_name:'大宮第一現場', site_addr:'埼玉県さいたま市大宮区桜木町0-0-0',
   applied_at:D(0)+' 11:15', via:'取引先ポータル', note:'川口ヤードは引取対応の対象外'},
   [{item_id:'i7', unit_id:'u3', qty:3}]);
 
 /* --- 差戻し --- */
 addPickup({id:'R-2026-0155', type:'pickup', status:'rejected', company_id:'c1', plant_id:'pl1',
   date:B(-2), begin_time:'14:00', end_time:'15:00',
+  site_name:'川越倉庫', site_addr:'埼玉県川越市脇田本町0-0-0',
   applied_at:B(-4)+' 11:00', via:'取引先ポータル',
   reject_reason:'指定日の収集ルートが満車のため。別日での再申請をお願いします。',
   rejected_at:B(-3)+' 09:12', rejected_by:'配車担当 山本'},
@@ -1174,7 +1164,7 @@ addPickup({id:'R-2026-0155', type:'pickup', status:'rejected', company_id:'c1', 
 /* --- 本日 --- */
 addPickup({id:'R-2026-0164', type:'drop', status:'done', company_id:'c1', plant_id:'pl1',
   date:D(0), begin_time:'09:00', end_time:'12:00',
-  car_number:'大宮 100 あ 12-34', driver_name:'佐藤 健', driver_tel:'090-0000-0000',
+  car_number:'大宮 100 あ 12-34',
   applied_at:B(-2)+' 14:00', via:'取引先ポータル',
   approved_at:B(-2)+' 15:10', approved_by:'受入担当 田中',
   arrived_at:'09:12', receipt_number:1,
@@ -1183,20 +1173,21 @@ addPickup({id:'R-2026-0164', type:'drop', status:'done', company_id:'c1', plant_
 
 addPickup({id:'R-2026-0165', type:'drop', status:'approved', company_id:'c3', plant_id:'pl1',
   date:D(0), begin_time:'09:00', end_time:'12:00',
-  car_number:'大宮 100 き 11-22', driver_name:'伊藤 大輔', driver_tel:'090-3333-3333',
+  car_number:'大宮 100 き 11-22',
   applied_at:B(-2)+' 16:20', via:'取引先ポータル',
   approved_at:B(-2)+' 17:00', approved_by:'受入担当 田中'},
   [{item_id:'i4', unit_id:'u2', qty:5.0}]);
 
 addPickup({id:'R-2026-0166', type:'drop', status:'approved', company_id:'c5', plant_id:'pl1',
   date:D(0), begin_time:'13:00', end_time:'16:00',
-  car_number:'大宮 100 か 55-66', driver_name:'鈴木 一郎', driver_tel:'090-1111-1111',
+  car_number:'大宮 100 か 55-66',
   applied_at:D(-1)+' 09:00', via:'取引先ポータル',
   approved_at:D(-1)+' 09:40', approved_by:'受入担当 田中'},
   [{item_id:'i2', unit_id:'u2', qty:2.2}]);
 
 addPickup({id:'R-2026-0167', type:'pickup', status:'approved', company_id:'c1', plant_id:'pl1',
   date:D(0), begin_time:'13:30', end_time:'15:00',
+  site_name:'川越倉庫', site_addr:'埼玉県川越市脇田本町0-0-0',
   applied_at:B(-2)+' 10:00', via:'取引先ポータル',
   approved_at:B(-2)+' 11:30', approved_by:'配車担当 山本',
   dispatch_note:'4t車・ドライバー中村で手配済（台帳）'},
@@ -1204,7 +1195,7 @@ addPickup({id:'R-2026-0167', type:'pickup', status:'approved', company_id:'c1', 
 
 addPickup({id:'R-2026-0168', type:'drop', status:'approved', company_id:'c1', plant_id:'pl2',
   date:D(0), begin_time:'13:00', end_time:'17:00',
-  car_number:'大宮 100 あ 33-44', driver_name:'渡辺 翔', driver_tel:'090-4444-4444',
+  car_number:'大宮 100 あ 33-44',
   applied_at:D(-1)+' 13:00', via:'電話（代行作成）',
   approved_at:D(-1)+' 13:20', approved_by:'受入担当 田中'},
   [{item_id:'i7', unit_id:'u3', qty:8}]);
@@ -1212,13 +1203,14 @@ addPickup({id:'R-2026-0168', type:'drop', status:'approved', company_id:'c1', pl
 /* --- 翌日以降 --- */
 addPickup({id:'R-2026-0169', type:'drop', status:'approved', company_id:'c3', plant_id:'pl1',
   date:B(1), begin_time:'09:00', end_time:'12:00',
-  car_number:'大宮 100 き 11-22', driver_name:'伊藤 大輔', driver_tel:'090-3333-3333',
+  car_number:'大宮 100 き 11-22',
   applied_at:D(-1)+' 15:00', via:'取引先ポータル',
   approved_at:D(-1)+' 15:30', approved_by:'受入担当 田中'},
   [{item_id:'i5', unit_id:'u2', qty:4.0}]);
 
 addPickup({id:'R-2026-0170', type:'pickup', status:'approved', company_id:'c5', plant_id:'pl1',
   date:B(1), begin_time:'10:00', end_time:'11:00',
+  site_name:'与野解体現場', site_addr:'埼玉県さいたま市中央区本町東0-0-0',
   applied_at:D(-1)+' 16:10', via:'取引先ポータル',
   approved_at:D(-1)+' 16:40', approved_by:'配車担当 山本',
   dispatch_note:'2t車で手配（台帳）'},
@@ -1226,7 +1218,7 @@ addPickup({id:'R-2026-0170', type:'pickup', status:'approved', company_id:'c5', 
 
 addPickup({id:'R-2026-0171', type:'drop', status:'approved', company_id:'c1', plant_id:'pl1',
   date:B(2), begin_time:'13:00', end_time:'16:00',
-  car_number:'大宮 100 か 55-66', driver_name:'鈴木 一郎', driver_tel:'090-1111-1111',
+  car_number:'大宮 100 か 55-66',
   applied_at:D(0)+' 07:50', via:'取引先ポータル',
   approved_at:D(0)+' 08:05', approved_by:'受入担当 田中'},
   [{item_id:'i1', unit_id:'u2', qty:0.9}]);
@@ -1255,8 +1247,8 @@ const round2 = n => Math.round(n*100)/100;
       addPickup({id, type, status:'done', company_id:co.id, plant_id:pl.id,
         date:ds, begin_time:slot.from, end_time:slot.to,
         car_number:'大宮 100 あ ' + (10+Math.floor(rnd()*80)) + '-' + (10+Math.floor(rnd()*80)),
-        driver_name:pick(['佐藤 健','鈴木 一郎','伊藤 大輔','渡辺 翔']),
-        driver_tel:'090-0000-0000',
+        site_name: type === 'pickup' ? pick(['大宮第一現場','川越倉庫','浦和第二工区','与野解体現場']) : '',
+        site_addr: type === 'pickup' ? '埼玉県さいたま市〇〇区0-0-0' : '',
         applied_at:D(-k-2)+' 10:00', via:'取引先ポータル',
         approved_at:D(-k-2)+' 11:00', approved_by:'受入担当 田中',
         arrived_at:pad(9+Math.floor(rnd()*6))+':'+pad(Math.floor(rnd()*6)*10),
@@ -1328,6 +1320,20 @@ function countOf(plantId, ds) {
 }
 const slotOf = (pl, p) => (pl.slots || []).find(s => s.from === p.begin_time && s.to === p.end_time);
 const inHours = (pl, p) => p.begin_time >= pl.begin_time && p.end_time <= pl.end_time;
+
+/* ---------- 予約の締切（取引先が自分で予約・変更できる期限） ---------- */
+const nowStamp = () => { const d = new Date(); return `${D(0)} ${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+/* 指定日の予約に対する締切日時（例：前日17:00） */
+function deadlineAt(plantId, ds) {
+  const pl = plant(plantId);
+  const d = addDays(parseD(ds), -(pl.deadline_days == null ? 1 : pl.deadline_days));
+  return `${dstr(d)} ${pl.deadline_time || '17:00'}`;
+}
+/* 締切を過ぎているか（過ぎていても社内は登録・変更できる） */
+const isPastDeadline = (plantId, ds) => deadlineAt(plantId, ds) <= nowStamp();
+/* 予約日として選べる最小の日付（過去日は不可） */
+const minDate = () => D(0);
+const deadlineLabel = pl => `${pl.deadline_days === 0 ? '当日' : pl.deadline_days === 1 ? '前日' : pl.deadline_days + '日前'} ${pl.deadline_time}`;
 
 /* =========================================================================
    画面定義
@@ -1520,9 +1526,8 @@ function approvalDetail(p) {
     [p.type === 'drop' ? '搬入希望日' : '引取希望日', fmtJp(p.date)],
     [p.type === 'drop' ? '受入時間枠' : '希望時間', timeRange(p)]
   ];
-  if (p.type === 'drop') rows.push(
-    ['車両ナンバー', esc(p.car_number)],
-    ['ドライバー', `${esc(p.driver_name)}（${esc(p.driver_tel)}）`]);
+  if (p.type === 'drop') rows.push(['車両ナンバー', esc(p.car_number)]);
+  else rows.push(['引取場所', `${esc(p.site_name || '')}<div class="text-secondary" style="font-size:12px">${esc(p.site_addr || '')}</div>`]);
   if (p.note) rows.push(['連絡事項', esc(p.note)]);
   rows.push(['申請', `${esc(p.via)}　${esc(p.applied_at)}`]);
 
@@ -1561,7 +1566,7 @@ var MODALS_APPROVE = m => {
   const body = isDrop
     ? `<div class="row g-3">
          <div class="col-12 col-sm-5"><label class="form-label">搬入日</label>
-           <input type="date" class="form-control" data-mod="date" value="${m.date || p.date}"></div>
+           <input type="date" class="form-control" data-mod="date" value="${m.date || p.date}" min="${minDate()}"></div>
          <div class="col-12 col-sm-7"><label class="form-label">受入時間枠<span class="req">必須</span></label>
            <select class="form-select" data-mod="slotId">${opts(slotOpts, m.slotId, false)}</select></div>
          <div class="col-12"><label class="form-label">取引先への連絡事項<span class="opt">任意</span></label>
@@ -1569,7 +1574,7 @@ var MODALS_APPROVE = m => {
        </div>`
     : `<div class="row g-2">
          <div class="col-12 col-sm-5"><label class="form-label">訪問日<span class="req">必須</span></label>
-           <input type="date" class="form-control" data-mod="date" value="${m.date || p.date}"></div>
+           <input type="date" class="form-control" data-mod="date" value="${m.date || p.date}" min="${minDate()}"></div>
          <div class="col-6 col-sm-3"><label class="form-label">開始<span class="req">必須</span></label>
            <input type="time" class="form-control" step="1800" data-mod="begin_time" value="${m.begin_time || p.begin_time}"></div>
          <div class="col-6 col-sm-3"><label class="form-label">終了<span class="req">必須</span></label>
@@ -1617,7 +1622,8 @@ var MODALS_PICKUP = m => {
     ['時間', timeRange(p)],
     ['申請', `${esc(p.via)}　${esc(p.applied_at)}`]
   ];
-  if (p.type === 'drop') rows.push(['車両ナンバー', esc(p.car_number)], ['ドライバー', `${esc(p.driver_name)}（${esc(p.driver_tel)}）`]);
+  if (p.type === 'drop') rows.push(['車両ナンバー', esc(p.car_number)]);
+  else rows.push(['引取場所', `${esc(p.site_name || '')}／${esc(p.site_addr || '')}`]);
   linesOf(p.id).forEach((l,i) => rows.push([`品目 ${i+1}`,
     `${esc(item(l.item_id).name)}${l.qty != null ? `　申告 ${dec(l.qty)} ${esc(unit(l.unit_id).name)}` : '　<span class="text-secondary">（申告になし）</span>'}`]));
   if (p.note) rows.push(['連絡事項', esc(p.note)]);
@@ -1647,7 +1653,7 @@ const BOARD_COLS = `<colgroup>
   <col style="width:10%"><col style="width:17%"></colgroup>`;
 const BOARD_HEAD = `<thead><tr>
   <th>受付番号</th><th>時間</th><th>取引先</th><th>品目・申告数量</th>
-  <th>車両ナンバー</th><th>ドライバー</th><th>メモ</th><th>ステータス</th><th></th></tr></thead>`;
+  <th>車両ナンバー</th><th>引取場所</th><th>メモ</th><th>ステータス</th><th></th></tr></thead>`;
 
 function boardRow(p) {
   const isDrop = p.type === 'drop';
@@ -1657,7 +1663,7 @@ function boardRow(p) {
     <td>${esc(company(p.company_id).name)}</td>
     <td style="font-size:13px">${esc(linesText(p.id))}</td>
     <td class="mono" style="font-size:13px">${esc(p.car_number || '—')}</td>
-    <td style="font-size:13px">${esc(p.driver_name || '—')}</td>
+    <td style="font-size:12px">${isDrop ? '—' : esc(p.site_name || '—')}</td>
     <td style="font-size:12px">${esc((isDrop ? p.note : p.dispatch_note) || '—')}</td>
     <td>${stBadge(p.status)}${p.arrived_at ? `<div class="text-secondary" style="font-size:11px">着車 ${esc(p.arrived_at)}</div>` : ''}</td>
     <td class="text-end text-nowrap">
@@ -1713,7 +1719,7 @@ function viewBoard() {
             <td>${esc(company(p.company_id).name)}</td>
             <td style="font-size:13px">${esc(linesText(p.id))}</td>
             <td class="mono" style="font-size:13px">${esc(p.car_number || '—')}</td>
-            <td style="font-size:13px">${esc(p.driver_name || '—')}</td>
+            <td style="font-size:12px">${p.type === 'drop' ? '—' : esc(p.site_name || '—')}</td>
             <td style="font-size:12px">${esc(p.reject_reason || p.cancel_reason || '—')}</td>
             <td>${stBadge(p.status)}</td>
             <td class="text-end text-nowrap">
@@ -1752,7 +1758,7 @@ var MODALS_CHANGESLOT = m => {
   return {
     title:`${p.id} の受入時間枠を変更`,
     body:`<div class="mb-3"><label class="form-label">搬入日</label>
-        <input type="date" class="form-control" data-mod="date" value="${m.date || p.date}"></div>
+        <input type="date" class="form-control" data-mod="date" value="${m.date || p.date}" min="${minDate()}"></div>
       <div class="mb-3"><label class="form-label">受入時間枠</label>
         <select class="form-select" data-mod="slotId">${opts(slotOpts, m.slotId, false)}</select></div>
       <div class="mb-0"><label class="form-label">変更理由<span class="req">必須</span></label>
@@ -1770,7 +1776,7 @@ var MODALS_CHANGEVISIT = m => {
     title:`${p.id} の訪問日時を変更`,
     body:`<div class="row g-2 mb-3">
         <div class="col-12 col-sm-5"><label class="form-label">訪問日</label>
-          <input type="date" class="form-control" data-mod="date" value="${m.date || p.date}"></div>
+          <input type="date" class="form-control" data-mod="date" value="${m.date || p.date}" min="${minDate()}"></div>
         <div class="col-6 col-sm-3"><label class="form-label">開始</label>
           <input type="time" class="form-control" step="1800" data-mod="begin_time" value="${m.begin_time || p.begin_time}"></div>
         <div class="col-6 col-sm-3"><label class="form-label">終了</label>
@@ -1808,7 +1814,7 @@ const blankProxy = () => ({
   company_id:'', plant_id: state.plantId !== 'all' ? state.plantId : PLANTS[0].id, type:'', date:'', slotId:'',
   begin_time:'', end_time:'',
   lines:[blankLine()],
-  car_number:'', driver_name:'', driver_tel:'',
+  car_number:'', site_name:'', site_addr:'',
   note:'', errors:[]
 });
 function nextPickupNo() {
@@ -1863,8 +1869,10 @@ function viewProxy() {
 
     ${d.type ? `<div class="card mb-3"><div class="card-head">日時</div><div class="card-body">
       <div class="mb-3"><label class="form-label">${d.type === 'drop' ? '搬入日' : '引取希望日'}<span class="req">必須</span></label>
-        <input type="date" class="form-control" style="max-width:220px" data-px="date" value="${d.date}">
-        ${cl ? `<div class="warnbox danger mt-2">${ic('alert',15)}<span>この日は休業です（${esc(cl.reason)}）</span></div>` : ''}</div>
+        <input type="date" class="form-control" style="max-width:220px" data-px="date" value="${d.date}" min="${minDate()}">
+        ${cl ? `<div class="warnbox danger mt-2">${ic('alert',15)}<span>この日は休業です（${esc(cl.reason)}）</span></div>` : ''}
+        ${d.date && !cl && isPastDeadline(d.plant_id, d.date) ? `<div class="warnbox mt-2">${ic('alert',15)}
+          <span>取引先の受付は締切（${esc(deadlineAt(d.plant_id, d.date))}）を過ぎています。社内からは登録できます。</span></div>` : ''}</div>
       ${d.type === 'drop'
         ? `<div class="mb-0"><label class="form-label">受入時間枠<span class="req">必須</span></label>
             <select class="form-select" style="max-width:420px" data-px="slotId">${opts(slotOpts, d.slotId)}</select></div>`
@@ -1879,15 +1887,16 @@ function viewProxy() {
       ${lines}
       <button class="btn btn-outline-primary btn-sm" data-act="pxAddLine">${ic('plus',15)}品目を追加</button>
     </div></div>
-    ${d.type === 'drop' ? `<div class="card mb-3"><div class="card-head">車両・ドライバー</div><div class="card-body">
+    ${d.type === 'drop' ? `<div class="card mb-3"><div class="card-head">車両<span class="sub">1予約につき1台</span></div><div class="card-body">
+      <div style="max-width:340px"><label class="form-label">車両ナンバー<span class="req">必須</span></label>
+        <input type="text" class="form-control" data-px="car_number" value="${esc(d.car_number)}" placeholder="大宮 100 あ 12-34"></div>
+    </div></div>` : `<div class="card mb-3"><div class="card-head">引取場所</div><div class="card-body">
       <div class="row g-3">
-        <div class="col-12 col-md-4"><label class="form-label">車両ナンバー<span class="req">必須</span></label>
-          <input type="text" class="form-control" data-px="car_number" value="${esc(d.car_number)}" placeholder="大宮 100 あ 12-34"></div>
-        <div class="col-12 col-md-4"><label class="form-label">ドライバー名<span class="req">必須</span></label>
-          <input type="text" class="form-control" data-px="driver_name" value="${esc(d.driver_name)}"></div>
-        <div class="col-12 col-md-4"><label class="form-label">連絡先<span class="req">必須</span></label>
-          <input type="tel" class="form-control" data-px="driver_tel" value="${esc(d.driver_tel)}"></div>
-      </div></div></div>` : ''}
+        <div class="col-12 col-md-5"><label class="form-label">現場名<span class="req">必須</span></label>
+          <input type="text" class="form-control" data-px="site_name" value="${esc(d.site_name)}" placeholder="例：大宮第一現場"></div>
+        <div class="col-12 col-md-7"><label class="form-label">住所<span class="req">必須</span></label>
+          <input type="text" class="form-control" data-px="site_addr" value="${esc(d.site_addr)}" placeholder="例：埼玉県さいたま市大宮区桜木町0-0-0"></div>
+      </div></div></div>`}
     <div class="card mb-3"><div class="card-head">連絡事項<span class="sub">任意</span></div><div class="card-body">
       <textarea class="form-control" rows="2" data-px="note"></textarea>
     </div></div>
@@ -1901,12 +1910,13 @@ function pxValidate() {
   if (!d.company_id) e.push('取引先を選択してください。');
   if (!d.type) e.push('受入方法を選択してください。');
   if (!d.date) e.push('日付を入力してください。');
+  else if (d.date < D(0)) e.push('過去の日付は指定できません。');
   if (d.type === 'drop') {
     if (!d.slotId) e.push('受入時間枠を選択してください。');
     if (!d.car_number.trim()) e.push('車両ナンバーを入力してください。');
-    if (!d.driver_name.trim()) e.push('ドライバー名を入力してください。');
-    if (!d.driver_tel.trim()) e.push('ドライバーの連絡先を入力してください。');
   } else if (d.type === 'pickup') {
+    if (!d.site_name.trim()) e.push('引取場所の現場名を入力してください。');
+    if (!d.site_addr.trim()) e.push('引取場所の住所を入力してください。');
     if (!d.begin_time) e.push('引取希望時間の開始を入力してください。');
     if (!d.end_time) e.push('引取希望時間の終了を入力してください。');
     if (d.begin_time && d.end_time && d.end_time <= d.begin_time) e.push('終了時間は開始時間より後にしてください。');
@@ -1933,7 +1943,8 @@ function pxSubmit() {
     applied_at:`${D(0)} ${pad(now.getHours())}:${pad(now.getMinutes())}`,
     via:'電話（代行作成）', note:d.note
   };
-  if (d.type === 'drop') Object.assign(p, {car_number:d.car_number, driver_name:d.driver_name, driver_tel:d.driver_tel});
+  if (d.type === 'drop') Object.assign(p, {car_number:d.car_number});
+  else Object.assign(p, {site_name:d.site_name, site_addr:d.site_addr});
   PICKUPS.unshift(p);
   d.lines.forEach(l => PICKUP_ITEMS.push({id:'pi' + (++_pi), pickup_id:p.id,
     item_id:l.item_id, unit_id:l.unit_id, qty:Number(l.qty)}));
@@ -2022,6 +2033,21 @@ function viewHours() {
         </div></div>
     </div>
   </div>
+
+  <div class="card mb-3"><div class="card-head">${ic('clock',16)}予約の締切
+      <span class="sub">この期限を過ぎると取引先は予約・変更できません（社内からは登録できます）</span></div>
+    <div class="card-body">
+      <div class="row g-2 align-items-end" style="max-width:520px">
+        <div class="col-6 col-md-4"><label class="form-label">予約日の何日前まで</label>
+          <select class="form-select" data-deadline="days">${opts([
+            {v:0,t:'当日'},{v:1,t:'前日'},{v:2,t:'2日前'},{v:3,t:'3日前'},{v:7,t:'7日前'}], pl.deadline_days, false)}</select></div>
+        <div class="col-6 col-md-4"><label class="form-label">締切時刻</label>
+          <input type="time" step="900" class="form-control" data-deadline="time" value="${pl.deadline_time}"></div>
+        <div class="col-12 col-md-4"><button class="btn btn-primary w-100" data-act="saveDeadline" data-id="${pl.id}">保存</button></div>
+      </div>
+      <div class="mt-3" style="font-size:13px;color:var(--ink-sub)">
+        現在の設定：<b>${deadlineLabel(pl)}</b> まで受付（例：${fmtMd(D(3))} の予約は ${esc(deadlineAt(pl.id, D(3)))} まで）</div>
+    </div></div>
 
   <div class="card mb-3"><div class="card-head">${ic('calendar',16)}定休日</div><div class="card-body">
     <div class="d-flex flex-wrap gap-3">
@@ -2148,7 +2174,7 @@ function viewReception() {
       <td class="mono nowrap">${timeRange(p)}</td>
       <td>${esc(company(p.company_id).name)}<div class="text-secondary" style="font-size:11px">${esc(plantShort(p.plant_id))}</div></td>
       <td style="font-size:13px">${esc(linesText(p.id))}</td>
-      <td class="mono" style="font-size:13px">${esc(p.car_number || '—')}</td>
+      <td class="mono" style="font-size:13px">${p.type === 'drop' ? esc(p.car_number || '—') : esc(p.site_name || '—')}</td>
       <td class="mono">${esc(p.arrived_at || '—')}</td>
       <td class="num">${p.weight != null ? `<b>${num(p.weight)}</b> kg` : '—'}</td>
       <td>${p.status === 'done' ? '<span class="badge b-approved">計量済</span>' : '<span class="badge b-pending">未計量</span>'}</td>
@@ -2184,7 +2210,7 @@ function viewReception() {
   <div class="table-wrap">
     <table class="table table-hover mb-0">
       <thead><tr><th>受付番号</th><th>区分</th><th>時間</th><th>取引先・拠点</th><th>申告内容</th>
-        <th>車両ナンバー</th><th>着車時間</th><th class="num">正味重量</th><th>状態</th><th></th></tr></thead>
+        <th>車両ナンバー／集荷先</th><th>着車時間</th><th class="num">正味重量</th><th>状態</th><th></th></tr></thead>
       <tbody>${rows || `<tr><td colspan="10" class="text-center text-secondary py-4">該当する予約がありません</td></tr>`}</tbody>
     </table>
   </div>`;
@@ -2784,6 +2810,7 @@ document.addEventListener('click', e => {
       renderModal(); break;
     case 'doApprove': {
       const p = pk(m.id), pl = plant(p.plant_id);
+      if (m.date && m.date < D(0)) { m.err = '過去の日付は指定できません。'; renderModal(); return; }
       if (p.type === 'drop') {
         const s = (pl.slots || []).find(x => x.id === m.slotId);
         if (!s) { m.err = '受入時間枠を選択してください。'; renderModal(); return; }
@@ -2819,6 +2846,7 @@ document.addEventListener('click', e => {
     }
     case 'doChangeSlot': {
       if (!m.reason || !m.reason.trim()) { m.err = '変更理由を入力してください。'; renderModal(); return; }
+      if (m.date < D(0)) { m.err = '過去の日付は指定できません。'; renderModal(); return; }
       const p = pk(m.id), pl = plant(p.plant_id);
       const s = (pl.slots || []).find(x => x.id === m.slotId);
       if (!s) { m.err = '受入時間枠を選択してください。'; renderModal(); return; }
@@ -2833,6 +2861,7 @@ document.addEventListener('click', e => {
     }
     case 'doChangeVisit': {
       if (!m.reason || !m.reason.trim()) { m.err = '変更理由を入力してください。'; renderModal(); return; }
+      if (m.date < D(0)) { m.err = '過去の日付は指定できません。'; renderModal(); return; }
       if (m.end_time <= m.begin_time) { m.err = '終了時刻は開始時刻より後にしてください。'; renderModal(); return; }
       const p = pk(m.id);
       Object.assign(p, {date:m.date, begin_time:m.begin_time, end_time:m.end_time, dispatch_note:m.dispatch_note});
@@ -2847,11 +2876,11 @@ document.addEventListener('click', e => {
     }
     case 'exportBoard': {
       const ds = state.board.date;
-      const rows = [['日付','受付番号','区分','ステータス','拠点','時間','取引先','品目・申告数量','車両ナンバー','ドライバー','連絡先','集荷手配メモ']];
+      const rows = [['日付','受付番号','区分','ステータス','拠点','時間','取引先','品目・申告数量','車両ナンバー','引取場所','住所','メモ']];
       PICKUPS.filter(p => p.date === ds && inScope(p) && !['pending','rejected'].includes(p.status))
         .forEach(p => rows.push([ds, p.id, typeLabel(p.type), STATUS[p.status].t, plant(p.plant_id).name,
           timeRange(p), company(p.company_id).name, linesText(p.id),
-          p.car_number || '', p.driver_name || '', p.driver_tel || '', p.dispatch_note || '']));
+          p.car_number || '', p.site_name || '', p.site_addr || '', (p.type === 'drop' ? p.note : p.dispatch_note) || '']));
       downloadCsv(`予約一覧_${ds}.csv`, rows);
       toast('CSVを出力しました。'); break;
     }
@@ -2900,6 +2929,12 @@ document.addEventListener('click', e => {
       if (!b || !t || t <= b) { toast('引取対応時間を確認してください。', 'err'); return; }
       pl.begin_time = b; pl.end_time = t;
       toast('引取対応時間を保存しました。'); render(); break;
+    }
+    case 'saveDeadline': {
+      const pl = plant(d.id);
+      pl.deadline_days = Number(document.querySelector('[data-deadline="days"]').value);
+      pl.deadline_time = document.querySelector('[data-deadline="time"]').value || '17:00';
+      toast(`予約の締切を「${deadlineLabel(pl)}」に設定しました。`); render(); break;
     }
     case 'saveDows': {
       const pl = plant(d.id);
@@ -2962,7 +2997,7 @@ document.addEventListener('click', e => {
       const id = nextPickupNo();
       PICKUPS.unshift({id, type:'drop', status:'done', company_id:m.company_id, plant_id:m.plant_id,
         date:recDate(), begin_time:m.arrived_at, end_time:m.arrived_at,
-        car_number:m.car_number || '', driver_name:'', driver_tel:'',
+        car_number:m.car_number || '',
         applied_at:`${D(0)} ${nowHm()}`, via:'飛び込み',
         approved_at:`${D(0)} ${nowHm()}`, approved_by:`${ME.role} ${ME.name.split(' ')[0]}`,
         arrived_at:m.arrived_at, receipt_number:nextReceiptNumber(m.plant_id, recDate()),
@@ -2982,9 +3017,10 @@ document.addEventListener('click', e => {
 
     /* ---- 実績一覧 ---- */
     case 'exportActuals': {
-      const rows = [['受付番号','日付','伝票番号','区分','取引先','拠点','着車時間','品目','申告(kg)','正味重量(kg)','差異(kg)','備考']];
+      const rows = [['受付番号','日付','伝票番号','区分','取引先','拠点','引取場所','車両ナンバー','着車時間','品目','申告(kg)','正味重量(kg)','差異(kg)','備考']];
       filteredActuals().forEach(p => rows.push([
         p.id, p.date, p.receipt_number || '', typeLabel(p.type), company(p.company_id).name, plant(p.plant_id).name,
+        p.site_name || '', p.car_number || '',
         p.arrived_at || '', linesOf(p.id).map(l => item(l.item_id).name).join('／'),
         declaredKg(p.id) || '', p.weight, p.diff, p.weigh_memo || '']));
       downloadCsv(`実績一覧_${state.actuals.from}_${state.actuals.to}.csv`, rows);

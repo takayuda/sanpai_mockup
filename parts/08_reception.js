@@ -33,7 +33,7 @@ function viewReception() {
       <td class="mono nowrap">${timeRange(p)}</td>
       <td>${esc(company(p.company_id).name)}<div class="text-secondary" style="font-size:11px">${esc(plantShort(p.plant_id))}</div></td>
       <td style="font-size:13px">${esc(linesText(p.id))}</td>
-      <td class="mono" style="font-size:13px">${esc(p.car_number || '—')}</td>
+      <td class="mono" style="font-size:13px">${p.type === 'drop' ? esc(p.car_number || '—') : esc(p.site_name || '—')}</td>
       <td class="mono">${esc(p.arrived_at || '—')}</td>
       <td class="num">${p.weight != null ? `<b>${num(p.weight)}</b> kg` : '—'}</td>
       <td>${p.status === 'done' ? '<span class="badge b-approved">計量済</span>' : '<span class="badge b-pending">未計量</span>'}</td>
@@ -69,7 +69,7 @@ function viewReception() {
   <div class="table-wrap">
     <table class="table table-hover mb-0">
       <thead><tr><th>受付番号</th><th>区分</th><th>時間</th><th>取引先・拠点</th><th>申告内容</th>
-        <th>車両ナンバー</th><th>着車時間</th><th class="num">正味重量</th><th>状態</th><th></th></tr></thead>
+        <th>車両ナンバー／集荷先</th><th>着車時間</th><th class="num">正味重量</th><th>状態</th><th></th></tr></thead>
       <tbody>${rows || `<tr><td colspan="10" class="text-center text-secondary py-4">該当する予約がありません</td></tr>`}</tbody>
     </table>
   </div>`;

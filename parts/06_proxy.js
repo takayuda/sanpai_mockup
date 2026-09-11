@@ -7,7 +7,7 @@ const blankProxy = () => ({
   company_id:'', plant_id: state.plantId !== 'all' ? state.plantId : PLANTS[0].id, type:'', date:'', slotId:'',
   begin_time:'', end_time:'',
   lines:[blankLine()],
-  car_number:'', driver_name:'', driver_tel:'',
+  car_number:'', site_name:'', site_addr:'',
   note:'', errors:[]
 });
 function nextPickupNo() {
@@ -62,8 +62,10 @@ function viewProxy() {
 
     ${d.type ? `<div class="card mb-3"><div class="card-head">日時</div><div class="card-body">
       <div class="mb-3"><label class="form-label">${d.type === 'drop' ? '搬入日' : '引取希望日'}<span class="req">必須</span></label>
-        <input type="date" class="form-control" style="max-width:220px" data-px="date" value="${d.date}">
-        ${cl ? `<div class="warnbox danger mt-2">${ic('alert',15)}<span>この日は休業です（${esc(cl.reason)}）</span></div>` : ''}</div>
+        <input type="date" class="form-control" style="max-width:220px" data-px="date" value="${d.date}" min="${minDate()}">
+        ${cl ? `<div class="warnbox danger mt-2">${ic('alert',15)}<span>この日は休業です（${esc(cl.reason)}）</span></div>` : ''}
+        ${d.date && !cl && isPastDeadline(d.plant_id, d.date) ? `<div class="warnbox mt-2">${ic('alert',15)}
+          <span>取引先の受付は締切（${esc(deadlineAt(d.plant_id, d.date))}）を過ぎています。社内からは登録できます。</span></div>` : ''}</div>
       ${d.type === 'drop'
         ? `<div class="mb-0"><label class="form-label">受入時間枠<span class="req">必須</span></label>
             <select class="form-select" style="max-width:420px" data-px="slotId">${opts(slotOpts, d.slotId)}</select></div>`
@@ -78,15 +80,16 @@ function viewProxy() {
       ${lines}
       <button class="btn btn-outline-primary btn-sm" data-act="pxAddLine">${ic('plus',15)}品目を追加</button>
     </div></div>
-    ${d.type === 'drop' ? `<div class="card mb-3"><div class="card-head">車両・ドライバー</div><div class="card-body">
+    ${d.type === 'drop' ? `<div class="card mb-3"><div class="card-head">車両<span class="sub">1予約につき1台</span></div><div class="card-body">
+      <div style="max-width:340px"><label class="form-label">車両ナンバー<span class="req">必須</span></label>
+        <input type="text" class="form-control" data-px="car_number" value="${esc(d.car_number)}" placeholder="大宮 100 あ 12-34"></div>
+    </div></div>` : `<div class="card mb-3"><div class="card-head">引取場所</div><div class="card-body">
       <div class="row g-3">
-        <div class="col-12 col-md-4"><label class="form-label">車両ナンバー<span class="req">必須</span></label>
-          <input type="text" class="form-control" data-px="car_number" value="${esc(d.car_number)}" placeholder="大宮 100 あ 12-34"></div>
-        <div class="col-12 col-md-4"><label class="form-label">ドライバー名<span class="req">必須</span></label>
-          <input type="text" class="form-control" data-px="driver_name" value="${esc(d.driver_name)}"></div>
-        <div class="col-12 col-md-4"><label class="form-label">連絡先<span class="req">必須</span></label>
-          <input type="tel" class="form-control" data-px="driver_tel" value="${esc(d.driver_tel)}"></div>
-      </div></div></div>` : ''}
+        <div class="col-12 col-md-5"><label class="form-label">現場名<span class="req">必須</span></label>
+          <input type="text" class="form-control" data-px="site_name" value="${esc(d.site_name)}" placeholder="例：大宮第一現場"></div>
+        <div class="col-12 col-md-7"><label class="form-label">住所<span class="req">必須</span></label>
+          <input type="text" class="form-control" data-px="site_addr" value="${esc(d.site_addr)}" placeholder="例：埼玉県さいたま市大宮区桜木町0-0-0"></div>
+      </div></div></div>`}
     <div class="card mb-3"><div class="card-head">連絡事項<span class="sub">任意</span></div><div class="card-body">
       <textarea class="form-control" rows="2" data-px="note"></textarea>
     </div></div>
@@ -100,12 +103,13 @@ function pxValidate() {
   if (!d.company_id) e.push('取引先を選択してください。');
   if (!d.type) e.push('受入方法を選択してください。');
   if (!d.date) e.push('日付を入力してください。');
+  else if (d.date < D(0)) e.push('過去の日付は指定できません。');
   if (d.type === 'drop') {
     if (!d.slotId) e.push('受入時間枠を選択してください。');
     if (!d.car_number.trim()) e.push('車両ナンバーを入力してください。');
-    if (!d.driver_name.trim()) e.push('ドライバー名を入力してください。');
-    if (!d.driver_tel.trim()) e.push('ドライバーの連絡先を入力してください。');
   } else if (d.type === 'pickup') {
+    if (!d.site_name.trim()) e.push('引取場所の現場名を入力してください。');
+    if (!d.site_addr.trim()) e.push('引取場所の住所を入力してください。');
     if (!d.begin_time) e.push('引取希望時間の開始を入力してください。');
     if (!d.end_time) e.push('引取希望時間の終了を入力してください。');
     if (d.begin_time && d.end_time && d.end_time <= d.begin_time) e.push('終了時間は開始時間より後にしてください。');
@@ -132,7 +136,8 @@ function pxSubmit() {
     applied_at:`${D(0)} ${pad(now.getHours())}:${pad(now.getMinutes())}`,
     via:'電話（代行作成）', note:d.note
   };
-  if (d.type === 'drop') Object.assign(p, {car_number:d.car_number, driver_name:d.driver_name, driver_tel:d.driver_tel});
+  if (d.type === 'drop') Object.assign(p, {car_number:d.car_number});
+  else Object.assign(p, {site_name:d.site_name, site_addr:d.site_addr});
   PICKUPS.unshift(p);
   d.lines.forEach(l => PICKUP_ITEMS.push({id:'pi' + (++_pi), pickup_id:p.id,
     item_id:l.item_id, unit_id:l.unit_id, qty:Number(l.qty)}));

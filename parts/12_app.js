@@ -198,6 +198,7 @@ document.addEventListener('click', e => {
       renderModal(); break;
     case 'doApprove': {
       const p = pk(m.id), pl = plant(p.plant_id);
+      if (m.date && m.date < D(0)) { m.err = '過去の日付は指定できません。'; renderModal(); return; }
       if (p.type === 'drop') {
         const s = (pl.slots || []).find(x => x.id === m.slotId);
         if (!s) { m.err = '受入時間枠を選択してください。'; renderModal(); return; }
@@ -233,6 +234,7 @@ document.addEventListener('click', e => {
     }
     case 'doChangeSlot': {
       if (!m.reason || !m.reason.trim()) { m.err = '変更理由を入力してください。'; renderModal(); return; }
+      if (m.date < D(0)) { m.err = '過去の日付は指定できません。'; renderModal(); return; }
       const p = pk(m.id), pl = plant(p.plant_id);
       const s = (pl.slots || []).find(x => x.id === m.slotId);
       if (!s) { m.err = '受入時間枠を選択してください。'; renderModal(); return; }
@@ -247,6 +249,7 @@ document.addEventListener('click', e => {
     }
     case 'doChangeVisit': {
       if (!m.reason || !m.reason.trim()) { m.err = '変更理由を入力してください。'; renderModal(); return; }
+      if (m.date < D(0)) { m.err = '過去の日付は指定できません。'; renderModal(); return; }
       if (m.end_time <= m.begin_time) { m.err = '終了時刻は開始時刻より後にしてください。'; renderModal(); return; }
       const p = pk(m.id);
       Object.assign(p, {date:m.date, begin_time:m.begin_time, end_time:m.end_time, dispatch_note:m.dispatch_note});
@@ -261,11 +264,11 @@ document.addEventListener('click', e => {
     }
     case 'exportBoard': {
       const ds = state.board.date;
-      const rows = [['日付','受付番号','区分','ステータス','拠点','時間','取引先','品目・申告数量','車両ナンバー','ドライバー','連絡先','集荷手配メモ']];
+      const rows = [['日付','受付番号','区分','ステータス','拠点','時間','取引先','品目・申告数量','車両ナンバー','引取場所','住所','メモ']];
       PICKUPS.filter(p => p.date === ds && inScope(p) && !['pending','rejected'].includes(p.status))
         .forEach(p => rows.push([ds, p.id, typeLabel(p.type), STATUS[p.status].t, plant(p.plant_id).name,
           timeRange(p), company(p.company_id).name, linesText(p.id),
-          p.car_number || '', p.driver_name || '', p.driver_tel || '', p.dispatch_note || '']));
+          p.car_number || '', p.site_name || '', p.site_addr || '', (p.type === 'drop' ? p.note : p.dispatch_note) || '']));
       downloadCsv(`予約一覧_${ds}.csv`, rows);
       toast('CSVを出力しました。'); break;
     }
@@ -314,6 +317,12 @@ document.addEventListener('click', e => {
       if (!b || !t || t <= b) { toast('引取対応時間を確認してください。', 'err'); return; }
       pl.begin_time = b; pl.end_time = t;
       toast('引取対応時間を保存しました。'); render(); break;
+    }
+    case 'saveDeadline': {
+      const pl = plant(d.id);
+      pl.deadline_days = Number(document.querySelector('[data-deadline="days"]').value);
+      pl.deadline_time = document.querySelector('[data-deadline="time"]').value || '17:00';
+      toast(`予約の締切を「${deadlineLabel(pl)}」に設定しました。`); render(); break;
     }
     case 'saveDows': {
       const pl = plant(d.id);
@@ -376,7 +385,7 @@ document.addEventListener('click', e => {
       const id = nextPickupNo();
       PICKUPS.unshift({id, type:'drop', status:'done', company_id:m.company_id, plant_id:m.plant_id,
         date:recDate(), begin_time:m.arrived_at, end_time:m.arrived_at,
-        car_number:m.car_number || '', driver_name:'', driver_tel:'',
+        car_number:m.car_number || '',
         applied_at:`${D(0)} ${nowHm()}`, via:'飛び込み',
         approved_at:`${D(0)} ${nowHm()}`, approved_by:`${ME.role} ${ME.name.split(' ')[0]}`,
         arrived_at:m.arrived_at, receipt_number:nextReceiptNumber(m.plant_id, recDate()),
@@ -396,9 +405,10 @@ document.addEventListener('click', e => {
 
     /* ---- 実績一覧 ---- */
     case 'exportActuals': {
-      const rows = [['受付番号','日付','伝票番号','区分','取引先','拠点','着車時間','品目','申告(kg)','正味重量(kg)','差異(kg)','備考']];
+      const rows = [['受付番号','日付','伝票番号','区分','取引先','拠点','引取場所','車両ナンバー','着車時間','品目','申告(kg)','正味重量(kg)','差異(kg)','備考']];
       filteredActuals().forEach(p => rows.push([
         p.id, p.date, p.receipt_number || '', typeLabel(p.type), company(p.company_id).name, plant(p.plant_id).name,
+        p.site_name || '', p.car_number || '',
         p.arrived_at || '', linesOf(p.id).map(l => item(l.item_id).name).join('／'),
         declaredKg(p.id) || '', p.weight, p.diff, p.weigh_memo || '']));
       downloadCsv(`実績一覧_${state.actuals.from}_${state.actuals.to}.csv`, rows);

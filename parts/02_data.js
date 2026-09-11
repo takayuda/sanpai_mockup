@@ -33,16 +33,17 @@ const ME = {name:'田中 誠', role:'受入担当'};
    - is_delivery … 持込の受入可否 / is_pickup … 引取（集荷）対応可否
    - begin_time〜end_time … 引取対応時間（営業時間・単一設定）
    - slots …  受入時間枠（複数設定可）
+   - deadline_days / deadline_time … 取引先が予約できる締切（既定：前日17時）
    ========================================================================= */
 let PLANTS = [
   {id:'pl1', name:'本社工場（さいたま中間処理場）', is_delivery:true, is_pickup:true,
-   begin_time:'08:00', end_time:'17:00',
+   begin_time:'08:00', end_time:'17:00', deadline_days:1, deadline_time:'17:00',
    postalcode:'331-0812', pref:'埼玉県', address:'さいたま市北区宮原町0-0-0', phone:'048-000-1000',
    closed_dows:[0],
    slots:[{id:'s1', name:'午前', from:'09:00', to:'12:00'},
           {id:'s2', name:'午後', from:'13:00', to:'16:00'}]},
   {id:'pl2', name:'川口ヤード', is_delivery:true, is_pickup:false,
-   begin_time:'08:30', end_time:'17:30',
+   begin_time:'08:30', end_time:'17:30', deadline_days:1, deadline_time:'16:00',
    postalcode:'332-0034', pref:'埼玉県', address:'川口市並木0-0-0', phone:'048-000-2000',
    closed_dows:[0],
    slots:[{id:'s3', name:'午前', from:'08:30', to:'11:30'},
@@ -115,6 +116,7 @@ let UNITS = [
 /* =========================================================================
    pickups：予約・依頼　/　pickup_items：予約明細
    type      … drop（持込）/ pickup（引取）
+   引取は集荷先（site_name / site_addr）を持つ。持込は車両ナンバーを持つ
    status    … pending 申請中 / approved 承認済 / rejected 差戻し
                 done 計量済 / canceled 取消
    ※受付番号は排出元ポータルの仕様に合わせ「申請時」に採番する
@@ -132,51 +134,56 @@ function addPickup(p, lines) {
 /* --- 承認待ち --- */
 addPickup({id:'R-2026-0152', type:'pickup', status:'pending', company_id:'c1', plant_id:'pl1',
   date:B(1), begin_time:'10:00', end_time:'11:30',
+  site_name:'大宮第一現場', site_addr:'埼玉県さいたま市大宮区桜木町0-0-0',
   applied_at:D(-1)+' 16:42', via:'取引先ポータル', note:'搬出口は建物裏手'},
   [{item_id:'i2', unit_id:'u2', qty:1.2}, {item_id:'i3', unit_id:'u1', qty:80}, {item_id:'i7', unit_id:'u3', qty:2}]);
 
 addPickup({id:'R-2026-0158', type:'drop', status:'pending', company_id:'c1', plant_id:'pl1',
   date:B(2), begin_time:'09:00', end_time:'12:00',
-  car_number:'大宮 100 あ 12-34', driver_name:'佐藤 健', driver_tel:'090-0000-0000',
+  car_number:'大宮 100 あ 12-34',
   applied_at:D(0)+' 08:12', via:'取引先ポータル', note:'フレコン8袋'},
   [{item_id:'i1', unit_id:'u2', qty:1.2}]);
 
 addPickup({id:'R-2026-0159', type:'drop', status:'pending', company_id:'c2', plant_id:'pl1',
   date:B(2), begin_time:'09:00', end_time:'12:00',
-  car_number:'大宮 100 か 55-66', driver_name:'鈴木 一郎', driver_tel:'090-1111-1111',
+  car_number:'大宮 100 か 55-66',
   applied_at:D(0)+' 08:40', via:'取引先ポータル', note:'解体系の混廃'},
   [{item_id:'i7', unit_id:'u3', qty:8}]);
 
 addPickup({id:'R-2026-0160', type:'pickup', status:'pending', company_id:'c3', plant_id:'pl1',
   date:B(3), begin_time:'09:00', end_time:'12:00',
+  site_name:'浦和第二工区', site_addr:'埼玉県さいたま市浦和区仲町0-0-0',
   applied_at:D(0)+' 09:05', via:'取引先ポータル', note:'脱水済み'},
   [{item_id:'i5', unit_id:'u2', qty:3.5}]);
 
 addPickup({id:'R-2026-0161', type:'drop', status:'pending', company_id:'c5', plant_id:'pl1',
   date:B(4), begin_time:'13:00', end_time:'16:00',
-  car_number:'所沢 400 さ 78-90', driver_name:'高橋 誠', driver_tel:'090-2222-2222',
+  car_number:'所沢 400 さ 78-90',
   applied_at:D(0)+' 09:31', via:'取引先ポータル', note:''},
   [{item_id:'i1', unit_id:'u2', qty:0.6}]);
 
 addPickup({id:'R-2026-0162', type:'pickup', status:'pending', company_id:'c5', plant_id:'pl1',
   date:B(1), begin_time:'13:00', end_time:'16:00',
+  site_name:'与野解体現場', site_addr:'埼玉県さいたま市中央区本町東0-0-0',
   applied_at:D(0)+' 10:02', via:'電話（代行作成）', note:'解体ガラ混じり'},
   [{item_id:'i2', unit_id:'u2', qty:2.0}, {item_id:'i7', unit_id:'u3', qty:4}]);
 
 addPickup({id:'R-2026-0163', type:'drop', status:'pending', company_id:'c1', plant_id:'pl2',
   date:B(5), begin_time:'08:30', end_time:'11:30',
-  car_number:'大宮 100 あ 12-34', driver_name:'佐藤 健', driver_tel:'090-0000-0000',
+  car_number:'大宮 100 あ 12-34',
   applied_at:D(0)+' 10:20', via:'取引先ポータル', note:'鉄スクラップ（有価物）'},
   [{item_id:'i3', unit_id:'u2', qty:1.8}]);
 
 addPickup({id:'R-2026-0172', type:'pickup', status:'pending', company_id:'c1', plant_id:'pl2',
   date:B(2), begin_time:'14:00', end_time:'16:00',
+  site_name:'大宮第一現場', site_addr:'埼玉県さいたま市大宮区桜木町0-0-0',
   applied_at:D(0)+' 11:15', via:'取引先ポータル', note:'川口ヤードは引取対応の対象外'},
   [{item_id:'i7', unit_id:'u3', qty:3}]);
 
 /* --- 差戻し --- */
 addPickup({id:'R-2026-0155', type:'pickup', status:'rejected', company_id:'c1', plant_id:'pl1',
   date:B(-2), begin_time:'14:00', end_time:'15:00',
+  site_name:'川越倉庫', site_addr:'埼玉県川越市脇田本町0-0-0',
   applied_at:B(-4)+' 11:00', via:'取引先ポータル',
   reject_reason:'指定日の収集ルートが満車のため。別日での再申請をお願いします。',
   rejected_at:B(-3)+' 09:12', rejected_by:'配車担当 山本'},
@@ -185,7 +192,7 @@ addPickup({id:'R-2026-0155', type:'pickup', status:'rejected', company_id:'c1', 
 /* --- 本日 --- */
 addPickup({id:'R-2026-0164', type:'drop', status:'done', company_id:'c1', plant_id:'pl1',
   date:D(0), begin_time:'09:00', end_time:'12:00',
-  car_number:'大宮 100 あ 12-34', driver_name:'佐藤 健', driver_tel:'090-0000-0000',
+  car_number:'大宮 100 あ 12-34',
   applied_at:B(-2)+' 14:00', via:'取引先ポータル',
   approved_at:B(-2)+' 15:10', approved_by:'受入担当 田中',
   arrived_at:'09:12', receipt_number:1,
@@ -194,20 +201,21 @@ addPickup({id:'R-2026-0164', type:'drop', status:'done', company_id:'c1', plant_
 
 addPickup({id:'R-2026-0165', type:'drop', status:'approved', company_id:'c3', plant_id:'pl1',
   date:D(0), begin_time:'09:00', end_time:'12:00',
-  car_number:'大宮 100 き 11-22', driver_name:'伊藤 大輔', driver_tel:'090-3333-3333',
+  car_number:'大宮 100 き 11-22',
   applied_at:B(-2)+' 16:20', via:'取引先ポータル',
   approved_at:B(-2)+' 17:00', approved_by:'受入担当 田中'},
   [{item_id:'i4', unit_id:'u2', qty:5.0}]);
 
 addPickup({id:'R-2026-0166', type:'drop', status:'approved', company_id:'c5', plant_id:'pl1',
   date:D(0), begin_time:'13:00', end_time:'16:00',
-  car_number:'大宮 100 か 55-66', driver_name:'鈴木 一郎', driver_tel:'090-1111-1111',
+  car_number:'大宮 100 か 55-66',
   applied_at:D(-1)+' 09:00', via:'取引先ポータル',
   approved_at:D(-1)+' 09:40', approved_by:'受入担当 田中'},
   [{item_id:'i2', unit_id:'u2', qty:2.2}]);
 
 addPickup({id:'R-2026-0167', type:'pickup', status:'approved', company_id:'c1', plant_id:'pl1',
   date:D(0), begin_time:'13:30', end_time:'15:00',
+  site_name:'川越倉庫', site_addr:'埼玉県川越市脇田本町0-0-0',
   applied_at:B(-2)+' 10:00', via:'取引先ポータル',
   approved_at:B(-2)+' 11:30', approved_by:'配車担当 山本',
   dispatch_note:'4t車・ドライバー中村で手配済（台帳）'},
@@ -215,7 +223,7 @@ addPickup({id:'R-2026-0167', type:'pickup', status:'approved', company_id:'c1', 
 
 addPickup({id:'R-2026-0168', type:'drop', status:'approved', company_id:'c1', plant_id:'pl2',
   date:D(0), begin_time:'13:00', end_time:'17:00',
-  car_number:'大宮 100 あ 33-44', driver_name:'渡辺 翔', driver_tel:'090-4444-4444',
+  car_number:'大宮 100 あ 33-44',
   applied_at:D(-1)+' 13:00', via:'電話（代行作成）',
   approved_at:D(-1)+' 13:20', approved_by:'受入担当 田中'},
   [{item_id:'i7', unit_id:'u3', qty:8}]);
@@ -223,13 +231,14 @@ addPickup({id:'R-2026-0168', type:'drop', status:'approved', company_id:'c1', pl
 /* --- 翌日以降 --- */
 addPickup({id:'R-2026-0169', type:'drop', status:'approved', company_id:'c3', plant_id:'pl1',
   date:B(1), begin_time:'09:00', end_time:'12:00',
-  car_number:'大宮 100 き 11-22', driver_name:'伊藤 大輔', driver_tel:'090-3333-3333',
+  car_number:'大宮 100 き 11-22',
   applied_at:D(-1)+' 15:00', via:'取引先ポータル',
   approved_at:D(-1)+' 15:30', approved_by:'受入担当 田中'},
   [{item_id:'i5', unit_id:'u2', qty:4.0}]);
 
 addPickup({id:'R-2026-0170', type:'pickup', status:'approved', company_id:'c5', plant_id:'pl1',
   date:B(1), begin_time:'10:00', end_time:'11:00',
+  site_name:'与野解体現場', site_addr:'埼玉県さいたま市中央区本町東0-0-0',
   applied_at:D(-1)+' 16:10', via:'取引先ポータル',
   approved_at:D(-1)+' 16:40', approved_by:'配車担当 山本',
   dispatch_note:'2t車で手配（台帳）'},
@@ -237,7 +246,7 @@ addPickup({id:'R-2026-0170', type:'pickup', status:'approved', company_id:'c5', 
 
 addPickup({id:'R-2026-0171', type:'drop', status:'approved', company_id:'c1', plant_id:'pl1',
   date:B(2), begin_time:'13:00', end_time:'16:00',
-  car_number:'大宮 100 か 55-66', driver_name:'鈴木 一郎', driver_tel:'090-1111-1111',
+  car_number:'大宮 100 か 55-66',
   applied_at:D(0)+' 07:50', via:'取引先ポータル',
   approved_at:D(0)+' 08:05', approved_by:'受入担当 田中'},
   [{item_id:'i1', unit_id:'u2', qty:0.9}]);
@@ -266,8 +275,8 @@ const round2 = n => Math.round(n*100)/100;
       addPickup({id, type, status:'done', company_id:co.id, plant_id:pl.id,
         date:ds, begin_time:slot.from, end_time:slot.to,
         car_number:'大宮 100 あ ' + (10+Math.floor(rnd()*80)) + '-' + (10+Math.floor(rnd()*80)),
-        driver_name:pick(['佐藤 健','鈴木 一郎','伊藤 大輔','渡辺 翔']),
-        driver_tel:'090-0000-0000',
+        site_name: type === 'pickup' ? pick(['大宮第一現場','川越倉庫','浦和第二工区','与野解体現場']) : '',
+        site_addr: type === 'pickup' ? '埼玉県さいたま市〇〇区0-0-0' : '',
         applied_at:D(-k-2)+' 10:00', via:'取引先ポータル',
         approved_at:D(-k-2)+' 11:00', approved_by:'受入担当 田中',
         arrived_at:pad(9+Math.floor(rnd()*6))+':'+pad(Math.floor(rnd()*6)*10),

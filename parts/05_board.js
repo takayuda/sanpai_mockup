@@ -9,7 +9,7 @@ const BOARD_COLS = `<colgroup>
   <col style="width:10%"><col style="width:17%"></colgroup>`;
 const BOARD_HEAD = `<thead><tr>
   <th>受付番号</th><th>時間</th><th>取引先</th><th>品目・申告数量</th>
-  <th>車両ナンバー</th><th>ドライバー</th><th>メモ</th><th>ステータス</th><th></th></tr></thead>`;
+  <th>車両ナンバー</th><th>引取場所</th><th>メモ</th><th>ステータス</th><th></th></tr></thead>`;
 
 function boardRow(p) {
   const isDrop = p.type === 'drop';
@@ -19,7 +19,7 @@ function boardRow(p) {
     <td>${esc(company(p.company_id).name)}</td>
     <td style="font-size:13px">${esc(linesText(p.id))}</td>
     <td class="mono" style="font-size:13px">${esc(p.car_number || '—')}</td>
-    <td style="font-size:13px">${esc(p.driver_name || '—')}</td>
+    <td style="font-size:12px">${isDrop ? '—' : esc(p.site_name || '—')}</td>
     <td style="font-size:12px">${esc((isDrop ? p.note : p.dispatch_note) || '—')}</td>
     <td>${stBadge(p.status)}${p.arrived_at ? `<div class="text-secondary" style="font-size:11px">着車 ${esc(p.arrived_at)}</div>` : ''}</td>
     <td class="text-end text-nowrap">
@@ -75,7 +75,7 @@ function viewBoard() {
             <td>${esc(company(p.company_id).name)}</td>
             <td style="font-size:13px">${esc(linesText(p.id))}</td>
             <td class="mono" style="font-size:13px">${esc(p.car_number || '—')}</td>
-            <td style="font-size:13px">${esc(p.driver_name || '—')}</td>
+            <td style="font-size:12px">${p.type === 'drop' ? '—' : esc(p.site_name || '—')}</td>
             <td style="font-size:12px">${esc(p.reject_reason || p.cancel_reason || '—')}</td>
             <td>${stBadge(p.status)}</td>
             <td class="text-end text-nowrap">
@@ -114,7 +114,7 @@ var MODALS_CHANGESLOT = m => {
   return {
     title:`${p.id} の受入時間枠を変更`,
     body:`<div class="mb-3"><label class="form-label">搬入日</label>
-        <input type="date" class="form-control" data-mod="date" value="${m.date || p.date}"></div>
+        <input type="date" class="form-control" data-mod="date" value="${m.date || p.date}" min="${minDate()}"></div>
       <div class="mb-3"><label class="form-label">受入時間枠</label>
         <select class="form-select" data-mod="slotId">${opts(slotOpts, m.slotId, false)}</select></div>
       <div class="mb-0"><label class="form-label">変更理由<span class="req">必須</span></label>
@@ -132,7 +132,7 @@ var MODALS_CHANGEVISIT = m => {
     title:`${p.id} の訪問日時を変更`,
     body:`<div class="row g-2 mb-3">
         <div class="col-12 col-sm-5"><label class="form-label">訪問日</label>
-          <input type="date" class="form-control" data-mod="date" value="${m.date || p.date}"></div>
+          <input type="date" class="form-control" data-mod="date" value="${m.date || p.date}" min="${minDate()}"></div>
         <div class="col-6 col-sm-3"><label class="form-label">開始</label>
           <input type="time" class="form-control" step="1800" data-mod="begin_time" value="${m.begin_time || p.begin_time}"></div>
         <div class="col-6 col-sm-3"><label class="form-label">終了</label>

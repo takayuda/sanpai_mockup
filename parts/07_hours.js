@@ -78,6 +78,21 @@ function viewHours() {
     </div>
   </div>
 
+  <div class="card mb-3"><div class="card-head">${ic('clock',16)}予約の締切
+      <span class="sub">この期限を過ぎると取引先は予約・変更できません（社内からは登録できます）</span></div>
+    <div class="card-body">
+      <div class="row g-2 align-items-end" style="max-width:520px">
+        <div class="col-6 col-md-4"><label class="form-label">予約日の何日前まで</label>
+          <select class="form-select" data-deadline="days">${opts([
+            {v:0,t:'当日'},{v:1,t:'前日'},{v:2,t:'2日前'},{v:3,t:'3日前'},{v:7,t:'7日前'}], pl.deadline_days, false)}</select></div>
+        <div class="col-6 col-md-4"><label class="form-label">締切時刻</label>
+          <input type="time" step="900" class="form-control" data-deadline="time" value="${pl.deadline_time}"></div>
+        <div class="col-12 col-md-4"><button class="btn btn-primary w-100" data-act="saveDeadline" data-id="${pl.id}">保存</button></div>
+      </div>
+      <div class="mt-3" style="font-size:13px;color:var(--ink-sub)">
+        現在の設定：<b>${deadlineLabel(pl)}</b> まで受付（例：${fmtMd(D(3))} の予約は ${esc(deadlineAt(pl.id, D(3)))} まで）</div>
+    </div></div>
+
   <div class="card mb-3"><div class="card-head">${ic('calendar',16)}定休日</div><div class="card-body">
     <div class="d-flex flex-wrap gap-3">
       ${DOW.map((d,i) => `<div class="form-check">

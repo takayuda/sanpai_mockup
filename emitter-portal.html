@@ -219,7 +219,7 @@ const blank = () => ({
   startH:'', startM:'', endH:'', endM:'',
   addr:'', siteId:'', saveSite:false, siteName:'',
   lines:[emptyLine()],
-  vClass:'', vCount:'', driver:'', driverTel:'', plate:''
+  vClass:'', plate:''
 });
 const clone = o => JSON.parse(JSON.stringify(o));
 function setPath(obj,path,v){
@@ -234,7 +234,7 @@ const state = {
   reservations:[
     {no:'R-2026-0148', processorId:'p1', method:'drop', dateLabel:'2026年8月28日（金） 9:00 〜 12:00', status:'approved',
      lines:[{item:'廃プラスチック類', qty:'320', unit:'kg', memo:'フレコンバッグ4袋'}],
-     vClass:'2tトラック（平ボディ）', vCount:'1', driver:'佐藤 健', driverTel:'090-0000-0000', plate:'大宮 100 あ 12-34'},
+     vClass:'2tトラック（平ボディ）', plate:'大宮 100 あ 12-34'},
     {no:'R-2026-0152', processorId:'p2', method:'pickup', dateLabel:'2026年8月31日（月） 10:00 〜 11:30', status:'pending',
      lines:[{item:'木くず', qty:'1.2', unit:'t', memo:'搬出口は建物裏手'},{item:'金属くず', qty:'80', unit:'kg', memo:''},{item:'混合廃棄物', qty:'2', unit:'m3', memo:''}],
      addr:'埼玉県さいたま市大宮区桜木町0-0-0', siteName:'大宮第一現場'},
@@ -391,26 +391,16 @@ function viewInput(){
 
   if(d.method==='drop'){
     html += `<div class="card">
-      <h2>車両・ドライバー</h2>
+      <h2>車両</h2>
+      <p class="hint">1回の予約につき1台です。複数台で搬入する場合は、台数ぶん予約を作成してください。</p>
       <div class="row">
         <div class="field" style="flex:2 1 260px;">
           <label class="label" for="elVClass">車格<span class="req">必須</span></label>
           <select id="elVClass" data-bind="vClass">${opts(MASTER.vehicleClasses,d.vClass)}</select></div>
-        <div class="field" style="flex:1 1 120px;">
-          <label class="label" for="elVCount">台数<span class="req">必須</span></label>
-          <input type="text" inputmode="numeric" id="elVCount" data-bind="vCount" value="${esc(d.vCount)}" placeholder="1"></div>
+        <div class="field" style="flex:2 1 260px;">
+          <label class="label" for="elPlate">車両ナンバー<span class="req">必須</span></label>
+          <input type="text" id="elPlate" data-bind="plate" value="${esc(d.plate)}" placeholder="例：大宮 100 あ 12-34"></div>
       </div>
-      <div class="row">
-        <div class="field" style="flex:1 1 240px;">
-          <label class="label" for="elDriver">ドライバー名<span class="req">必須</span></label>
-          <input type="text" id="elDriver" data-bind="driver" value="${esc(d.driver)}" placeholder="例：佐藤 健"></div>
-        <div class="field" style="flex:1 1 240px;">
-          <label class="label" for="elTel">ドライバー連絡先<span class="req">必須</span></label>
-          <input type="tel" id="elTel" data-bind="driverTel" value="${esc(d.driverTel)}" placeholder="例：090-0000-0000"></div>
-      </div>
-      <div class="field">
-        <label class="label" for="elPlate">車両ナンバー<span class="req">必須</span></label>
-        <input type="text" id="elPlate" data-bind="plate" value="${esc(d.plate)}" placeholder="例：大宮 100 あ 12-34"></div>
     </div>`;
   }
 
@@ -474,11 +464,8 @@ function viewConfirm(){
         d.date?slotButtons():`<p class="hint" style="margin:0;">先に搬入日を選んでください。</p>`)}
     </table></div>
     ${itemsBlock()}
-    <div class="reviewgroup"><div class="reviewhead">車両・ドライバー</div><table class="reviewtable">
+    <div class="reviewgroup"><div class="reviewhead">車両</div><table class="reviewtable">
       ${rrow('vClass','車格', d.vClass, edSelect('vClass',MASTER.vehicleClasses,d.vClass))}
-      ${rrow('vCount','台数', d.vCount?d.vCount+' 台':'', edText('vCount',d.vCount,'1'))}
-      ${rrow('driver','ドライバー名', d.driver, edText('driver',d.driver,'例：佐藤 健'))}
-      ${rrow('driverTel','ドライバー連絡先', d.driverTel, edText('driverTel',d.driverTel,'例：090-0000-0000'))}
       ${rrow('plate','車両ナンバー', d.plate, edText('plate',d.plate,'例：大宮 100 あ 12-34'))}
     </table></div>`;
   }else if(d.method==='pickup'){
@@ -562,7 +549,7 @@ function viewDetailDialog(){
           ${line('日時', r.dateLabel)}
           ${r.method==='pickup'?line('引取場所',(r.siteName?r.siteName+'／':'')+(r.addr||'')):''}
           ${r.lines.map((ln,i)=>line(`品目 ${i+1}`, `${ln.item}　${ln.qty} ${ln.unit}${ln.memo?'　／　'+ln.memo:''}`)).join('')}
-          ${r.method==='drop'?line('車格',r.vClass)+line('台数',r.vCount?r.vCount+' 台':'')+line('ドライバー名',r.driver)+line('ドライバー連絡先',r.driverTel)+line('車両ナンバー',r.plate):''}
+          ${r.method==='drop'?line('車格',r.vClass)+line('車両ナンバー',r.plate):''}
         </table></div>
       </div>
       <div class="dialog-foot"><button type="button" class="btn btn-secondary" data-act="closeDetail">閉じる</button></div>
@@ -585,10 +572,6 @@ function validate(){
     if(d.method==='drop'){
       if(d.date && !d.slotId) e.push('時間枠を選択してください。');
       if(!d.vClass) e.push('車格を選択してください。');
-      if(!String(d.vCount).trim()) e.push('台数を入力してください。');
-      else if(!/^\d+$/.test(String(d.vCount).trim())) e.push('台数は半角数字で入力してください。');
-      if(!d.driver.trim()) e.push('ドライバー名を入力してください。');
-      if(!d.driverTel.trim()) e.push('ドライバー連絡先を入力してください。');
       if(!d.plate.trim()) e.push('車両ナンバーを入力してください。');
     }else{
       if(!d.startH||!d.startM) e.push('引取希望時間の開始を選択してください。');
@@ -704,7 +687,7 @@ function submit(){
     ? `${fmtFull(d.date)} ${SLOT_DEFS.find(s=>s.id===d.slotId)?.label||''}`
     : `${fmtFull(d.date)} ${timeStr(d.startH,d.startM)} 〜 ${timeStr(d.endH,d.endM)}`;
   const rec={no, processorId:d.processorId, method:d.method, dateLabel, lines:clone(d.lines), status:'pending'};
-  if(d.method==='drop') Object.assign(rec,{vClass:d.vClass,vCount:d.vCount,driver:d.driver,driverTel:d.driverTel,plate:d.plate});
+  if(d.method==='drop') Object.assign(rec,{vClass:d.vClass,plate:d.plate});
   else{
     let siteName=(SITES.find(s=>s.id===d.siteId)||{}).name||'';
     if(d.saveSite && d.siteName.trim()){

@@ -88,9 +88,8 @@ function approvalDetail(p) {
     [p.type === 'drop' ? '搬入希望日' : '引取希望日', fmtJp(p.date)],
     [p.type === 'drop' ? '受入時間枠' : '希望時間', timeRange(p)]
   ];
-  if (p.type === 'drop') rows.push(
-    ['車両ナンバー', esc(p.car_number)],
-    ['ドライバー', `${esc(p.driver_name)}（${esc(p.driver_tel)}）`]);
+  if (p.type === 'drop') rows.push(['車両ナンバー', esc(p.car_number)]);
+  else rows.push(['引取場所', `${esc(p.site_name || '')}<div class="text-secondary" style="font-size:12px">${esc(p.site_addr || '')}</div>`]);
   if (p.note) rows.push(['連絡事項', esc(p.note)]);
   rows.push(['申請', `${esc(p.via)}　${esc(p.applied_at)}`]);
 
@@ -129,7 +128,7 @@ var MODALS_APPROVE = m => {
   const body = isDrop
     ? `<div class="row g-3">
          <div class="col-12 col-sm-5"><label class="form-label">搬入日</label>
-           <input type="date" class="form-control" data-mod="date" value="${m.date || p.date}"></div>
+           <input type="date" class="form-control" data-mod="date" value="${m.date || p.date}" min="${minDate()}"></div>
          <div class="col-12 col-sm-7"><label class="form-label">受入時間枠<span class="req">必須</span></label>
            <select class="form-select" data-mod="slotId">${opts(slotOpts, m.slotId, false)}</select></div>
          <div class="col-12"><label class="form-label">取引先への連絡事項<span class="opt">任意</span></label>
@@ -137,7 +136,7 @@ var MODALS_APPROVE = m => {
        </div>`
     : `<div class="row g-2">
          <div class="col-12 col-sm-5"><label class="form-label">訪問日<span class="req">必須</span></label>
-           <input type="date" class="form-control" data-mod="date" value="${m.date || p.date}"></div>
+           <input type="date" class="form-control" data-mod="date" value="${m.date || p.date}" min="${minDate()}"></div>
          <div class="col-6 col-sm-3"><label class="form-label">開始<span class="req">必須</span></label>
            <input type="time" class="form-control" step="1800" data-mod="begin_time" value="${m.begin_time || p.begin_time}"></div>
          <div class="col-6 col-sm-3"><label class="form-label">終了<span class="req">必須</span></label>
@@ -185,7 +184,8 @@ var MODALS_PICKUP = m => {
     ['時間', timeRange(p)],
     ['申請', `${esc(p.via)}　${esc(p.applied_at)}`]
   ];
-  if (p.type === 'drop') rows.push(['車両ナンバー', esc(p.car_number)], ['ドライバー', `${esc(p.driver_name)}（${esc(p.driver_tel)}）`]);
+  if (p.type === 'drop') rows.push(['車両ナンバー', esc(p.car_number)]);
+  else rows.push(['引取場所', `${esc(p.site_name || '')}／${esc(p.site_addr || '')}`]);
   linesOf(p.id).forEach((l,i) => rows.push([`品目 ${i+1}`,
     `${esc(item(l.item_id).name)}${l.qty != null ? `　申告 ${dec(l.qty)} ${esc(unit(l.unit_id).name)}` : '　<span class="text-secondary">（申告になし）</span>'}`]));
   if (p.note) rows.push(['連絡事項', esc(p.note)]);

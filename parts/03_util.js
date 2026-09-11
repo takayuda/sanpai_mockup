@@ -62,6 +62,20 @@ function countOf(plantId, ds) {
 const slotOf = (pl, p) => (pl.slots || []).find(s => s.from === p.begin_time && s.to === p.end_time);
 const inHours = (pl, p) => p.begin_time >= pl.begin_time && p.end_time <= pl.end_time;
 
+/* ---------- 予約の締切（取引先が自分で予約・変更できる期限） ---------- */
+const nowStamp = () => { const d = new Date(); return `${D(0)} ${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+/* 指定日の予約に対する締切日時（例：前日17:00） */
+function deadlineAt(plantId, ds) {
+  const pl = plant(plantId);
+  const d = addDays(parseD(ds), -(pl.deadline_days == null ? 1 : pl.deadline_days));
+  return `${dstr(d)} ${pl.deadline_time || '17:00'}`;
+}
+/* 締切を過ぎているか（過ぎていても社内は登録・変更できる） */
+const isPastDeadline = (plantId, ds) => deadlineAt(plantId, ds) <= nowStamp();
+/* 予約日として選べる最小の日付（過去日は不可） */
+const minDate = () => D(0);
+const deadlineLabel = pl => `${pl.deadline_days === 0 ? '当日' : pl.deadline_days === 1 ? '前日' : pl.deadline_days + '日前'} ${pl.deadline_time}`;
+
 /* =========================================================================
    画面定義
    ========================================================================= */
