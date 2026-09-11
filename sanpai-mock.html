@@ -156,6 +156,12 @@ body{-webkit-font-smoothing:antialiased;}
 .dl dt{background:#FAFAFA;padding:8px 12px;font-weight:500;color:var(--ink-sub);border-bottom:1px solid var(--line);margin:0;}
 .dl dd{padding:8px 12px;border-bottom:1px solid var(--line);margin:0;font-weight:500;}
 .dl dt:nth-last-of-type(1),.dl dd:nth-last-of-type(1){border-bottom:0;}
+.itemgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:8px;}
+.itemchk{display:flex;align-items:flex-start;gap:8px;border:1px solid var(--line-strong);border-radius:var(--radius);padding:9px 12px;cursor:pointer;background:var(--white);font-size:14px;}
+.itemchk:hover{background:var(--blue-100);}
+.itemchk.on{border-color:var(--blue-800);border-width:2px;padding:8px 11px;background:var(--blue-100);}
+.itemchk small{display:block;font-size:11px;color:var(--ink-sub);font-weight:500;}
+.itemchk input{margin-top:3px;flex:none;}
 .urlbox{display:flex;gap:8px;align-items:center;background:#FAFAFA;border:1px solid var(--line-strong);border-radius:var(--radius);padding:10px 12px;font-size:13px;word-break:break-all;}
 .urlbox code{color:var(--blue-900);font-weight:700;}
 .invitewrap{max-width:560px;margin:0 auto;}
@@ -1064,11 +1070,6 @@ let COMPANIES = [
    invoice:'T3456789012345', bank:'埼玉りそな銀行 浦和支店 普通 3456789',
    credit:'A',
    status:'active', token:'c3d4e5f6g7', invited_at:'2026-04-05 11:00', registered_at:'2026-04-06 08:45'},
-  /* 招待中：登録用URLを発行しただけの状態。社名を含め取引先が本登録で入力する */
-  {id:'c4', name:'', kana:'', is_generator:false, is_transporter:false,
-   postalcode:'', pref:'', address:'', phone:'', email:'', contact:'',
-   invoice:'', bank:'', credit:'',
-   status:'invited', token:'d4e5f6g7h8', invited_at:D(-1)+' 16:30', registered_at:null},
   {id:'c5', name:'武蔵野解体株式会社', kana:'ムサシノカイタイカブシキガイシャ',
    is_generator:true, is_transporter:false,
    postalcode:'338-0001', pref:'埼玉県', address:'さいたま市中央区上落合0-0-0',
@@ -1076,6 +1077,11 @@ let COMPANIES = [
    invoice:'T5678901234567', bank:'りそな銀行 与野支店 普通 5678901',
    credit:'B',
    status:'active', token:'e5f6g7h8i9', invited_at:'2026-08-01 09:00', registered_at:'2026-08-01 17:30'}
+];
+
+/* 発行済みの登録用URL（取引先が本登録すると COMPANIES に移る） */
+let INVITES = [
+  {id:'iv1', token:'d4e5f6g7h8', issued_at:D(-1)+' 16:30'}
 ];
 
 /* =========================================================================
@@ -1101,7 +1107,7 @@ let UNITS = [
    pickups：予約・依頼　/　pickup_items：予約明細
    type      … drop（持込）/ pickup（引取）
    status    … pending 申請中 / approved 承認済 / rejected 差戻し
-                arrived 入場受付済 / done 実績記録済 / canceled 取消
+                done 計量済 / canceled 取消
    ※受付番号は排出元ポータルの仕様に合わせ「申請時」に採番する
      （ER図の receipt_number は当日の計量伝票番号として入場受付時に採番）
    ========================================================================= */
@@ -1174,14 +1180,14 @@ addPickup({id:'R-2026-0164', type:'drop', status:'done', company_id:'c1', plant_
   applied_at:B(-2)+' 14:00', via:'取引先ポータル',
   approved_at:B(-2)+' 15:10', approved_by:'受入担当 田中',
   arrived_at:'09:12', receipt_number:1,
-  total_weight:6120, car_weight:2480, weight:3640, diff:2240, diff_reason:'積込時に追加発生分あり'},
-  [{item_id:'i1', unit_id:'u2', qty:1.4, actual_qty:3.64}]);
+  weight:3640, diff:2240, weigh_memo:'フレコン内に金属片の混入あり'},
+  [{item_id:'i1', unit_id:'u2', qty:1.4}]);
 
-addPickup({id:'R-2026-0165', type:'drop', status:'arrived', company_id:'c3', plant_id:'pl1',
+addPickup({id:'R-2026-0165', type:'drop', status:'approved', company_id:'c3', plant_id:'pl1',
   date:D(0), begin_time:'09:00', end_time:'12:00',
   car_number:'大宮 100 き 11-22', driver_name:'伊藤 大輔', driver_tel:'090-3333-3333',
   applied_at:B(-2)+' 16:20', via:'取引先ポータル',
-  approved_at:B(-2)+' 17:00', approved_by:'受入担当 田中', arrived_at:'10:48', receipt_number:2},
+  approved_at:B(-2)+' 17:00', approved_by:'受入担当 田中'},
   [{item_id:'i4', unit_id:'u2', qty:5.0}]);
 
 addPickup({id:'R-2026-0166', type:'drop', status:'approved', company_id:'c5', plant_id:'pl1',
@@ -1246,7 +1252,6 @@ const round2 = n => Math.round(n*100)/100;
       const type = rnd() < 0.3 && pl.is_pickup ? 'pickup' : 'drop';
       const slot = pick(pl.slots);
       const qty = round2(0.4 + rnd()*4);
-      const car = 2400 + Math.round(rnd()*600);
       const net = Math.max(120, Math.round(qty * 1000 * (0.85 + rnd()*0.4)));
       const id = 'R-2026-' + pad(no++);
       addPickup({id, type, status:'done', company_id:co.id, plant_id:pl.id,
@@ -1257,11 +1262,8 @@ const round2 = n => Math.round(n*100)/100;
         applied_at:D(-k-2)+' 10:00', via:'取引先ポータル',
         approved_at:D(-k-2)+' 11:00', approved_by:'受入担当 田中',
         arrived_at:pad(9+Math.floor(rnd()*6))+':'+pad(Math.floor(rnd()*6)*10),
-        receipt_number:j+1,
-        total_weight:car+net, car_weight:car, weight:net,
-        diff: net - Math.round(qty*1000),
-        diff_reason: Math.abs(net - qty*1000) / Math.max(qty*1000,1) > 0.25 ? '実測差（申告は目安）' : ''},
-        [{item_id:it.id, unit_id:'u2', qty, actual_qty:round2(net/1000)}]);
+        receipt_number:j+1, weight:net, diff: net - Math.round(qty*1000), weigh_memo:''},
+        [{item_id:it.id, unit_id:'u2', qty}]);
     }
   }
 })();
@@ -1301,7 +1303,6 @@ const STATUS = {
   pending:  {t:'申請中', c:'b-pending'},
   approved: {t:'承認済', c:'b-approved'},
   rejected: {t:'差戻し', c:'b-rejected'},
-  arrived:  {t:'入場済', c:'b-dark'},
   done:     {t:'計量済', c:'b-neutral'},
   canceled: {t:'取消',   c:'b-neutral'}
 };
@@ -1343,7 +1344,7 @@ const NAV = [
     {route:'hours',     label:'受付時間・休業日', ico:'clock'}
   ]},
   {sec:'実績', items:[
-    {route:'reception', label:'入場受付・計量', ico:'truck'},
+    {route:'reception', label:'計量入力',       ico:'truck'},
     {route:'actuals',   label:'実績一覧',       ico:'chart'}
   ]},
   {sec:'マスタ', items:[
@@ -1620,16 +1621,17 @@ var MODALS_PICKUP = m => {
   ];
   if (p.type === 'drop') rows.push(['車両ナンバー', esc(p.car_number)], ['ドライバー', `${esc(p.driver_name)}（${esc(p.driver_tel)}）`]);
   linesOf(p.id).forEach((l,i) => rows.push([`品目 ${i+1}`,
-    `${esc(item(l.item_id).name)}　申告 ${dec(l.qty)} ${esc(unit(l.unit_id).name)}${l.actual_qty != null ? `　実数 ${dec(l.actual_qty)} ${esc(unit(l.unit_id).name)}` : ''}`]));
+    `${esc(item(l.item_id).name)}${l.qty != null ? `　申告 ${dec(l.qty)} ${esc(unit(l.unit_id).name)}` : '　<span class="text-secondary">（申告になし）</span>'}`]));
   if (p.note) rows.push(['連絡事項', esc(p.note)]);
   if (p.approved_at) rows.push(['承認', `${esc(p.approved_at)}／${esc(p.approved_by)}`]);
   if (p.dispatch_note) rows.push(['集荷手配メモ', esc(p.dispatch_note)]);
   if (p.reject_reason) rows.push(['変更依頼の理由', `${esc(p.reject_reason)}<div class="text-secondary" style="font-size:12px">${esc(p.rejected_at || '')}</div>`]);
   if (p.cancel_reason) rows.push(['取消理由', esc(p.cancel_reason)]);
-  if (p.arrived_at) rows.push(['入場時刻', `${esc(p.arrived_at)}　伝票番号 No.${p.receipt_number}`]);
+  if (p.arrived_at) rows.push(['着車時間', `${esc(p.arrived_at)}${p.receipt_number ? `　伝票番号 No.${p.receipt_number}` : ''}`]);
   if (p.weight != null) rows.push(
-    ['総重量', kg(p.total_weight)], ['空車重量', kg(p.car_weight)], ['正味重量', `<b>${kg(p.weight)}</b>`],
-    ['申告との差異', `${p.diff > 0 ? '+' : ''}${num(p.diff)} kg${p.diff_reason ? '／' + esc(p.diff_reason) : ''}`]);
+    ['正味重量', `<b>${kg(p.weight)}</b>`],
+    ['申告との差異', `${p.diff > 0 ? '+' : ''}${num(p.diff)} kg`]);
+  if (p.weigh_memo) rows.push(['計量時の備考', esc(p.weigh_memo)]);
   return {
     title:`予約詳細 ${p.id}`,
     body: dl(rows),
@@ -1659,7 +1661,7 @@ function boardRow(p) {
     <td class="mono" style="font-size:13px">${esc(p.car_number || '—')}</td>
     <td style="font-size:13px">${esc(p.driver_name || '—')}</td>
     <td style="font-size:12px">${esc((isDrop ? p.note : p.dispatch_note) || '—')}</td>
-    <td>${stBadge(p.status)}${p.arrived_at ? `<div class="text-secondary" style="font-size:11px">入場 ${esc(p.arrived_at)}</div>` : ''}</td>
+    <td>${stBadge(p.status)}${p.arrived_at ? `<div class="text-secondary" style="font-size:11px">着車 ${esc(p.arrived_at)}</div>` : ''}</td>
     <td class="text-end text-nowrap">
       <button class="btn btn-outline-secondary btn-sm" data-act="openPickupDetail" data-id="${p.id}">詳細</button>
       ${p.status === 'approved' ? `<button class="btn btn-outline-primary btn-sm ms-1" data-act="${isDrop ? 'openChangeSlot' : 'openChangeVisit'}" data-id="${p.id}">${isDrop ? '枠変更' : '日時変更'}</button>
@@ -2094,18 +2096,21 @@ var MODALS_HOLIDAY = m => {
 };
 
 /* =========================================================================
-   入場受付・計量
+   計量入力
+   構内では品目ごとの計量ができないため、記録するのは
+   「総正味重量」と「含まれていた品目」「着車時間」「備考」のみ
    ========================================================================= */
 /* 申告数量の重量換算（kg）。t/kg 以外の単位は換算しない */
 function declaredKg(pickupId) {
   return linesOf(pickupId).reduce((s,l) => {
     const u = unit(l.unit_id).name;
+    if (l.qty == null) return s;
     if (u === 't') return s + Number(l.qty) * 1000;
     if (u === 'kg') return s + Number(l.qty);
     return s;
   }, 0);
 }
-const todayList = () => PICKUPS.filter(p => p.date === D(0) && inScope(p) && ['approved','arrived','done'].includes(p.status));
+const todayList = () => PICKUPS.filter(p => p.date === D(0) && inScope(p) && ['approved','done'].includes(p.status));
 function nextReceiptNumber(plantId, ds) {
   const n = PICKUPS.filter(p => p.plant_id === plantId && p.date === ds && p.receipt_number)
     .reduce((a,p) => Math.max(a, p.receipt_number), 0);
@@ -2118,39 +2123,33 @@ function viewReception() {
   if (q) list = list.filter(p => (p.id + (p.car_number || '') + company(p.company_id).name).includes(q));
   list.sort((a,b) => a.begin_time < b.begin_time ? -1 : 1);
 
-  const st = p => p.status === 'done' ? {t:'計量済', c:'b-approved'}
-    : p.status === 'arrived' ? {t:'入場済（計量待ち）', c:'b-pending'} : {t:'未着', c:'b-neutral'};
-
-  const rows = list.map(p => {
-    const s = st(p);
-    return `<tr>
-      <td class="mono">${p.id}${p.receipt_number ? `<div class="text-secondary" style="font-size:11px">伝票 No.${p.receipt_number}</div>` : ''}</td>
+  const rows = list.map(p => `<tr>
+      <td class="mono nowrap">${p.id}${p.receipt_number ? `<div class="text-secondary" style="font-size:11px">伝票 No.${p.receipt_number}</div>` : ''}</td>
       <td>${tBadge(p.type)}</td>
       <td class="mono nowrap">${timeRange(p)}</td>
       <td>${esc(company(p.company_id).name)}<div class="text-secondary" style="font-size:11px">${esc(plantShort(p.plant_id))}</div></td>
       <td style="font-size:13px">${esc(linesText(p.id))}</td>
       <td class="mono" style="font-size:13px">${esc(p.car_number || '—')}</td>
-      <td>${p.weight != null ? `<b>${num(p.weight)}</b> kg` : '—'}</td>
-      <td><span class="badge ${s.c}">${s.t}</span>${p.arrived_at ? `<div class="text-secondary" style="font-size:11px">入場 ${esc(p.arrived_at)}</div>` : ''}</td>
+      <td class="mono">${esc(p.arrived_at || '—')}</td>
+      <td class="num">${p.weight != null ? `<b>${num(p.weight)}</b> kg` : '—'}</td>
+      <td>${p.status === 'done' ? '<span class="badge b-approved">計量済</span>' : '<span class="badge b-pending">未計量</span>'}</td>
       <td class="text-end text-nowrap">
-        ${p.status === 'approved' ? `<button class="btn btn-primary btn-sm" data-act="doArrive" data-id="${p.id}">入場受付</button>` : ''}
-        ${p.status === 'arrived' ? `<button class="btn btn-primary btn-sm" data-act="openWeigh" data-id="${p.id}">計量入力</button>` : ''}
-        ${p.status === 'done' ? `<button class="btn btn-outline-secondary btn-sm" data-act="openPickupDetail" data-id="${p.id}">実績を見る</button>` : ''}
-        ${p.status !== 'done' ? `<button class="btn btn-outline-danger btn-sm ms-1" data-act="openRefuse" data-id="${p.id}">受入不可</button>` : ''}
-      </td></tr>`;
-  }).join('');
+        ${p.status === 'approved'
+          ? `<button class="btn btn-primary btn-sm" data-act="openWeigh" data-id="${p.id}">計量入力</button>`
+          : `<button class="btn btn-outline-secondary btn-sm" data-act="openPickupDetail" data-id="${p.id}">実績を見る</button>`}
+      </td></tr>`).join('');
 
-  const arrived = list.filter(p => p.status === 'arrived').length;
+  const yet = list.filter(p => p.status === 'approved').length;
   const done = list.filter(p => p.status === 'done').length;
-  const netToday = list.filter(p => p.weight).reduce((s,p) => s + p.weight, 0);
+  const net = list.filter(p => p.weight).reduce((s,p) => s + p.weight, 0);
 
-  return pageHead('入場受付・計量',
+  return pageHead('計量入力',
     `<button class="btn btn-outline-primary btn-sm" data-act="openSpot">${ic('plus',15)}飛び込み搬入を登録</button>`) +
   `<div class="row g-3 mb-3">
     <div class="col-6 col-lg-3">${kpi('本日の予定', list.length + ' <small>件</small>')}</div>
-    <div class="col-6 col-lg-3">${kpi('入場済（計量待ち）', arrived + ' <small>件</small>', '', arrived ? 'alert-kpi' : '')}</div>
+    <div class="col-6 col-lg-3">${kpi('未計量', yet + ' <small>件</small>', '', yet ? 'alert-kpi' : '')}</div>
     <div class="col-6 col-lg-3">${kpi('計量済', done + ' <small>件</small>')}</div>
-    <div class="col-6 col-lg-3">${kpi('本日の正味重量', num(netToday) + ' <small>kg</small>')}</div>
+    <div class="col-6 col-lg-3">${kpi('本日の正味重量', num(net) + ' <small>kg</small>')}</div>
   </div>
   <div class="filterbar">
     <div class="f" style="flex:1"><label>検索</label>
@@ -2159,100 +2158,82 @@ function viewReception() {
   </div>
   <div class="table-wrap">
     <table class="table table-hover mb-0">
-      <thead><tr><th>受付番号</th><th>区分</th><th>時間</th><th>取引先・拠点</th><th>申告内容</th><th>車両ナンバー</th><th>正味重量</th><th>状態</th><th></th></tr></thead>
-      <tbody>${rows || `<tr><td colspan="9" class="text-center text-secondary py-4">該当する予約がありません</td></tr>`}</tbody>
+      <thead><tr><th>受付番号</th><th>区分</th><th>時間</th><th>取引先・拠点</th><th>申告内容</th>
+        <th>車両ナンバー</th><th>着車時間</th><th class="num">正味重量</th><th>状態</th><th></th></tr></thead>
+      <tbody>${rows || `<tr><td colspan="10" class="text-center text-secondary py-4">該当する予約がありません</td></tr>`}</tbody>
     </table>
   </div>`;
 }
 
 /* ---------- 計量モーダル ---------- */
 function weighInit(id) {
-  return {
-    id, total_weight:'', car_weight:'',
-    lines: linesOf(id).map(l => ({id:l.id, item_id:l.item_id, unit_id:l.unit_id, qty:l.qty, actual_qty:dec(l.qty)})),
-    diff_reason:''
-  };
+  return {id, arrived_at:nowHm(), weight:'', items:linesOf(id).map(l => l.item_id), memo:''};
 }
+/* 品目のチェックボックス（申告にあった品目は申告数量を併記） */
+function itemChecks(lines, checked, prefix) {
+  return `<div class="itemgrid">${ITEMS.map(it => {
+    const l = lines.find(x => x.item_id === it.id);
+    return `<label class="itemchk ${checked.includes(it.id) ? 'on' : ''}">
+      <input class="form-check-input" type="checkbox" data-mod="${prefix}.${it.id}" data-rerender="1" ${checked.includes(it.id) ? 'checked' : ''}>
+      <span>${esc(it.name)}${l && l.qty != null ? `<small>申告 ${dec(l.qty)} ${esc(unit(l.unit_id).name)}</small>` : ''}</span>
+    </label>`;
+  }).join('')}</div>`;
+}
+
 var MODALS_WEIGH = m => {
-  const p = pk(m.id);
-  const net = Number(m.total_weight) - Number(m.car_weight);
-  const netOk = m.total_weight !== '' && m.car_weight !== '' && net > 0;
-  const dec_kg = declaredKg(p.id);
-  const diff = netOk ? net - dec_kg : 0;
-  const hasDiff = netOk && dec_kg > 0 && Math.abs(diff) / dec_kg > 0.1;
-
-  const lineRows = m.lines.map((l,i) => {
-    const d = Number(l.actual_qty) - Number(l.qty);
-    return `<tr>
-      <td><select class="form-select form-select-sm" data-mod="lines.${i}.item_id" data-rerender="1">${opts(o1(ITEMS), l.item_id, false)}</select></td>
-      <td class="num">${dec(l.qty)}</td>
-      <td class="num"><input type="text" inputmode="decimal" class="form-control form-control-sm text-end" style="width:96px" data-mod="lines.${i}.actual_qty" data-rerender="1" value="${esc(l.actual_qty)}"></td>
-      <td><select class="form-select form-select-sm" style="width:90px" data-mod="lines.${i}.unit_id" data-rerender="1">${opts(o1(UNITS), l.unit_id, false)}</select></td>
-      <td class="num ${Math.abs(d) > 0.001 ? 'text-danger fw-bold' : ''}">${d > 0 ? '+' : ''}${dec(d)}</td>
-      <td>${m.lines.length > 1 ? `<button class="btn btn-outline-danger btn-sm btn-icon" data-act="weighRemoveLine" data-idx="${i}" aria-label="削除">${ic('trash',14)}</button>` : ''}</td>
-    </tr>`;
-  }).join('');
-
+  const p = pk(m.id), dk = declaredKg(p.id);
+  const w = Number(m.weight);
+  const diff = m.weight !== '' && !isNaN(w) ? w - dk : null;
   return {
     title:`計量入力　${p.id}　${esc(company(p.company_id).name)}`,
     body:`<div class="row g-3 mb-3">
-        <div class="col-6 col-md-3"><label class="form-label">総重量（kg）<span class="req">必須</span></label>
-          <input type="text" inputmode="numeric" class="form-control" data-mod="total_weight" data-rerender="1" value="${esc(m.total_weight)}" placeholder="例：6120"></div>
-        <div class="col-6 col-md-3"><label class="form-label">空車重量（kg）<span class="req">必須</span></label>
-          <input type="text" inputmode="numeric" class="form-control" data-mod="car_weight" data-rerender="1" value="${esc(m.car_weight)}" placeholder="例：2480"></div>
-        <div class="col-12 col-md-6">${kpi('正味重量（自動算出）', netOk ? num(net) + ' <small>kg</small>' : '<small class="text-secondary">総重量・空車重量を入力</small>',
-          netOk && dec_kg ? `申告 ${num(dec_kg)} kg ／ 差異 ${diff > 0 ? '+' : ''}${num(diff)} kg` : '')}</div>
+        <div class="col-6 col-md-3"><label class="form-label">着車時間<span class="req">必須</span></label>
+          <input type="time" class="form-control" data-mod="arrived_at" value="${esc(m.arrived_at)}"></div>
+        <div class="col-6 col-md-4"><label class="form-label">正味重量（kg）<span class="req">必須</span></label>
+          <input type="text" inputmode="numeric" class="form-control" data-mod="weight" data-rerender="1" value="${esc(m.weight)}" placeholder="例：3640"></div>
+        <div class="col-12 col-md-5">${kpi('申告数量（重量換算）', dk ? num(dk) + ' <small>kg</small>' : '—',
+          diff != null && dk ? `差異 ${diff > 0 ? '+' : ''}${num(diff)} kg` : '')}</div>
       </div>
-      <h6 style="font-size:14px;font-weight:700">実搬入内容</h6>
-      <div class="table-wrap mb-2"><table class="table table-sm mb-0">
-        <thead><tr><th style="width:34%">品目</th><th class="num">申告</th><th class="num">実数量</th><th>単位</th><th class="num">差異</th><th></th></tr></thead>
-        <tbody>${lineRows}</tbody></table></div>
-      <button class="btn btn-outline-primary btn-sm mb-3" data-act="weighAddLine">${ic('plus',15)}品目を追加</button>
-      ${hasDiff ? `<div class="mb-3"><label class="form-label">差異理由<span class="req">必須</span></label>
-        <select class="form-select" data-mod="diff_reason">${opts([
-          {v:'実測差（申告は目安）',t:'実測差（申告は目安）'},{v:'品目の相違',t:'品目の相違'},
-          {v:'積込時に追加発生分あり',t:'積込時に追加発生分あり'},{v:'異物混入',t:'異物混入'},{v:'その他',t:'その他'}], m.diff_reason)}</select></div>` : ''}
-      ${m.err ? `<div class="text-danger" style="font-size:13px">${esc(m.err)}</div>` : ''}`,
-    foot:`<button class="btn btn-outline-secondary" data-act="closeModal">キャンセル</button>
+      <label class="form-label">含まれていた品目<span class="req">必須</span></label>
+      ${itemChecks(linesOf(p.id), m.items, 'pi')}
+      <div class="mt-3"><label class="form-label">備考<span class="opt">任意</span></label>
+        <textarea class="form-control" rows="2" data-mod="memo" placeholder="荷姿、異物の混入、当日の状況など">${esc(m.memo)}</textarea></div>
+      ${m.err ? `<div class="text-danger mt-2" style="font-size:13px">${esc(m.err)}</div>` : ''}`,
+    foot:`<button class="btn btn-link btn-sm text-secondary me-auto p-0" style="font-size:12px" data-act="openRefuse" data-id="${p.id}">受入不可として記録</button>
+          <button class="btn btn-outline-secondary" data-act="closeModal">キャンセル</button>
           <button class="btn btn-primary" data-act="doWeigh" data-id="${p.id}">実績を確定する</button>`
   };
 };
 
 /* ---------- 飛び込み搬入 ---------- */
-var MODALS_SPOT = m => {
-  const net = Number(m.total_weight) - Number(m.car_weight);
-  return {
-    title:'飛び込み搬入の登録',
-    body:`<div class="row g-3">
-        <div class="col-12 col-md-6"><label class="form-label">取引先<span class="req">必須</span></label>
-          <select class="form-select" data-mod="company_id">${opts(o1(COMPANIES), m.company_id)}</select></div>
-        <div class="col-12 col-md-6"><label class="form-label">拠点<span class="req">必須</span></label>
-          <select class="form-select" data-mod="plant_id">${opts(o1(PLANTS.filter(p => p.is_delivery)), m.plant_id, false)}</select></div>
-        <div class="col-12 col-md-6"><label class="form-label">品目<span class="req">必須</span></label>
-          <select class="form-select" data-mod="item_id">${opts(o1(ITEMS), m.item_id)}</select></div>
-        <div class="col-6 col-md-3"><label class="form-label">数量<span class="req">必須</span></label>
-          <input type="text" inputmode="decimal" class="form-control" data-mod="qty" value="${esc(m.qty || '')}"></div>
-        <div class="col-6 col-md-3"><label class="form-label">単位<span class="req">必須</span></label>
-          <select class="form-select" data-mod="unit_id">${opts(o1(UNITS), m.unit_id)}</select></div>
-        <div class="col-12 col-md-6"><label class="form-label">車両ナンバー</label>
-          <input type="text" class="form-control" data-mod="car_number" value="${esc(m.car_number || '')}"></div>
-        <div class="col-6 col-md-3"><label class="form-label">総重量(kg)<span class="req">必須</span></label>
-          <input type="text" inputmode="numeric" class="form-control" data-mod="total_weight" data-rerender="1" value="${esc(m.total_weight || '')}"></div>
-        <div class="col-6 col-md-3"><label class="form-label">空車重量(kg)<span class="req">必須</span></label>
-          <input type="text" inputmode="numeric" class="form-control" data-mod="car_weight" data-rerender="1" value="${esc(m.car_weight || '')}"></div>
-        <div class="col-12">${kpi('正味重量', m.total_weight && m.car_weight ? num(net) + ' <small>kg</small>' : '—')}</div>
-      </div>
-      ${m.err ? `<div class="text-danger mt-2" style="font-size:13px">${esc(m.err)}</div>` : ''}`,
-    foot:`<button class="btn btn-outline-secondary" data-act="closeModal">キャンセル</button>
-          <button class="btn btn-primary" data-act="doSpot">実績として登録</button>`
-  };
-};
+var MODALS_SPOT = m => ({
+  title:'飛び込み搬入の登録',
+  body:`<div class="row g-3 mb-3">
+      <div class="col-12 col-md-6"><label class="form-label">取引先<span class="req">必須</span></label>
+        <select class="form-select" data-mod="company_id">${opts(COMPANIES.map(c => ({v:c.id, t:c.name})), m.company_id)}</select></div>
+      <div class="col-12 col-md-6"><label class="form-label">拠点<span class="req">必須</span></label>
+        <select class="form-select" data-mod="plant_id">${opts(o1(PLANTS.filter(x => x.is_delivery)), m.plant_id, false)}</select></div>
+      <div class="col-6 col-md-3"><label class="form-label">着車時間<span class="req">必須</span></label>
+        <input type="time" class="form-control" data-mod="arrived_at" value="${esc(m.arrived_at)}"></div>
+      <div class="col-6 col-md-4"><label class="form-label">正味重量（kg）<span class="req">必須</span></label>
+        <input type="text" inputmode="numeric" class="form-control" data-mod="weight" value="${esc(m.weight)}"></div>
+      <div class="col-12 col-md-5"><label class="form-label">車両ナンバー<span class="opt">任意</span></label>
+        <input type="text" class="form-control" data-mod="car_number" value="${esc(m.car_number)}"></div>
+    </div>
+    <label class="form-label">含まれていた品目<span class="req">必須</span></label>
+    ${itemChecks([], m.items, 'pi')}
+    <div class="mt-3"><label class="form-label">備考<span class="opt">任意</span></label>
+      <textarea class="form-control" rows="2" data-mod="memo">${esc(m.memo)}</textarea></div>
+    ${m.err ? `<div class="text-danger mt-2" style="font-size:13px">${esc(m.err)}</div>` : ''}`,
+  foot:`<button class="btn btn-outline-secondary" data-act="closeModal">キャンセル</button>
+        <button class="btn btn-primary" data-act="doSpot">実績として登録</button>`
+});
 
-/* ---------- 受入拒否・集荷不可 ---------- */
+/* ---------- 受入不可・集荷不可 ---------- */
 var MODALS_REFUSE = m => {
   const p = pk(m.id);
   return {
-    title:`${p.id} の${p.type === 'drop' ? '受入拒否' : '集荷不可'}を記録`,
+    title:`${p.id} を${p.type === 'drop' ? '受入不可' : '集荷不可'}として記録`,
     body:`<div class="mb-0"><label class="form-label">理由<span class="req">必須</span></label>
         <select class="form-select" data-mod="reason">${opts(
           (p.type === 'drop'
@@ -2268,6 +2249,10 @@ var MODALS_REFUSE = m => {
 /* =========================================================================
    実績一覧
    ========================================================================= */
+const diffRate = p => {
+  const dk = declaredKg(p.id);
+  return dk > 0 && p.diff != null ? Math.abs(p.diff) / dk : 0;
+};
 function filteredActuals() {
   const f = state.actuals;
   return PICKUPS.filter(p =>
@@ -2276,31 +2261,32 @@ function filteredActuals() {
     (!f.companyId || p.company_id === f.companyId) &&
     (!f.type || p.type === f.type) &&
     (!f.itemId || linesOf(p.id).some(l => l.item_id === f.itemId)) &&
-    (!f.diffOnly || (p.diff_reason && p.diff_reason !== ''))
+    (!f.diffOnly || diffRate(p) > 0.1)
   ).sort((a,b) => a.date === b.date ? (a.id < b.id ? 1 : -1) : (a.date < b.date ? 1 : -1));
 }
 
 function viewActuals() {
   const f = state.actuals, list = filteredActuals();
   const net = list.reduce((s,p) => s + (p.weight || 0), 0);
-  const diffs = list.filter(p => p.diff_reason).length;
+  const diffs = list.filter(p => diffRate(p) > 0.1).length;
 
-  const rows = list.slice(0, 200).map(p => `<tr class="clickable" data-act="openPickupDetail" data-id="${p.id}">
-      <td class="mono">${p.id}</td>
-      <td class="mono">${fmtMd(p.date)}</td>
+  const rows = list.slice(0, 200).map(p => {
+    const dk = declaredKg(p.id);
+    return `<tr class="clickable" data-act="openPickupDetail" data-id="${p.id}">
+      <td class="mono nowrap">${p.id}</td>
+      <td class="mono nowrap">${fmtMd(p.date)}</td>
       <td class="mono">${p.receipt_number ? 'No.' + p.receipt_number : '—'}</td>
       <td>${tBadge(p.type)}${p.via === '飛び込み' ? ' <span class="badge b-neutral b-sq">飛込</span>' : ''}</td>
       <td>${esc(company(p.company_id).name)}</td>
       <td class="nowrap" style="font-size:13px">${esc(plantShort(p.plant_id))}</td>
+      <td class="mono">${esc(p.arrived_at || '—')}</td>
       <td style="font-size:13px">${linesOf(p.id).map(l => esc(item(l.item_id).name)).join('／')}</td>
-      <td class="num">${linesOf(p.id).map(l => dec(l.qty) + unit(l.unit_id).name).join('／')}</td>
-      <td class="num">${linesOf(p.id).map(l => l.actual_qty != null ? dec(l.actual_qty) + unit(l.unit_id).name : '—').join('／')}</td>
-      <td class="num">${num(p.total_weight)}</td>
-      <td class="num">${num(p.car_weight)}</td>
+      <td class="num">${dk ? num(dk) : '—'}</td>
       <td class="num fw-bold">${num(p.weight)}</td>
-      <td class="num ${p.diff_reason ? 'text-danger' : ''}">${p.diff > 0 ? '+' : ''}${num(p.diff)}
-        ${p.diff_reason ? `<div class="text-secondary" style="font-size:11px">${esc(p.diff_reason)}</div>` : ''}</td>
-    </tr>`).join('');
+      <td class="num ${diffRate(p) > 0.1 ? 'text-danger' : ''}">${dk ? (p.diff > 0 ? '+' : '') + num(p.diff) : '—'}</td>
+      <td style="font-size:12px">${esc(p.weigh_memo || '')}</td>
+    </tr>`;
+  }).join('');
 
   return pageHead('実績一覧',
     `<button class="btn btn-outline-primary btn-sm" data-act="exportActuals">${ic('download')}CSV出力</button>`) +
@@ -2308,7 +2294,7 @@ function viewActuals() {
     <div class="col-6 col-lg-3">${kpi('実績件数', list.length + ' <small>件</small>')}</div>
     <div class="col-6 col-lg-3">${kpi('正味重量 合計', num(net) + ' <small>kg</small>', net >= 1000 ? `${dec(net/1000)} t` : '')}</div>
     <div class="col-6 col-lg-3">${kpi('1件あたり平均', list.length ? num(Math.round(net / list.length)) + ' <small>kg</small>' : '—')}</div>
-    <div class="col-6 col-lg-3">${kpi('差異の記録あり', diffs + ' <small>件</small>')}</div>
+    <div class="col-6 col-lg-3">${kpi('申告との差異 10%超', diffs + ' <small>件</small>')}</div>
   </div>
   <div class="filterbar">
     <div class="f"><label>開始日</label><input type="date" class="form-control form-control-sm" data-act="acFilter" data-key="from" value="${f.from}"></div>
@@ -2317,13 +2303,13 @@ function viewActuals() {
     <div class="f"><label>品目</label><select class="form-select form-select-sm" data-act="acFilter" data-key="itemId">${opts(o1(ITEMS), f.itemId, 'すべて')}</select></div>
     <div class="f"><label>区分</label><select class="form-select form-select-sm" data-act="acFilter" data-key="type">${opts([{v:'drop',t:'持込'},{v:'pickup',t:'引取'}], f.type, 'すべて')}</select></div>
     <div class="f align-self-end"><div class="form-check"><input class="form-check-input" type="checkbox" data-act="acFilter" data-key="diffOnly" ${f.diffOnly ? 'checked' : ''}>
-      <label class="form-check-label" style="font-size:13px">差異のある実績のみ</label></div></div>
+      <label class="form-check-label" style="font-size:13px">差異 10%超のみ</label></div></div>
   </div>
   <div class="table-wrap">
     <table class="table table-hover mb-0">
-      <thead><tr><th>受付番号</th><th>日付</th><th>伝票No</th><th>区分</th><th>取引先</th><th>拠点</th><th>品目</th>
-        <th class="num">申告</th><th class="num">実数</th><th class="num">総重量</th><th class="num">空車重量</th><th class="num">正味重量</th><th class="num">差異(kg)</th></tr></thead>
-      <tbody>${rows || `<tr><td colspan="13" class="text-center text-secondary py-4">該当する実績がありません</td></tr>`}</tbody>
+      <thead><tr><th>受付番号</th><th>日付</th><th>伝票No</th><th>区分</th><th>取引先</th><th>拠点</th><th>着車</th>
+        <th>品目</th><th class="num">申告(kg)</th><th class="num">正味重量(kg)</th><th class="num">差異(kg)</th><th>備考</th></tr></thead>
+      <tbody>${rows || `<tr><td colspan="12" class="text-center text-secondary py-4">該当する実績がありません</td></tr>`}</tbody>
     </table>
   </div>
   ${list.length > 200 ? `<p class="hint mt-2">先頭200件を表示（全 ${list.length} 件）。CSVは全件出力されます。</p>` : ''}`;
@@ -2338,49 +2324,57 @@ const INVITE_BASE = 'https://sanpai.example.jp/invite/';
 const randToken = () => Math.random().toString(36).slice(2,10) + Math.random().toString(36).slice(2,4);
 
 function viewCompanies() {
-  const rows = COMPANIES.map((c,i) => c.status === 'invited'
-    ? `<tr class="dim">
-        <td colspan="5" style="font-size:13px">未登録（登録用URL発行済　${esc(c.invited_at)}）</td>
-        <td><span class="badge b-pending">招待中</span></td>
-        <td class="text-end text-nowrap">
-          <button class="btn btn-outline-primary btn-sm" data-act="showInvite" data-id="${c.id}">${ic('link',14)}登録用URL</button>
-          <button class="btn btn-outline-danger btn-sm ms-1" data-act="delCompany" data-i="${i}">削除</button></td></tr>`
-    : `<tr>
-        <td><b>${esc(c.name)}</b><div class="text-secondary" style="font-size:11px">${esc(c.kana || '')}</div></td>
-        <td style="font-size:13px">${companyKind(c)}</td>
-        <td style="font-size:13px">${esc(c.contact || '—')}</td>
-        <td style="font-size:13px">${esc(c.email || '—')}<div class="text-secondary" style="font-size:11px">${esc(c.phone || '')}</div></td>
-        <td style="font-size:13px">${esc(c.invoice || '—')}</td>
-        <td><span class="badge b-approved">本登録済</span><div class="text-secondary" style="font-size:11px">${esc(c.registered_at || '')}</div></td>
-        <td class="text-end text-nowrap">
-          <button class="btn btn-outline-secondary btn-sm" data-act="editCompany" data-i="${i}">編集</button>
-          <button class="btn btn-outline-danger btn-sm ms-1" data-act="delCompany" data-i="${i}">削除</button></td></tr>`).join('');
+  const list = COMPANIES.filter(c => c.status === 'active');
+  const rows = list.map(c => {
+    const i = COMPANIES.indexOf(c);
+    return `<tr>
+      <td><b>${esc(c.name)}</b><div class="text-secondary" style="font-size:11px">${esc(c.kana || '')}</div></td>
+      <td style="font-size:13px">${companyKind(c)}</td>
+      <td style="font-size:13px">${esc(c.contact || '—')}</td>
+      <td style="font-size:13px">${esc(c.email || '—')}<div class="text-secondary" style="font-size:11px">${esc(c.phone || '')}</div></td>
+      <td style="font-size:13px">${esc(c.invoice || '—')}</td>
+      <td class="mono" style="font-size:12px">${esc(c.registered_at || '')}</td>
+      <td class="text-end text-nowrap">
+        <button class="btn btn-outline-secondary btn-sm" data-act="editCompany" data-i="${i}">編集</button>
+        <button class="btn btn-outline-danger btn-sm ms-1" data-act="delCompany" data-i="${i}">削除</button></td></tr>`;
+  }).join('');
+
+  const invites = INVITES.map(v => `<tr>
+      <td class="mono" style="font-size:12px">${esc(v.issued_at)}</td>
+      <td style="font-size:12px;word-break:break-all">${INVITE_BASE}${esc(v.token)}</td>
+      <td class="text-end text-nowrap">
+        <button class="btn btn-outline-secondary btn-sm" data-act="copyInvite" data-token="${esc(v.token)}">${ic('copy',14)}コピー</button>
+        <button class="btn btn-outline-secondary btn-sm ms-1 mockbtn" data-act="openInvitePage" data-token="${esc(v.token)}">登録画面</button>
+        <button class="btn btn-outline-danger btn-sm ms-1" data-act="delInvite" data-id="${v.id}">失効</button></td></tr>`).join('');
 
   return pageHead('取引先',
     `<button class="btn btn-primary btn-sm" data-act="newInvite">${ic('link',15)}登録用URLを発行</button>
      <button class="btn btn-outline-primary btn-sm" data-act="csvCompanies">${ic('download')}CSV出力</button>`) +
-  `<div class="table-wrap">
+  `<div class="table-wrap mb-4">
     <table class="table table-hover mb-0">
       <thead><tr><th style="width:24%">取引先名</th><th style="width:12%">区分</th><th style="width:12%">担当者</th>
-        <th style="width:20%">連絡先</th><th style="width:14%">インボイス登録番号</th><th style="width:10%">状態</th><th></th></tr></thead>
-      <tbody>${rows}</tbody>
+        <th style="width:20%">連絡先</th><th style="width:14%">インボイス登録番号</th><th style="width:10%">登録日時</th><th></th></tr></thead>
+      <tbody>${rows || `<tr><td colspan="7" class="text-center text-secondary py-4">登録済みの取引先はありません</td></tr>`}</tbody>
     </table>
-  </div>`;
+  </div>
+  ${INVITES.length ? `<div class="card">
+    <div class="card-head">${ic('link',16)}発行済みの登録用URL<span class="sub">取引先が本登録を完了すると上の一覧に追加されます</span></div>
+    <table class="table mb-0">
+      <thead><tr><th style="width:180px">発行日時</th><th>URL</th><th style="width:300px"></th></tr></thead>
+      <tbody>${invites}</tbody></table>
+  </div>` : ''}`;
 }
 
 /* ---------- 登録用URL ---------- */
-var MODALS_INVITE = m => {
-  const c = company(m.id);
-  return {
-    title:'登録用URL',
-    body:`<div class="urlbox"><code>${INVITE_BASE}${esc(c.token)}</code>
-        <button class="btn btn-outline-secondary btn-sm ms-auto text-nowrap" data-act="copyInvite" data-token="${esc(c.token)}">${ic('copy',14)}コピー</button></div>
-      <div class="d-flex gap-2 mt-3 flex-wrap">
-        <button class="btn btn-outline-primary btn-sm mockbtn" data-act="openInvitePage" data-token="${esc(c.token)}">${ic('login',15)}登録画面を開く</button>
-      </div>`,
-    foot:`<button class="btn btn-primary" data-act="closeModal">閉じる</button>`
-  };
-};
+var MODALS_INVITE = m => ({
+  title:'登録用URL',
+  body:`<div class="urlbox"><code>${INVITE_BASE}${esc(m.token)}</code>
+      <button class="btn btn-outline-secondary btn-sm ms-auto text-nowrap" data-act="copyInvite" data-token="${esc(m.token)}">${ic('copy',14)}コピー</button></div>
+    <div class="d-flex gap-2 mt-3 flex-wrap">
+      <button class="btn btn-outline-primary btn-sm mockbtn" data-act="openInvitePage" data-token="${esc(m.token)}">${ic('login',15)}登録画面を開く</button>
+    </div>`,
+  foot:`<button class="btn btn-primary" data-act="closeModal">閉じる</button>`
+});
 
 /* ---------- 取引先の編集 ---------- */
 var MODALS_COMPANY = m => {
@@ -2420,24 +2414,24 @@ var MODALS_COMPANY = m => {
    取引先の本登録画面　※本番では取引先側アプリの画面。モック用に同梱
    ========================================================================= */
 function viewInvite() {
-  const c = COMPANIES.find(x => x.token === state.invite.token);
-  if (!c) return `<div class="invitewrap"><div class="empty">この登録用URLは無効です。</div></div>`;
+  const f0 = state.invite.form;
+  if (state.invite.done) {
+    return `<div class="invitewrap">
+      <div class="card"><div class="card-body text-center p-4">
+        <div style="color:var(--success)">${ic('check',44)}</div>
+        <h1 style="font-size:22px;font-weight:700;margin:8px 0">登録が完了しました</h1>
+        <p class="mb-3">${esc(f0.email)} でログインできます。</p>
+        <div><button class="btn btn-outline-secondary btn-sm mockbtn" data-act="go" data-route="m_companies">処理業者側の管理画面に戻る</button></div>
+      </div></div></div>`;
+  }
+  const iv = INVITES.find(x => x.token === state.invite.token);
+  if (!iv) return `<div class="invitewrap"><div class="empty">この登録用URLは無効です。</div></div>`;
   if (!state.invite.form) state.invite.form = {
     name:'', kana:'', is_generator:true, is_transporter:false,
     contact:'', email:'', password:'', password2:'',
     phone:'', postalcode:'', pref:'', address:'', invoice:'', bank:'', errors:[]
   };
   const f = state.invite.form;
-  if (state.invite.done) {
-    return `<div class="invitewrap">
-      <div class="card"><div class="card-body text-center p-4">
-        <div style="color:var(--success)">${ic('check',44)}</div>
-        <h1 style="font-size:22px;font-weight:700;margin:8px 0">登録が完了しました</h1>
-        <p class="mb-3">${esc(f.email)} でログインできます。</p>
-        <a class="btn btn-primary" href="emitter-portal.html">排出者ポータルを開く</a>
-        <div class="mt-3"><button class="btn btn-outline-secondary btn-sm mockbtn" data-act="go" data-route="m_companies">処理業者側の管理画面に戻る</button></div>
-      </div></div></div>`;
-  }
   const err = f.errors.length ? `<div class="alert alert-danger"><b>入力内容を確認してください</b>
     <ul class="mb-0 mt-2">${f.errors.map(e => `<li>${esc(e)}</li>`).join('')}</ul></div>` : '';
   const fi = (k, label, type, ph, req) => `<label class="form-label">${label}${req ? '<span class="req">必須</span>' : '<span class="opt">任意</span>'}</label>
@@ -2470,7 +2464,7 @@ function viewInvite() {
         <div class="col-12 col-md-6">${fi('invoice','インボイス登録番号','text','')}</div>
         <div class="col-12 col-md-6">${fi('bank','振込先口座','text','')}</div>
       </div>
-      <button class="btn btn-primary w-100 mt-4" data-act="doInvite" data-token="${esc(c.token)}">この内容で登録する</button>
+      <button class="btn btn-primary w-100 mt-4" data-act="doInvite" data-token="${esc(iv.token)}">この内容で登録する</button>
     </div></div>
     <div class="text-center mt-3">
       <button class="btn btn-outline-secondary btn-sm mockbtn" data-act="go" data-route="m_companies">処理業者側の管理画面に戻る</button>
@@ -2710,6 +2704,13 @@ document.addEventListener('change', e => {
 function modBind(key, val) {
   const m = state.modal; if (!m) return;
   if (key.startsWith('row.')) { setPath(m.row, key.slice(4), val); return; }
+  if (key.startsWith('pi.')) {          /* 計量時の「含まれていた品目」 */
+    const id = key.slice(3);
+    m.items = m.items || [];
+    if (val) { if (!m.items.includes(id)) m.items.push(id); }
+    else m.items = m.items.filter(x => x !== id);
+    return;
+  }
   setPath(m, key, val);
 }
 
@@ -2898,52 +2899,47 @@ document.addEventListener('click', e => {
     }
 
     /* ---- 入場受付・計量 ---- */
-    case 'doArrive': {
-      const p = pk(d.id);
-      p.status = 'arrived'; p.arrived_at = nowHm();
-      p.receipt_number = nextReceiptNumber(p.plant_id, p.date);
-      toast(`${p.id} を入場受付しました（伝票 No.${p.receipt_number}）。`); render(); break;
-    }
-    case 'openWeigh': openModal('weigh', weighInit(d.id), 'modal-xl'); break;
-    case 'weighAddLine': m.lines.push({id:null, item_id:'', unit_id:'u2', qty:0, actual_qty:''}); renderModal(); break;
-    case 'weighRemoveLine': m.lines.splice(Number(d.idx), 1); renderModal(); break;
+    case 'openWeigh': openModal('weigh', weighInit(d.id), 'modal-lg'); break;
     case 'doWeigh': {
-      const p = pk(m.id);
-      const g = Number(m.total_weight), c = Number(m.car_weight);
-      if (m.total_weight === '' || m.car_weight === '' || isNaN(g) || isNaN(c)) { m.err = '総重量・空車重量を数字で入力してください。'; renderModal(); return; }
-      if (g <= c) { m.err = '総重量は空車重量より大きい値を入力してください。'; renderModal(); return; }
-      if (m.lines.some(l => !l.item_id || !l.unit_id || l.actual_qty === '' || isNaN(Number(l.actual_qty)) || Number(l.actual_qty) <= 0)) {
-        m.err = '実数量は品目ごとに正の数で入力してください。'; renderModal(); return;
-      }
-      const net = g - c, dk = declaredKg(p.id);
-      const hasDiff = dk > 0 && Math.abs(net - dk) / dk > 0.1;
-      if (hasDiff && !m.diff_reason) { m.err = '差異理由を選択してください。'; renderModal(); return; }
+      const p = pk(m.id), w = Number(m.weight);
+      if (!m.arrived_at) { m.err = '着車時間を入力してください。'; renderModal(); return; }
+      if (m.weight === '' || isNaN(w) || w <= 0) { m.err = '正味重量を数字で入力してください。'; renderModal(); return; }
+      if (!m.items.length) { m.err = '含まれていた品目を1つ以上選んでください。'; renderModal(); return; }
+      const dk = declaredKg(p.id);
+      const before = linesOf(p.id);
       PICKUP_ITEMS = PICKUP_ITEMS.filter(l => l.pickup_id !== p.id);
-      m.lines.forEach(l => PICKUP_ITEMS.push({id:l.id || 'pi' + (++_pi), pickup_id:p.id,
-        item_id:l.item_id, unit_id:l.unit_id, qty:Number(l.qty) || 0, actual_qty:Number(l.actual_qty)}));
-      Object.assign(p, {status:'done', total_weight:g, car_weight:c, weight:net,
-        diff: dk ? net - dk : 0, diff_reason: m.diff_reason || ''});
-      closeModal(); toast(`${p.id} の実績を確定しました（正味 ${num(net)} kg）。`); render(); break;
+      m.items.forEach(id => {
+        const old = before.find(l => l.item_id === id);
+        PICKUP_ITEMS.push(old || {id:'pi' + (++_pi), pickup_id:p.id, item_id:id, unit_id:'u2', qty:null});
+      });
+      Object.assign(p, {status:'done', arrived_at:m.arrived_at, weight:w,
+        diff: dk ? w - dk : 0, weigh_memo:m.memo || '',
+        receipt_number: p.receipt_number || nextReceiptNumber(p.plant_id, p.date)});
+      closeModal();
+      toast(`${p.id} の実績を確定しました（正味 ${num(w)} kg／伝票 No.${p.receipt_number}）。`);
+      render(); break;
     }
     case 'openSpot': openModal('spot', {company_id:'', plant_id:PLANTS.filter(p => p.is_delivery)[0].id,
-      item_id:'', qty:'', unit_id:'u2', car_number:'', total_weight:'', car_weight:''}); break;
+      items:[], car_number:'', weight:'', arrived_at:nowHm(), memo:''}); break;
     case 'doSpot': {
-      if (!m.company_id || !m.item_id || !m.unit_id || !String(m.qty).trim()) { m.err = '取引先・品目・数量・単位を入力してください。'; renderModal(); return; }
-      const g = Number(m.total_weight), c = Number(m.car_weight);
-      if (!m.total_weight || !m.car_weight || isNaN(g) || isNaN(c) || g <= c) { m.err = '総重量・空車重量を確認してください。'; renderModal(); return; }
-      const id = nextPickupNo(), net = g - c;
+      const w = Number(m.weight);
+      if (!m.company_id) { m.err = '取引先を選択してください。'; renderModal(); return; }
+      if (m.weight === '' || isNaN(w) || w <= 0) { m.err = '正味重量を数字で入力してください。'; renderModal(); return; }
+      if (!m.items.length) { m.err = '含まれていた品目を1つ以上選んでください。'; renderModal(); return; }
+      const id = nextPickupNo();
       PICKUPS.unshift({id, type:'drop', status:'done', company_id:m.company_id, plant_id:m.plant_id,
-        date:D(0), begin_time:nowHm(), end_time:nowHm(),
+        date:D(0), begin_time:m.arrived_at, end_time:m.arrived_at,
         car_number:m.car_number || '', driver_name:'', driver_tel:'',
         applied_at:`${D(0)} ${nowHm()}`, via:'飛び込み',
         approved_at:`${D(0)} ${nowHm()}`, approved_by:`${ME.role} ${ME.name.split(' ')[0]}`,
-        arrived_at:nowHm(), receipt_number:nextReceiptNumber(m.plant_id, D(0)),
-        total_weight:g, car_weight:c, weight:net, diff:0, diff_reason:'飛び込み搬入（予約なし）'});
-      PICKUP_ITEMS.push({id:'pi' + (++_pi), pickup_id:id, item_id:m.item_id, unit_id:m.unit_id,
-        qty:Number(m.qty), actual_qty:Number(m.qty)});
-      closeModal(); toast(`飛び込み搬入 ${id} を実績登録しました。`); render(); break;
+        arrived_at:m.arrived_at, receipt_number:nextReceiptNumber(m.plant_id, D(0)),
+        weight:w, diff:0, weigh_memo:m.memo || ''});
+      m.items.forEach(it => PICKUP_ITEMS.push({id:'pi' + (++_pi), pickup_id:id, item_id:it, unit_id:'u2', qty:null}));
+      closeModal();
+      toast(`飛び込み搬入 ${id} を実績登録しました。`);
+      render(); break;
     }
-    case 'openRefuse': openModal('refuse', {id:d.id, reason:''}, 'modal-md'); break;
+    case 'openRefuse': closeModal(); setTimeout(() => openModal('refuse', {id:d.id, reason:''}, 'modal-md'), 250); break;
     case 'doRefuse': {
       if (!m.reason) { m.err = '理由を選択してください。'; renderModal(); return; }
       const p = pk(m.id);
@@ -2953,28 +2949,28 @@ document.addEventListener('click', e => {
 
     /* ---- 実績一覧 ---- */
     case 'exportActuals': {
-      const rows = [['受付番号','日付','伝票番号','区分','取引先','拠点','品目','申告数量','単位','実数量','総重量kg','空車重量kg','正味重量kg','差異kg','差異理由','入場時刻']];
-      filteredActuals().forEach(p => linesOf(p.id).forEach(l => rows.push([
+      const rows = [['受付番号','日付','伝票番号','区分','取引先','拠点','着車時間','品目','申告(kg)','正味重量(kg)','差異(kg)','備考']];
+      filteredActuals().forEach(p => rows.push([
         p.id, p.date, p.receipt_number || '', typeLabel(p.type), company(p.company_id).name, plant(p.plant_id).name,
-        item(l.item_id).name, l.qty, unit(l.unit_id).name, l.actual_qty != null ? l.actual_qty : '',
-        p.total_weight, p.car_weight, p.weight, p.diff, p.diff_reason || '', p.arrived_at || ''])));
+        p.arrived_at || '', linesOf(p.id).map(l => item(l.item_id).name).join('／'),
+        declaredKg(p.id) || '', p.weight, p.diff, p.weigh_memo || '']));
       downloadCsv(`実績一覧_${state.actuals.from}_${state.actuals.to}.csv`, rows);
       toast(`実績 ${filteredActuals().length} 件をCSV出力しました。`); break;
     }
 
     /* ---- 取引先マスタ ---- */
     case 'newInvite': {
-      let n = COMPANIES.length + 1;
-      while (COMPANIES.find(x => x.id === 'c' + n)) n++;
-      const c = {id:'c' + n, name:'', kana:'', is_generator:false, is_transporter:false,
-        postalcode:'', pref:'', address:'', phone:'', email:'', contact:'',
-        invoice:'', bank:'', credit:'',
-        status:'invited', token:randToken(), invited_at:`${D(0)} ${nowHm()}`, registered_at:null};
-      COMPANIES.push(c);
-      openModal('invite', {id:c.id}, 'modal-md');
+      const v = {id:'iv' + Date.now().toString(36), token:randToken(), issued_at:`${D(0)} ${nowHm()}`};
+      INVITES.push(v);
+      openModal('invite', {token:v.token}, 'modal-md');
       break;
     }
-    case 'showInvite': openModal('invite', {id:d.id}, 'modal-md'); break;
+    case 'showInvite': openModal('invite', {token:d.token}, 'modal-md'); break;
+    case 'delInvite': {
+      if (!confirm('この登録用URLを失効させます。よろしいですか？')) return;
+      INVITES = INVITES.filter(x => x.id !== d.id);
+      toast('登録用URLを失効しました。', 'warn'); render(); break;
+    }
     case 'copyInvite': {
       const url = INVITE_BASE + d.token;
       if (navigator.clipboard) navigator.clipboard.writeText(url).catch(() => {});
@@ -2985,7 +2981,7 @@ document.addEventListener('click', e => {
       state.invite = {token:d.token, form:null, done:false};
       go('invite'); break;
     case 'doInvite': {
-      const c = COMPANIES.find(x => x.token === d.token), f = state.invite.form, e2 = [];
+      const iv = INVITES.find(x => x.token === d.token), f = state.invite.form, e2 = [];
       if (!f.name.trim()) e2.push('会社名を入力してください。');
       if (!f.is_generator && !f.is_transporter) e2.push('区分を1つ以上選択してください。');
       if (!f.contact.trim()) e2.push('ご担当者名を入力してください。');
@@ -2996,11 +2992,16 @@ document.addEventListener('click', e => {
       if (f.password !== f.password2) e2.push('パスワード（確認）が一致しません。');
       f.errors = e2;
       if (e2.length) { render(); return; }
-      Object.assign(c, {status:'active', name:f.name.trim(), kana:f.kana,
+      let n = COMPANIES.length + 1;
+      while (COMPANIES.find(x => x.id === 'c' + n)) n++;
+      COMPANIES.push({id:'c' + n, name:f.name.trim(), kana:f.kana,
         is_generator:!!f.is_generator, is_transporter:!!f.is_transporter,
         contact:f.contact, email:f.email, phone:f.phone,
-        postalcode:f.postalcode, pref:f.pref, address:f.address, invoice:f.invoice, bank:f.bank,
-        registered_at:`${D(0)} ${nowHm()}`});
+        postalcode:f.postalcode, pref:f.pref, address:f.address,
+        invoice:f.invoice, bank:f.bank, credit:'',
+        status:'active', token:iv.token,
+        invited_at:iv.issued_at, registered_at:`${D(0)} ${nowHm()}`});
+      INVITES = INVITES.filter(x => x.id !== iv.id);
       state.invite.done = true;
       toast('本登録が完了しました。');
       render(); break;
@@ -3018,10 +3019,10 @@ document.addEventListener('click', e => {
       toast('削除しました。', 'warn'); render(); break;
     }
     case 'csvCompanies': {
-      const rows = [['取引先名','フリガナ','排出事業者','運搬業者','担当者','メールアドレス','電話番号','郵便番号','都道府県','住所','インボイス登録番号','振込先口座','与信区分','状態','招待日時','登録日時']];
-      COMPANIES.forEach(c => rows.push([c.name, c.kana, c.is_generator ? '○' : '', c.is_transporter ? '○' : '',
+      const rows = [['取引先名','フリガナ','排出事業者','運搬業者','担当者','メールアドレス','電話番号','郵便番号','都道府県','住所','インボイス登録番号','振込先口座','与信区分','URL発行日時','登録日時']];
+      COMPANIES.filter(c => c.status === 'active').forEach(c => rows.push([c.name, c.kana, c.is_generator ? '○' : '', c.is_transporter ? '○' : '',
         c.contact, c.email, c.phone, c.postalcode, c.pref, c.address, c.invoice, c.bank, c.credit,
-        c.status === 'active' ? '本登録済' : '招待中', c.invited_at || '', c.registered_at || '']));
+        c.invited_at || '', c.registered_at || '']));
       downloadCsv('取引先マスタ.csv', rows);
       toast('CSVを出力しました。'); break;
     }

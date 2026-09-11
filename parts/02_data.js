@@ -81,11 +81,6 @@ let COMPANIES = [
    invoice:'T3456789012345', bank:'埼玉りそな銀行 浦和支店 普通 3456789',
    credit:'A',
    status:'active', token:'c3d4e5f6g7', invited_at:'2026-04-05 11:00', registered_at:'2026-04-06 08:45'},
-  /* 招待中：登録用URLを発行しただけの状態。社名を含め取引先が本登録で入力する */
-  {id:'c4', name:'', kana:'', is_generator:false, is_transporter:false,
-   postalcode:'', pref:'', address:'', phone:'', email:'', contact:'',
-   invoice:'', bank:'', credit:'',
-   status:'invited', token:'d4e5f6g7h8', invited_at:D(-1)+' 16:30', registered_at:null},
   {id:'c5', name:'武蔵野解体株式会社', kana:'ムサシノカイタイカブシキガイシャ',
    is_generator:true, is_transporter:false,
    postalcode:'338-0001', pref:'埼玉県', address:'さいたま市中央区上落合0-0-0',
@@ -93,6 +88,11 @@ let COMPANIES = [
    invoice:'T5678901234567', bank:'りそな銀行 与野支店 普通 5678901',
    credit:'B',
    status:'active', token:'e5f6g7h8i9', invited_at:'2026-08-01 09:00', registered_at:'2026-08-01 17:30'}
+];
+
+/* 発行済みの登録用URL（取引先が本登録すると COMPANIES に移る） */
+let INVITES = [
+  {id:'iv1', token:'d4e5f6g7h8', issued_at:D(-1)+' 16:30'}
 ];
 
 /* =========================================================================
@@ -118,7 +118,7 @@ let UNITS = [
    pickups：予約・依頼　/　pickup_items：予約明細
    type      … drop（持込）/ pickup（引取）
    status    … pending 申請中 / approved 承認済 / rejected 差戻し
-                arrived 入場受付済 / done 実績記録済 / canceled 取消
+                done 計量済 / canceled 取消
    ※受付番号は排出元ポータルの仕様に合わせ「申請時」に採番する
      （ER図の receipt_number は当日の計量伝票番号として入場受付時に採番）
    ========================================================================= */
@@ -191,14 +191,14 @@ addPickup({id:'R-2026-0164', type:'drop', status:'done', company_id:'c1', plant_
   applied_at:B(-2)+' 14:00', via:'取引先ポータル',
   approved_at:B(-2)+' 15:10', approved_by:'受入担当 田中',
   arrived_at:'09:12', receipt_number:1,
-  total_weight:6120, car_weight:2480, weight:3640, diff:2240, diff_reason:'積込時に追加発生分あり'},
-  [{item_id:'i1', unit_id:'u2', qty:1.4, actual_qty:3.64}]);
+  weight:3640, diff:2240, weigh_memo:'フレコン内に金属片の混入あり'},
+  [{item_id:'i1', unit_id:'u2', qty:1.4}]);
 
-addPickup({id:'R-2026-0165', type:'drop', status:'arrived', company_id:'c3', plant_id:'pl1',
+addPickup({id:'R-2026-0165', type:'drop', status:'approved', company_id:'c3', plant_id:'pl1',
   date:D(0), begin_time:'09:00', end_time:'12:00',
   car_number:'大宮 100 き 11-22', driver_name:'伊藤 大輔', driver_tel:'090-3333-3333',
   applied_at:B(-2)+' 16:20', via:'取引先ポータル',
-  approved_at:B(-2)+' 17:00', approved_by:'受入担当 田中', arrived_at:'10:48', receipt_number:2},
+  approved_at:B(-2)+' 17:00', approved_by:'受入担当 田中'},
   [{item_id:'i4', unit_id:'u2', qty:5.0}]);
 
 addPickup({id:'R-2026-0166', type:'drop', status:'approved', company_id:'c5', plant_id:'pl1',
@@ -263,7 +263,6 @@ const round2 = n => Math.round(n*100)/100;
       const type = rnd() < 0.3 && pl.is_pickup ? 'pickup' : 'drop';
       const slot = pick(pl.slots);
       const qty = round2(0.4 + rnd()*4);
-      const car = 2400 + Math.round(rnd()*600);
       const net = Math.max(120, Math.round(qty * 1000 * (0.85 + rnd()*0.4)));
       const id = 'R-2026-' + pad(no++);
       addPickup({id, type, status:'done', company_id:co.id, plant_id:pl.id,
@@ -274,11 +273,8 @@ const round2 = n => Math.round(n*100)/100;
         applied_at:D(-k-2)+' 10:00', via:'取引先ポータル',
         approved_at:D(-k-2)+' 11:00', approved_by:'受入担当 田中',
         arrived_at:pad(9+Math.floor(rnd()*6))+':'+pad(Math.floor(rnd()*6)*10),
-        receipt_number:j+1,
-        total_weight:car+net, car_weight:car, weight:net,
-        diff: net - Math.round(qty*1000),
-        diff_reason: Math.abs(net - qty*1000) / Math.max(qty*1000,1) > 0.25 ? '実測差（申告は目安）' : ''},
-        [{item_id:it.id, unit_id:'u2', qty, actual_qty:round2(net/1000)}]);
+        receipt_number:j+1, weight:net, diff: net - Math.round(qty*1000), weigh_memo:''},
+        [{item_id:it.id, unit_id:'u2', qty}]);
     }
   }
 })();

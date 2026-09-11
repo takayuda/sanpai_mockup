@@ -21,7 +21,7 @@ function boardRow(p) {
     <td class="mono" style="font-size:13px">${esc(p.car_number || '—')}</td>
     <td style="font-size:13px">${esc(p.driver_name || '—')}</td>
     <td style="font-size:12px">${esc((isDrop ? p.note : p.dispatch_note) || '—')}</td>
-    <td>${stBadge(p.status)}${p.arrived_at ? `<div class="text-secondary" style="font-size:11px">入場 ${esc(p.arrived_at)}</div>` : ''}</td>
+    <td>${stBadge(p.status)}${p.arrived_at ? `<div class="text-secondary" style="font-size:11px">着車 ${esc(p.arrived_at)}</div>` : ''}</td>
     <td class="text-end text-nowrap">
       <button class="btn btn-outline-secondary btn-sm" data-act="openPickupDetail" data-id="${p.id}">詳細</button>
       ${p.status === 'approved' ? `<button class="btn btn-outline-primary btn-sm ms-1" data-act="${isDrop ? 'openChangeSlot' : 'openChangeVisit'}" data-id="${p.id}">${isDrop ? '枠変更' : '日時変更'}</button>

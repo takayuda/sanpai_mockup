@@ -34,7 +34,6 @@ const STATUS = {
   pending:  {t:'申請中', c:'b-pending'},
   approved: {t:'承認済', c:'b-approved'},
   rejected: {t:'差戻し', c:'b-rejected'},
-  arrived:  {t:'入場済', c:'b-dark'},
   done:     {t:'計量済', c:'b-neutral'},
   canceled: {t:'取消',   c:'b-neutral'}
 };
@@ -76,7 +75,7 @@ const NAV = [
     {route:'hours',     label:'受付時間・休業日', ico:'clock'}
   ]},
   {sec:'実績', items:[
-    {route:'reception', label:'入場受付・計量', ico:'truck'},
+    {route:'reception', label:'計量入力',       ico:'truck'},
     {route:'actuals',   label:'実績一覧',       ico:'chart'}
   ]},
   {sec:'マスタ', items:[

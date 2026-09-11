@@ -8,49 +8,57 @@ const INVITE_BASE = 'https://sanpai.example.jp/invite/';
 const randToken = () => Math.random().toString(36).slice(2,10) + Math.random().toString(36).slice(2,4);
 
 function viewCompanies() {
-  const rows = COMPANIES.map((c,i) => c.status === 'invited'
-    ? `<tr class="dim">
-        <td colspan="5" style="font-size:13px">未登録（登録用URL発行済　${esc(c.invited_at)}）</td>
-        <td><span class="badge b-pending">招待中</span></td>
-        <td class="text-end text-nowrap">
-          <button class="btn btn-outline-primary btn-sm" data-act="showInvite" data-id="${c.id}">${ic('link',14)}登録用URL</button>
-          <button class="btn btn-outline-danger btn-sm ms-1" data-act="delCompany" data-i="${i}">削除</button></td></tr>`
-    : `<tr>
-        <td><b>${esc(c.name)}</b><div class="text-secondary" style="font-size:11px">${esc(c.kana || '')}</div></td>
-        <td style="font-size:13px">${companyKind(c)}</td>
-        <td style="font-size:13px">${esc(c.contact || '—')}</td>
-        <td style="font-size:13px">${esc(c.email || '—')}<div class="text-secondary" style="font-size:11px">${esc(c.phone || '')}</div></td>
-        <td style="font-size:13px">${esc(c.invoice || '—')}</td>
-        <td><span class="badge b-approved">本登録済</span><div class="text-secondary" style="font-size:11px">${esc(c.registered_at || '')}</div></td>
-        <td class="text-end text-nowrap">
-          <button class="btn btn-outline-secondary btn-sm" data-act="editCompany" data-i="${i}">編集</button>
-          <button class="btn btn-outline-danger btn-sm ms-1" data-act="delCompany" data-i="${i}">削除</button></td></tr>`).join('');
+  const list = COMPANIES.filter(c => c.status === 'active');
+  const rows = list.map(c => {
+    const i = COMPANIES.indexOf(c);
+    return `<tr>
+      <td><b>${esc(c.name)}</b><div class="text-secondary" style="font-size:11px">${esc(c.kana || '')}</div></td>
+      <td style="font-size:13px">${companyKind(c)}</td>
+      <td style="font-size:13px">${esc(c.contact || '—')}</td>
+      <td style="font-size:13px">${esc(c.email || '—')}<div class="text-secondary" style="font-size:11px">${esc(c.phone || '')}</div></td>
+      <td style="font-size:13px">${esc(c.invoice || '—')}</td>
+      <td class="mono" style="font-size:12px">${esc(c.registered_at || '')}</td>
+      <td class="text-end text-nowrap">
+        <button class="btn btn-outline-secondary btn-sm" data-act="editCompany" data-i="${i}">編集</button>
+        <button class="btn btn-outline-danger btn-sm ms-1" data-act="delCompany" data-i="${i}">削除</button></td></tr>`;
+  }).join('');
+
+  const invites = INVITES.map(v => `<tr>
+      <td class="mono" style="font-size:12px">${esc(v.issued_at)}</td>
+      <td style="font-size:12px;word-break:break-all">${INVITE_BASE}${esc(v.token)}</td>
+      <td class="text-end text-nowrap">
+        <button class="btn btn-outline-secondary btn-sm" data-act="copyInvite" data-token="${esc(v.token)}">${ic('copy',14)}コピー</button>
+        <button class="btn btn-outline-secondary btn-sm ms-1 mockbtn" data-act="openInvitePage" data-token="${esc(v.token)}">登録画面</button>
+        <button class="btn btn-outline-danger btn-sm ms-1" data-act="delInvite" data-id="${v.id}">失効</button></td></tr>`).join('');
 
   return pageHead('取引先',
     `<button class="btn btn-primary btn-sm" data-act="newInvite">${ic('link',15)}登録用URLを発行</button>
      <button class="btn btn-outline-primary btn-sm" data-act="csvCompanies">${ic('download')}CSV出力</button>`) +
-  `<div class="table-wrap">
+  `<div class="table-wrap mb-4">
     <table class="table table-hover mb-0">
       <thead><tr><th style="width:24%">取引先名</th><th style="width:12%">区分</th><th style="width:12%">担当者</th>
-        <th style="width:20%">連絡先</th><th style="width:14%">インボイス登録番号</th><th style="width:10%">状態</th><th></th></tr></thead>
-      <tbody>${rows}</tbody>
+        <th style="width:20%">連絡先</th><th style="width:14%">インボイス登録番号</th><th style="width:10%">登録日時</th><th></th></tr></thead>
+      <tbody>${rows || `<tr><td colspan="7" class="text-center text-secondary py-4">登録済みの取引先はありません</td></tr>`}</tbody>
     </table>
-  </div>`;
+  </div>
+  ${INVITES.length ? `<div class="card">
+    <div class="card-head">${ic('link',16)}発行済みの登録用URL<span class="sub">取引先が本登録を完了すると上の一覧に追加されます</span></div>
+    <table class="table mb-0">
+      <thead><tr><th style="width:180px">発行日時</th><th>URL</th><th style="width:300px"></th></tr></thead>
+      <tbody>${invites}</tbody></table>
+  </div>` : ''}`;
 }
 
 /* ---------- 登録用URL ---------- */
-var MODALS_INVITE = m => {
-  const c = company(m.id);
-  return {
-    title:'登録用URL',
-    body:`<div class="urlbox"><code>${INVITE_BASE}${esc(c.token)}</code>
-        <button class="btn btn-outline-secondary btn-sm ms-auto text-nowrap" data-act="copyInvite" data-token="${esc(c.token)}">${ic('copy',14)}コピー</button></div>
-      <div class="d-flex gap-2 mt-3 flex-wrap">
-        <button class="btn btn-outline-primary btn-sm mockbtn" data-act="openInvitePage" data-token="${esc(c.token)}">${ic('login',15)}登録画面を開く</button>
-      </div>`,
-    foot:`<button class="btn btn-primary" data-act="closeModal">閉じる</button>`
-  };
-};
+var MODALS_INVITE = m => ({
+  title:'登録用URL',
+  body:`<div class="urlbox"><code>${INVITE_BASE}${esc(m.token)}</code>
+      <button class="btn btn-outline-secondary btn-sm ms-auto text-nowrap" data-act="copyInvite" data-token="${esc(m.token)}">${ic('copy',14)}コピー</button></div>
+    <div class="d-flex gap-2 mt-3 flex-wrap">
+      <button class="btn btn-outline-primary btn-sm mockbtn" data-act="openInvitePage" data-token="${esc(m.token)}">${ic('login',15)}登録画面を開く</button>
+    </div>`,
+  foot:`<button class="btn btn-primary" data-act="closeModal">閉じる</button>`
+});
 
 /* ---------- 取引先の編集 ---------- */
 var MODALS_COMPANY = m => {
@@ -90,24 +98,24 @@ var MODALS_COMPANY = m => {
    取引先の本登録画面　※本番では取引先側アプリの画面。モック用に同梱
    ========================================================================= */
 function viewInvite() {
-  const c = COMPANIES.find(x => x.token === state.invite.token);
-  if (!c) return `<div class="invitewrap"><div class="empty">この登録用URLは無効です。</div></div>`;
+  const f0 = state.invite.form;
+  if (state.invite.done) {
+    return `<div class="invitewrap">
+      <div class="card"><div class="card-body text-center p-4">
+        <div style="color:var(--success)">${ic('check',44)}</div>
+        <h1 style="font-size:22px;font-weight:700;margin:8px 0">登録が完了しました</h1>
+        <p class="mb-3">${esc(f0.email)} でログインできます。</p>
+        <div><button class="btn btn-outline-secondary btn-sm mockbtn" data-act="go" data-route="m_companies">処理業者側の管理画面に戻る</button></div>
+      </div></div></div>`;
+  }
+  const iv = INVITES.find(x => x.token === state.invite.token);
+  if (!iv) return `<div class="invitewrap"><div class="empty">この登録用URLは無効です。</div></div>`;
   if (!state.invite.form) state.invite.form = {
     name:'', kana:'', is_generator:true, is_transporter:false,
     contact:'', email:'', password:'', password2:'',
     phone:'', postalcode:'', pref:'', address:'', invoice:'', bank:'', errors:[]
   };
   const f = state.invite.form;
-  if (state.invite.done) {
-    return `<div class="invitewrap">
-      <div class="card"><div class="card-body text-center p-4">
-        <div style="color:var(--success)">${ic('check',44)}</div>
-        <h1 style="font-size:22px;font-weight:700;margin:8px 0">登録が完了しました</h1>
-        <p class="mb-3">${esc(f.email)} でログインできます。</p>
-        <a class="btn btn-primary" href="emitter-portal.html">排出者ポータルを開く</a>
-        <div class="mt-3"><button class="btn btn-outline-secondary btn-sm mockbtn" data-act="go" data-route="m_companies">処理業者側の管理画面に戻る</button></div>
-      </div></div></div>`;
-  }
   const err = f.errors.length ? `<div class="alert alert-danger"><b>入力内容を確認してください</b>
     <ul class="mb-0 mt-2">${f.errors.map(e => `<li>${esc(e)}</li>`).join('')}</ul></div>` : '';
   const fi = (k, label, type, ph, req) => `<label class="form-label">${label}${req ? '<span class="req">必須</span>' : '<span class="opt">任意</span>'}</label>
@@ -140,7 +148,7 @@ function viewInvite() {
         <div class="col-12 col-md-6">${fi('invoice','インボイス登録番号','text','')}</div>
         <div class="col-12 col-md-6">${fi('bank','振込先口座','text','')}</div>
       </div>
-      <button class="btn btn-primary w-100 mt-4" data-act="doInvite" data-token="${esc(c.token)}">この内容で登録する</button>
+      <button class="btn btn-primary w-100 mt-4" data-act="doInvite" data-token="${esc(iv.token)}">この内容で登録する</button>
     </div></div>
     <div class="text-center mt-3">
       <button class="btn btn-outline-secondary btn-sm mockbtn" data-act="go" data-route="m_companies">処理業者側の管理画面に戻る</button>

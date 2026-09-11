@@ -187,16 +187,17 @@ var MODALS_PICKUP = m => {
   ];
   if (p.type === 'drop') rows.push(['車両ナンバー', esc(p.car_number)], ['ドライバー', `${esc(p.driver_name)}（${esc(p.driver_tel)}）`]);
   linesOf(p.id).forEach((l,i) => rows.push([`品目 ${i+1}`,
-    `${esc(item(l.item_id).name)}　申告 ${dec(l.qty)} ${esc(unit(l.unit_id).name)}${l.actual_qty != null ? `　実数 ${dec(l.actual_qty)} ${esc(unit(l.unit_id).name)}` : ''}`]));
+    `${esc(item(l.item_id).name)}${l.qty != null ? `　申告 ${dec(l.qty)} ${esc(unit(l.unit_id).name)}` : '　<span class="text-secondary">（申告になし）</span>'}`]));
   if (p.note) rows.push(['連絡事項', esc(p.note)]);
   if (p.approved_at) rows.push(['承認', `${esc(p.approved_at)}／${esc(p.approved_by)}`]);
   if (p.dispatch_note) rows.push(['集荷手配メモ', esc(p.dispatch_note)]);
   if (p.reject_reason) rows.push(['変更依頼の理由', `${esc(p.reject_reason)}<div class="text-secondary" style="font-size:12px">${esc(p.rejected_at || '')}</div>`]);
   if (p.cancel_reason) rows.push(['取消理由', esc(p.cancel_reason)]);
-  if (p.arrived_at) rows.push(['入場時刻', `${esc(p.arrived_at)}　伝票番号 No.${p.receipt_number}`]);
+  if (p.arrived_at) rows.push(['着車時間', `${esc(p.arrived_at)}${p.receipt_number ? `　伝票番号 No.${p.receipt_number}` : ''}`]);
   if (p.weight != null) rows.push(
-    ['総重量', kg(p.total_weight)], ['空車重量', kg(p.car_weight)], ['正味重量', `<b>${kg(p.weight)}</b>`],
-    ['申告との差異', `${p.diff > 0 ? '+' : ''}${num(p.diff)} kg${p.diff_reason ? '／' + esc(p.diff_reason) : ''}`]);
+    ['正味重量', `<b>${kg(p.weight)}</b>`],
+    ['申告との差異', `${p.diff > 0 ? '+' : ''}${num(p.diff)} kg`]);
+  if (p.weigh_memo) rows.push(['計量時の備考', esc(p.weigh_memo)]);
   return {
     title:`予約詳細 ${p.id}`,
     body: dl(rows),
