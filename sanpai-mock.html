@@ -189,40 +189,27 @@ body.invite-mode .topbar .brand span{color:#C9D2FF;}
   .sidebar.open{transform:none;box-shadow:0 0 0 100vw rgba(0,0,0,.4);}
   .content{padding:calc(var(--topbar-h) + 16px) 14px 64px;}
 }
+
+/* 画面一覧のカード */
+.portal-card{display:flex;gap:12px;align-items:flex-start;background:var(--white);border:1px solid var(--line);
+  border-radius:var(--radius);padding:16px;text-decoration:none;color:var(--ink);height:100%;}
+.portal-card:hover{border-color:var(--blue-800);background:var(--blue-100);}
+.portal-card .ico{color:var(--blue-800);flex:none;margin-top:2px;}
+.portal-card b{display:block;font-size:15px;}
+.portal-card small{display:block;font-size:12px;color:var(--ink-sub);line-height:1.5;margin-top:2px;}
+
+/* 単一ファイル版：排出者ポータルを枠内に表示する */
+.emitframe-inline{width:100%;height:calc(100vh - var(--topbar-h) - 60px);border:1px solid var(--line);
+  border-radius:var(--radius);background:var(--white);}
+
 </style>
 </head>
 <body>
-
-<header class="topbar">
-  <button class="btn btn-outline-secondary btn-sm btn-icon d-lg-none" data-act="toggleNav" aria-label="メニュー" id="elMenuBtn"></button>
-  <div class="brand">産廃予約管理システム<span>株式会社エコクリーン埼玉（処理業者）</span></div>
-  <div class="ms-auto d-flex align-items-center gap-2">
-    <a class="btn btn-outline-secondary btn-sm mockbtn" href="emitter-portal.html" id="elEmitterBtn" data-act="openEmitter">排出者側の画面</a>
-    <select class="form-select form-select-sm" style="width:auto;" data-act="switchPlant" id="elPlantSel" aria-label="拠点"></select>
-    <button class="btn btn-outline-secondary btn-sm btn-icon" data-act="openNotif" aria-label="通知" id="elNotifBtn"></button>
-  </div>
-</header>
-
-<nav class="sidebar" id="elSidebar" aria-label="メインメニュー"></nav>
 <main class="content" id="elView"></main>
-
-<div class="modal fade" id="appModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-scrollable" id="elModalDialog">
-    <div class="modal-content">
-      <div class="modal-header"><h5 class="modal-title" id="elModalTitle"></h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
-      <div class="modal-body" id="elModalBody"></div>
-      <div class="modal-footer" id="elModalFoot"></div>
-    </div>
-  </div>
-</div>
-<div class="toast-host" id="elToast"></div>
-<iframe id="elEmitFrame" class="emitframe" title="排出者ポータル" hidden></iframe>
-<button id="elBackBtn" class="backbtn mockbtn" data-act="backToAdmin" hidden></button>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- 排出者ポータル（添付モックをそのまま同梱。iframe で表示するため互いのCSS/JSは干渉しない） -->
+<!-- 排出者ポータル（分割版の emitter.html をそのまま同梱） -->
 <script type="text/html" id="emitterHtml">
 <!DOCTYPE html>
 <html lang="ja">
@@ -380,8 +367,12 @@ textarea{min-height:88px;resize:vertical;}
 .dialog-head h2{margin:0;font-size:18px;flex:1;}
 .dialog-body{padding:24px;}
 .dialog-foot{padding:16px 24px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;}
+.mocklink{margin-left:auto;font-size:13px;font-weight:700;color:var(--blue-800);border:1px solid var(--blue-800);border-radius:var(--radius);padding:6px 14px;text-decoration:none;white-space:nowrap;position:relative;background:var(--white);}
+.mocklink:hover{background:var(--blue-100);}
+.mocklink::after{content:"MOCK";position:absolute;top:-8px;right:-10px;background:var(--warn);color:#fff;font-size:9px;font-weight:700;border-radius:3px;padding:0 4px;letter-spacing:.04em;}
 @media (max-width:600px){
   .appbar-inner{flex-wrap:wrap;gap:0 16px;padding:8px 16px;}
+  .mocklink{margin-left:0;order:2;font-size:12px;padding:4px 10px;}
   .gnav{order:3;width:100%;overflow-x:auto;}
   .gnav button{padding:12px;font-size:14px;}
   .wrap{padding:24px 16px 72px;}
@@ -933,49 +924,17 @@ render();
 </html>
 
 </script>
+
 <script>
-/* =========================================================================
-   アイコン（線画SVG・stroke は currentColor）
-   ========================================================================= */
-const ICONS = {
-  inbox:'<polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>',
-  clipboard:'<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="13" y2="16"/>',
-  phone:'<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>',
-  clock:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
-  truck:'<rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>',
-  chart:'<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',
-  users:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
-  factory:'<path d="M3 21h18"/><path d="M5 21V9l6 4V9l6 4V5h2v16"/><line x1="8" y1="17" x2="8" y2="17.01"/><line x1="13" y1="17" x2="13" y2="17.01"/>',
-  box:'<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>',
-  hash:'<line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/>',
-  file:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>',
-  bell:'<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>',
-  menu:'<line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>',
-  plus:'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
-  download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
-  copy:'<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
-  link:'<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
-  mail:'<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>',
-  check:'<polyline points="20 6 9 17 4 12"/>',
-  alert:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
-  x:'<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
-  calendar:'<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
-  left:'<polyline points="15 18 9 12 15 6"/>',
-  right:'<polyline points="9 18 15 12 9 6"/>',
-  edit:'<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>',
-  trash:'<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
-  search:'<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
-  login:'<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/>',
-  chevronDown:'<polyline points="6 9 12 15 18 9"/>',
-  chevronRight:'<polyline points="9 18 15 12 9 6"/>'
-};
-const ic = (n, size) => `<svg class="ic" width="${size || 18}" height="${size || 18}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n] || ''}</svg>`;
+window.SINGLE_FILE = true;
 
 /* =========================================================================
-   産廃DX 処理業者 管理画面モック（第1期スコープ）
+   ダミーデータ
    - テーブル構成は添付ER図（companies / plants / items / units /
      pickups / pickup_items）に準拠し、業務上必要な項目のみ追加している
-   - データはすべてブラウザ内のダミー。リロードで初期状態に戻る
+   - ページを移動しても内容が引き継がれるよう localStorage に保存する
+     （保存できない環境ではページ内だけで保持する）
+   - 日付は開いた日を基準に生成し、日付が変わったら作り直す
    ========================================================================= */
 
 /* ---------- 日付ユーティリティ ---------- */
@@ -1000,6 +959,50 @@ function B(n) { return bizDay(n); }
 /* ---------- ログイン中の担当者（権限の切替は行わない） ---------- */
 const ME = {name:'田中 誠', role:'受入担当'};
 
+const ITEM_TYPES = [{v:1, t:'産業廃棄物'}, {v:2, t:'特別管理産業廃棄物'}, {v:3, t:'一般廃棄物'}];
+
+/* ---------- データ本体 ---------- */
+let PLANTS = [], HOLIDAYS = [], COMPANIES = [], ITEMS = [], UNITS = [],
+    PICKUPS = [], PICKUP_ITEMS = [], INVITE_LINK = {}, _pi = 0;
+
+let _seed = 20260727;
+const rnd = () => { _seed = (_seed * 1103515245 + 12345) % 2147483648; return _seed / 2147483648; };
+const pick = a => a[Math.floor(rnd()*a.length)];
+const round2 = n => Math.round(n*100)/100;
+
+function addPickup(p, lines) {
+  PICKUPS.push(p);
+  lines.forEach(l => PICKUP_ITEMS.push(Object.assign({id:'pi' + (++_pi), pickup_id:p.id}, l)));
+}
+
+/* ---------- 保存と復元 ---------- */
+const STORE_KEY = 'sanpai-mock-data';
+function saveData() {
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify({
+      seededOn: D(0), _pi, PLANTS, HOLIDAYS, COMPANIES, ITEMS, UNITS, PICKUPS, PICKUP_ITEMS, INVITE_LINK
+    }));
+  } catch (e) { /* 保存できない環境ではページ内だけで保持する */ }
+}
+function restoreData() {
+  try {
+    const o = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
+    if (!o || o.seededOn !== D(0)) return false;   /* 日付が変わったら作り直す */
+    PLANTS = o.PLANTS; HOLIDAYS = o.HOLIDAYS; COMPANIES = o.COMPANIES;
+    ITEMS = o.ITEMS; UNITS = o.UNITS; PICKUPS = o.PICKUPS; PICKUP_ITEMS = o.PICKUP_ITEMS;
+    INVITE_LINK = o.INVITE_LINK; _pi = o._pi || 0;
+    return true;
+  } catch (e) { return false; }
+}
+function resetData() {
+  try { localStorage.removeItem(STORE_KEY); } catch (e) {}
+  seedData(); saveData();
+}
+
+function seedData() {
+  _seed = 20260727; _pi = 0;
+  PICKUPS = []; PICKUP_ITEMS = [];
+
 /* =========================================================================
    plants：拠点（処理施設）マスタ
    - is_delivery … 持込の受入可否 / is_pickup … 引取（集荷）対応可否
@@ -1007,7 +1010,7 @@ const ME = {name:'田中 誠', role:'受入担当'};
    - slots …  受入時間枠（複数設定可）
    - deadline_days / deadline_time … 取引先が予約できる締切（既定：前日17時）
    ========================================================================= */
-let PLANTS = [
+  PLANTS = [
   {id:'pl1', name:'本社工場（さいたま中間処理場）', is_delivery:true, is_pickup:true,
    begin_time:'08:00', end_time:'17:00', deadline_days:1, deadline_time:'17:00',
    postalcode:'331-0812', pref:'埼玉県', address:'さいたま市北区宮原町0-0-0', phone:'048-000-1000',
@@ -1022,7 +1025,7 @@ let PLANTS = [
           {id:'s4', name:'午後', from:'13:00', to:'17:00'}]}
 ];
 /* 臨時休業日（拠点別） */
-let HOLIDAYS = [
+  HOLIDAYS = [
   {id:'h1', plant_id:'pl1', date:B(6), reason:'設備定期点検のため臨時休業'}
 ];
 
@@ -1032,7 +1035,7 @@ let HOLIDAYS = [
    - 取引先自身が入力する項目（メールアドレス・パスワード等）は
      登録用URLからの本登録で埋まる
    ========================================================================= */
-let COMPANIES = [
+  COMPANIES = [
   {id:'c1', name:'株式会社サンプル建設', kana:'カブシキガイシャサンプルケンセツ',
    is_generator:true, is_transporter:false,
    postalcode:'330-0854', pref:'埼玉県', address:'さいたま市大宮区桜木町0-0-0',
@@ -1064,13 +1067,12 @@ let COMPANIES = [
 ];
 
 /* 取引先の登録用URL。処理業者ごとに1本を使い回し、必要なときだけ再発行する */
-let INVITE_LINK = {token:'d4e5f6g7h8', issued_at:'2026-04-01 10:00'};
+  INVITE_LINK = {token:'d4e5f6g7h8', issued_at:'2026-04-01 10:00'};
 
 /* =========================================================================
    items：品目マスタ　/　units：単位マスタ
    ========================================================================= */
-const ITEM_TYPES = [{v:1, t:'産業廃棄物'}, {v:2, t:'特別管理産業廃棄物'}, {v:3, t:'一般廃棄物'}];
-let ITEMS = [
+  ITEMS = [
   {id:'i1', type:1, name:'廃プラスチック類', is_value:false},
   {id:'i2', type:1, name:'木くず',           is_value:false},
   {id:'i3', type:1, name:'金属くず',         is_value:true},
@@ -1080,7 +1082,7 @@ let ITEMS = [
   {id:'i7', type:1, name:'混合廃棄物',       is_value:false},
   {id:'i8', type:2, name:'廃油（引火性）',   is_value:false}
 ];
-let UNITS = [
+  UNITS = [
   {id:'u1', name:'kg'}, {id:'u2', name:'t'}, {id:'u3', name:'m3'},
   {id:'u4', name:'個'}, {id:'u5', name:'台'}, {id:'u6', name:'袋'}
 ];
@@ -1094,14 +1096,7 @@ let UNITS = [
    ※受付番号は排出元ポータルの仕様に合わせ「申請時」に採番する
      （ER図の receipt_number は当日の計量伝票番号として入場受付時に採番）
    ========================================================================= */
-let PICKUPS = [];
-let PICKUP_ITEMS = [];
 
-let _pi = 0;
-function addPickup(p, lines) {
-  PICKUPS.push(p);
-  lines.forEach(l => PICKUP_ITEMS.push(Object.assign({id:'pi' + (++_pi), pickup_id:p.id}, l)));
-}
 
 /* --- 承認待ち --- */
 addPickup({id:'R-2026-0152', type:'pickup', status:'pending', company_id:'c1', plant_id:'pl1',
@@ -1224,12 +1219,8 @@ addPickup({id:'R-2026-0171', type:'drop', status:'approved', company_id:'c1', pl
   [{item_id:'i1', unit_id:'u2', qty:0.9}]);
 
 /* --- 過去の実績（実績一覧の検証用に45日ぶん生成） --- */
-let _seed = 20260727;
-const rnd = () => { _seed = (_seed * 1103515245 + 12345) % 2147483648; return _seed / 2147483648; };
-const pick = a => a[Math.floor(rnd()*a.length)];
-const round2 = n => Math.round(n*100)/100;
 
-(function seedHistory(){
+  (function seedHistory(){
   let no = 100;
   for (let k = 45; k >= 1; k--) {
     const ds = D(-k), dow = parseD(ds).getDay();
@@ -1256,7 +1247,76 @@ const round2 = n => Math.round(n*100)/100;
         [{item_id:it.id, unit_id:'u2', qty}]);
     }
   }
-})();
+  })();
+
+}
+
+if (!restoreData()) { seedData(); saveData(); }
+/* =========================================================================
+   共通処理（全ページで読み込む）
+   - 画面の枠（ヘッダー・サイドバー・モーダル）の生成
+   - 画面ごとのスクリプトは ACTIONS / MODALS に処理を登録する
+   ========================================================================= */
+
+/* ---------- アイコン ---------- */
+const ICONS = {
+  inbox:'<polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>',
+  clipboard:'<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="13" y2="16"/>',
+  phone:'<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>',
+  clock:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+  truck:'<rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>',
+  chart:'<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',
+  users:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  factory:'<path d="M3 21h18"/><path d="M5 21V9l6 4V9l6 4V5h2v16"/><line x1="8" y1="17" x2="8" y2="17.01"/><line x1="13" y1="17" x2="13" y2="17.01"/>',
+  box:'<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>',
+  hash:'<line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/>',
+  file:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>',
+  bell:'<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>',
+  menu:'<line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>',
+  plus:'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+  download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+  copy:'<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+  link:'<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+  mail:'<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>',
+  check:'<polyline points="20 6 9 17 4 12"/>',
+  alert:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+  x:'<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+  calendar:'<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+  left:'<polyline points="15 18 9 12 15 6"/>',
+  right:'<polyline points="9 18 15 12 9 6"/>',
+  edit:'<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>',
+  trash:'<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+  search:'<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+  login:'<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/>',
+  chevronDown:'<polyline points="6 9 12 15 18 9"/>',
+  chevronRight:'<polyline points="9 18 15 12 9 6"/>',
+  grid:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>'
+};
+const ic = (n, size) => `<svg class="ic" width="${size || 18}" height="${size || 18}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n] || ''}</svg>`;
+
+/* ---------- 取引先の登録用URL ---------- */
+const INVITE_BASE = 'https://sanpai.example.jp/invite/';
+const randToken = () => Math.random().toString(36).slice(2,10) + Math.random().toString(36).slice(2,4);
+
+/* ---------- ページ定義 ---------- */
+const PAGES = {
+  index:       {file:'index.html',     title:'画面一覧'},
+  approvals:   {file:'approvals.html', title:'予約の承認'},
+  board:       {file:'board.html',     title:'確定した予約'},
+  proxy:       {file:'proxy.html',     title:'予約の代行作成'},
+  hours:       {file:'hours.html',     title:'受付時間・休業日'},
+  reception:   {file:'reception.html', title:'計量入力'},
+  actuals:     {file:'actuals.html',   title:'実績一覧'},
+  m_companies: {file:'companies.html', title:'取引先'},
+  m_plants:    {file:'plants.html',    title:'拠点'},
+  m_items:     {file:'items.html',     title:'品目'},
+  m_units:     {file:'units.html',     title:'単位'},
+  invite:      {file:'invite.html',    title:'取引先アカウントの登録'},
+  emitter:     {file:'emitter.html',   title:'排出者ポータル'}
+};
+/* 単一ファイル版ではページ遷移せずハッシュで切り替える */
+const IS_SINGLE = !!window.SINGLE_FILE;
+const hrefOf = r => IS_SINGLE ? '#' + r : PAGES[r].file;
 
 /* =========================================================================
    共通ユーティリティ
@@ -1335,9 +1395,7 @@ const isPastDeadline = (plantId, ds) => deadlineAt(plantId, ds) <= nowStamp();
 const minDate = () => D(0);
 const deadlineLabel = pl => `${pl.deadline_days === 0 ? '当日' : pl.deadline_days === 1 ? '前日' : pl.deadline_days + '日前'} ${pl.deadline_time}`;
 
-/* =========================================================================
-   画面定義
-   ========================================================================= */
+
 const NAV = [
   {sec:'受付・承認', items:[
     {route:'approvals', label:'予約の承認',     ico:'inbox', badge:true},
@@ -1359,10 +1417,12 @@ const NAV = [
   ]}
 ];
 
+
 /* =========================================================================
-   画面状態
+   画面の状態（ページをまたぐものは sessionStorage で引き継ぐ）
    ========================================================================= */
-const state = {
+const UI_KEY = 'sanpai-mock-ui';
+const defaultState = () => ({
   route:'approvals', plantId:'all', modal:null, emitter:false,
   approval:{sel:null, type:'all', keyword:''},
   board:{date:D(0), tab:'all', showVoid:false},
@@ -1371,8 +1431,27 @@ const state = {
   reception:{q:'', date:D(0)},
   actuals:{from:D(-30), to:D(0), companyId:'', itemId:'', type:'', diffOnly:false},
   master:{},
-  invite:{token:null, form:null}
-};
+  invite:{token:null, form:null, done:false}
+});
+const state = defaultState();
+(function restoreUI() {
+  try {
+    const o = JSON.parse(sessionStorage.getItem(UI_KEY) || 'null');
+    if (!o) return;
+    if (o.plantId) state.plantId = o.plantId;
+    ['board','hours','reception','actuals'].forEach(k => Object.assign(state[k], o[k] || {}));
+    if (o.approval) { state.approval.type = o.approval.type; state.approval.keyword = o.approval.keyword; }
+  } catch (e) {}
+})();
+function saveUI() {
+  try {
+    sessionStorage.setItem(UI_KEY, JSON.stringify({
+      plantId:state.plantId, board:state.board, hours:state.hours,
+      reception:{q:state.reception.q, date:state.reception.date}, actuals:state.actuals,
+      approval:{type:state.approval.type, keyword:state.approval.keyword}
+    }));
+  } catch (e) {}
+}
 /* ヘッダーの拠点セレクタで対象を絞り込む */
 const plantScope = () => state.plantId === 'all' ? PLANTS.map(p => p.id) : [state.plantId];
 const inScope = p => plantScope().includes(p.plant_id);
@@ -1436,6 +1515,309 @@ function kpi(t, v, sub, cls) {
 }
 const pendingList = () => PICKUPS.filter(p => p.status === 'pending' && inScope(p));
 const pendingCount = () => pendingList().length;
+
+
+
+/* ---------- 複数のページで使う採番・換算 ---------- */
+/* 申告数量の重量換算（kg）。t/kg 以外の単位は換算しない */
+function declaredKg(pickupId) {
+  return linesOf(pickupId).reduce((s,l) => {
+    const u = unit(l.unit_id).name;
+    if (l.qty == null) return s;
+    if (u === 't') return s + Number(l.qty) * 1000;
+    if (u === 'kg') return s + Number(l.qty);
+    return s;
+  }, 0);
+}
+function nextPickupNo() {
+  const n = PICKUPS.map(p => Number(p.id.slice(-4))).reduce((a,b) => Math.max(a,b), 0);
+  return 'R-2026-' + String(n + 1).padStart(4, '0');
+}
+
+/* =========================================================================
+   画面の枠（ヘッダー・サイドバー・モーダル）
+   ========================================================================= */
+const CHROME = `
+<header class="topbar">
+  <button class="btn btn-outline-secondary btn-sm btn-icon d-lg-none" data-act="toggleNav" aria-label="メニュー" id="elMenuBtn"></button>
+  <div class="brand" id="elBrand"></div>
+  <div class="ms-auto d-flex align-items-center gap-2">
+    <a class="btn btn-outline-secondary btn-sm mockbtn" id="elEmitterBtn" data-act="openEmitter"></a>
+    <select class="form-select form-select-sm" style="width:auto;" data-act="switchPlant" id="elPlantSel" aria-label="拠点"></select>
+    <button class="btn btn-outline-secondary btn-sm btn-icon" data-act="openNotif" aria-label="通知" id="elNotifBtn"></button>
+  </div>
+</header>
+<nav class="sidebar" id="elSidebar" aria-label="メインメニュー"></nav>
+<div class="modal fade" id="appModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable" id="elModalDialog">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title" id="elModalTitle"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
+      <div class="modal-body" id="elModalBody"></div>
+      <div class="modal-footer" id="elModalFoot"></div>
+    </div>
+  </div>
+</div>
+<div class="toast-host" id="elToast"></div>`;
+
+const BRAND_ADMIN  = '産廃予約管理システム<span>株式会社エコクリーン埼玉（処理業者）</span>';
+const BRAND_INVITE = '産廃予約システム<span>取引先アカウント登録</span>';
+
+let PAGE = {route:'approvals', view:() => '', chrome:'admin'};
+
+function applyChromeMode() {
+  const plain = PAGE.chrome === 'plain';
+  document.body.classList.toggle('invite-mode', plain);
+  document.getElementById('elBrand').innerHTML = plain ? BRAND_INVITE : BRAND_ADMIN;
+  ['elPlantSel','elNotifBtn','elEmitterBtn','elMenuBtn'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = plain ? 'none' : '';
+  });
+}
+function buildChrome() {
+  document.body.insertAdjacentHTML('afterbegin', CHROME);
+  applyChromeMode();
+  if (PAGE.chrome === 'plain') return;
+  const ps = document.getElementById('elPlantSel');
+  ps.innerHTML = `<option value="all">すべての拠点</option>` +
+    PLANTS.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('');
+  ps.value = state.plantId;
+  document.getElementById('elMenuBtn').innerHTML = ic('menu');
+  const em = document.getElementById('elEmitterBtn');
+  em.innerHTML = ic('login',15) + '排出者側の画面';
+  em.href = hrefOf('emitter');
+}
+
+function renderSidebar() {
+  document.getElementById('elSidebar').innerHTML =
+    `<a href="${hrefOf('index')}" class="navitem ${PAGE.route === 'index' ? 'active' : ''}" data-act="go" data-route="index">
+       <span class="ico">${ic('grid',17)}</span><span>画面一覧</span></a>` +
+    NAV.map(sec => {
+      const items = sec.items.map(it => {
+        const cnt = it.badge ? pendingCount() : 0;
+        return `<a href="${hrefOf(it.route)}" class="navitem ${PAGE.route === it.route ? 'active' : ''}" data-act="go" data-route="${it.route}">
+          <span class="ico">${ic(it.ico, 17)}</span><span>${it.label}</span>
+          ${cnt ? `<span class="cnt">${cnt}</span>` : ''}</a>`;
+      }).join('');
+      return `<div class="navsec">${sec.sec}</div>${items}`;
+    }).join('');
+}
+
+/* ---------- 入力中のフォーカスを保つ ---------- */
+function focusKey(el) {
+  if (!el || !el.dataset) return null;
+  const d = el.dataset;
+  if (d.px)  return 'px:'  + d.px;
+  if (d.mod) return 'mod:' + d.mod;
+  if (d.inv) return 'inv:' + d.inv;
+  if (d.key) return 'key:' + d.key;
+  return null;
+}
+function restoreFocus(key, pos) {
+  if (!key) return;
+  const i = key.indexOf(':'), t = key.slice(0, i), v = key.slice(i+1);
+  const el = document.querySelector(`[data-${t}="${window.CSS && CSS.escape ? CSS.escape(v) : v}"]`);
+  if (!el) return;
+  el.focus({preventScroll:true});
+  try { el.setSelectionRange(pos, pos); } catch (e) {}
+}
+
+function render() {
+  const y = window.scrollY;
+  const af = document.activeElement, fk = focusKey(af);
+  const pos = af && af.setSelectionRange ? (af.selectionStart || 0) : 0;
+  if (PAGE.chrome !== 'plain') {
+    renderSidebar();
+    const n = pendingCount();
+    document.getElementById('elNotifBtn').innerHTML =
+      ic('bell') + (n ? ` <span class="badge b-rejected b-sq" style="padding:1px 6px">${n}</span>` : '');
+    document.getElementById('elPlantSel').value = state.plantId;
+  }
+  document.getElementById('elView').innerHTML = PAGE.view();
+  if (PAGE.after) PAGE.after();
+  window.scrollTo(0, y);
+  restoreFocus(fk, pos);
+  saveData(); saveUI();
+}
+
+/* 画面遷移（分割版はページ遷移、単一ファイル版はハッシュ切替） */
+function go(route) {
+  saveData(); saveUI();
+  if (IS_SINGLE) gotoRoute(route);
+  else location.href = hrefOf(route);
+}
+
+/* ページごとのスクリプトから呼ぶ。route はサイドバーの選択表示に使う */
+function mount(route, view, opts) {
+  PAGE = {route, view, chrome:(opts && opts.chrome) || 'admin'};
+  buildChrome();
+  render();
+}
+
+/* =========================================================================
+   イベント（画面ごとの処理は ACTIONS に登録する）
+   ========================================================================= */
+const ACTIONS = {};
+const MODALS = {};
+const INPUT_HOOKS = [];    /* ページごとの入力処理（登録された順に試す） */
+const CHANGE_HOOKS = [];
+
+document.addEventListener('input', e => {
+  const d = e.target.dataset;
+  const val = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+  if (d.mod) { modBind(d.mod, val); if (d.rerender) renderModal(); return; }
+  for (const h of INPUT_HOOKS) if (h(e, d, val, false)) return;
+});
+/* テキスト入力の change はフォーカスが外れた瞬間に発火する。ここで再描画すると
+   クリックしようとしたボタンが作り直されてクリックが失われるため、
+   再描画はセレクト・チェックボックス・日付だけに限定する */
+document.addEventListener('change', e => {
+  const d = e.target.dataset;
+  const val = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+  const structural = e.target.tagName === 'SELECT' || ['checkbox','radio','date'].includes(e.target.type);
+  if (d.mod) { modBind(d.mod, val); if (structural) renderModal(); return; }
+  if (d.act === 'switchPlant') { state.plantId = val; state.approval.sel = null; render(); return; }
+  for (const h of CHANGE_HOOKS) if (h(e, d, val, structural)) return;
+});
+
+function modBind(key, val) {
+  const m = state.modal; if (!m) return;
+  if (key.startsWith('row.')) { setPath(m.row, key.slice(4), val); return; }
+  if (key.startsWith('pi.')) {          /* 計量時の「含まれていた品目」 */
+    const id = key.slice(3);
+    m.items = m.items || [];
+    if (val) { if (!m.items.includes(id)) m.items.push(id); }
+    else m.items = m.items.filter(x => x !== id);
+    return;
+  }
+  setPath(m, key, val);
+}
+function getPath(o, p) { return p.split('.').reduce((t,k) => (t == null ? t : t[k]), o); }
+function setPath(o, p, v) {
+  const ks = p.split('.'); let t = o;
+  for (let i = 0; i < ks.length - 1; i++) { if (t[ks[i]] == null) t[ks[i]] = {}; t = t[ks[i]]; }
+  t[ks[ks.length-1]] = v;
+}
+
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  const a = el.dataset.act;
+  if (['SELECT','INPUT','TEXTAREA'].includes(el.tagName)) return;
+  if (el.tagName === 'A') e.preventDefault();   /* 遷移は ACTIONS 側で行う */
+  const fn = ACTIONS[a];
+  if (fn) { fn(el.dataset, el, e); saveData(); }
+});
+
+const nowHm = () => { const d = new Date(); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+
+/* ---------- 全ページ共通の操作 ---------- */
+Object.assign(ACTIONS, {
+  toggleNav: () => document.getElementById('elSidebar').classList.toggle('open'),
+  closeModal: () => { closeModal(); render(); },
+  openNotif: () => {
+    toast(`承認待ち ${pendingCount()} 件（通知チャネルはLINE／LINE WORKS等を想定・要確定）`);
+    go('approvals');
+  },
+  openPickupDetail: d => openModal('pickup', {id:d.id}),
+  go: d => go(d.route),
+  openEmitter: () => go('emitter'),
+  resetData: () => {
+    if (!confirm('入力した内容をすべて破棄して、最初の状態に戻します。よろしいですか？')) return;
+    resetData(); toast('データを初期化しました。'); render();
+  }
+});
+
+/* ---------- 予約詳細 ---------- */
+MODALS.pickup = m => {
+  const p = pk(m.id), co = company(p.company_id), pl = plant(p.plant_id);
+  const rows = [
+    ['受付番号', `<span class="mono">${p.id}</span>`],
+    ['ステータス', stBadge(p.status)],
+    ['区分', typeLabel(p.type)],
+    ['取引先', esc(co.name)],
+    ['拠点', esc(pl.name)],
+    ['日付', fmtJp(p.date)],
+    ['時間', timeRange(p)],
+    ['申請', `${esc(p.via)}　${esc(p.applied_at)}`]
+  ];
+  if (p.type === 'drop') rows.push(['車両ナンバー', esc(p.car_number)]);
+  else rows.push(['引取場所', `${esc(p.site_name || '')}／${esc(p.site_addr || '')}`]);
+  linesOf(p.id).forEach((l,i) => rows.push([`品目 ${i+1}`,
+    `${esc(item(l.item_id).name)}${l.qty != null ? `　申告 ${dec(l.qty)} ${esc(unit(l.unit_id).name)}` : '　<span class="text-secondary">（申告になし）</span>'}`]));
+  if (p.note) rows.push(['連絡事項', esc(p.note)]);
+  if (p.approved_at) rows.push(['承認', `${esc(p.approved_at)}／${esc(p.approved_by)}`]);
+  if (p.dispatch_note) rows.push(['集荷手配メモ', esc(p.dispatch_note)]);
+  if (p.reject_reason) rows.push(['変更依頼の理由', `${esc(p.reject_reason)}<div class="text-secondary" style="font-size:12px">${esc(p.rejected_at || '')}</div>`]);
+  if (p.cancel_reason) rows.push(['取消理由', esc(p.cancel_reason)]);
+  if (p.arrived_at) rows.push(['着車時間', `${esc(p.arrived_at)}${p.receipt_number ? `　伝票番号 No.${p.receipt_number}` : ''}`]);
+  if (p.weight != null) rows.push(
+    ['正味重量', `<b>${kg(p.weight)}</b>`],
+    ['申告との差異', `${p.diff > 0 ? '+' : ''}${num(p.diff)} kg`]);
+  if (p.weigh_memo) rows.push(['計量時の備考', esc(p.weigh_memo)]);
+  return {
+    title:`予約詳細 ${p.id}`,
+    body: dl(rows),
+    foot:`<button class="btn btn-outline-secondary" data-act="closeModal">閉じる</button>`
+  };
+};
+
+/* ===== index ===== */
+
+/* =========================================================================
+   画面一覧（ポータル）
+   ========================================================================= */
+const PORTAL = [
+  {sec:'受付・承認', items:[
+    ['approvals','予約の承認','申請中の予約・依頼を承認する／変更依頼を返す'],
+    ['board','確定した予約','承認済の予約を拠点別・日別に確認し、枠や訪問日時を調整する'],
+    ['proxy','予約の代行作成','電話で受けた予約・集荷依頼を社内で入力する']
+  ]},
+  {sec:'稼働設定', items:[
+    ['hours','受付時間・休業日','受入時間枠・引取対応時間・予約の締切・休業日を設定する']
+  ]},
+  {sec:'実績', items:[
+    ['reception','計量入力','着車時間・正味重量・含まれていた品目を記録する'],
+    ['actuals','実績一覧','実績の検索・差異の確認・CSV出力']
+  ]},
+  {sec:'マスタ', items:[
+    ['m_companies','取引先','登録用URLの管理と、本登録済み取引先の編集'],
+    ['m_plants','拠点','処理施設の基本情報'],
+    ['m_items','品目','品目・廃棄物区分・有価物'],
+    ['m_units','単位','数量の単位']
+  ]},
+  {sec:'取引先から見える画面（モック）', items:[
+    ['emitter','排出者ポータル','取引先が予約を申請する画面'],
+    ['invite','取引先アカウントの登録','登録用URLを開いたときの画面']
+  ]}
+];
+
+function viewIndex() {
+  const today = PICKUPS.filter(p => p.date === D(0) && inScope(p) && !['canceled','rejected','pending'].includes(p.status));
+  return pageHead('画面一覧',
+    `<button class="btn btn-outline-danger btn-sm" data-act="resetData">${ic('trash',15)}データを初期化</button>`) +
+  `<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">${kpi('承認待ち', pendingCount() + ' <small>件</small>', '', pendingCount() ? 'alert-kpi' : '')}</div>
+    <div class="col-6 col-lg-3">${kpi('本日の予約', today.length + ' <small>件</small>')}</div>
+    <div class="col-6 col-lg-3">${kpi('未計量', today.filter(p => p.status === 'approved').length + ' <small>件</small>')}</div>
+    <div class="col-6 col-lg-3">${kpi('取引先', COMPANIES.length + ' <small>社</small>')}</div>
+  </div>
+  ${PORTAL.map(sec => `<h2 style="font-size:15px;font-weight:700;margin:22px 0 10px">${sec.sec}</h2>
+    <div class="row g-3">
+      ${sec.items.map(([r,t,desc]) => {
+        /* 取引先の登録画面は、発行中のURL（トークン付き）で開く */
+        const href = (r === 'invite' && !IS_SINGLE) ? `invite.html?t=${INVITE_LINK.token}` : hrefOf(r);
+        const act  = (r === 'invite' && !IS_SINGLE) ? '' : `data-act="go" data-route="${r}"`;
+        return `<div class="col-12 col-md-6 col-xl-4">
+        <a class="portal-card" href="${href}" ${act}>
+          <span class="ico">${ic((NAV.flatMap(s => s.items).find(x => x.route === r) || {ico:'login'}).ico, 18)}</span>
+          <span><b>${t}</b><small>${desc}</small></span>
+        </a></div>`; }).join('')}
+    </div>`).join('')}
+  <p class="hint mt-4">データはブラウザ内のダミーです。ページを移動しても引き継がれ、
+    「データを初期化」で最初の状態に戻ります（日付が変わったときも作り直されます）。</p>`;
+}
+
+/* ===== approvals ===== */
 
 /* =========================================================================
    予約の承認
@@ -1560,7 +1942,7 @@ function approvalDetail(p) {
 }
 
 /* ---------- 承認 ---------- */
-var MODALS_APPROVE = m => {
+MODALS.approve = m => {
   const p = pk(m.id), pl = plant(p.plant_id), isDrop = p.type === 'drop';
   const slotOpts = (pl.slots || []).map(s => ({v:s.id, t:`${s.name}　${s.from} 〜 ${s.to}`}));
   const body = isDrop
@@ -1593,7 +1975,7 @@ var MODALS_APPROVE = m => {
 };
 
 /* ---------- 変更依頼 ---------- */
-var MODALS_REJECT = m => {
+MODALS.reject = m => {
   const p = pk(m.id), alts = findAlternatives(p);
   return {
     title:`${p.id} に変更依頼`,
@@ -1609,39 +1991,61 @@ var MODALS_REJECT = m => {
   };
 };
 
-/* ---------- 予約詳細 ---------- */
-var MODALS_PICKUP = m => {
-  const p = pk(m.id), co = company(p.company_id), pl = plant(p.plant_id);
-  const rows = [
-    ['受付番号', `<span class="mono">${p.id}</span>`],
-    ['ステータス', stBadge(p.status)],
-    ['区分', typeLabel(p.type)],
-    ['取引先', esc(co.name)],
-    ['拠点', esc(pl.name)],
-    ['日付', fmtJp(p.date)],
-    ['時間', timeRange(p)],
-    ['申請', `${esc(p.via)}　${esc(p.applied_at)}`]
-  ];
-  if (p.type === 'drop') rows.push(['車両ナンバー', esc(p.car_number)]);
-  else rows.push(['引取場所', `${esc(p.site_name || '')}／${esc(p.site_addr || '')}`]);
-  linesOf(p.id).forEach((l,i) => rows.push([`品目 ${i+1}`,
-    `${esc(item(l.item_id).name)}${l.qty != null ? `　申告 ${dec(l.qty)} ${esc(unit(l.unit_id).name)}` : '　<span class="text-secondary">（申告になし）</span>'}`]));
-  if (p.note) rows.push(['連絡事項', esc(p.note)]);
-  if (p.approved_at) rows.push(['承認', `${esc(p.approved_at)}／${esc(p.approved_by)}`]);
-  if (p.dispatch_note) rows.push(['集荷手配メモ', esc(p.dispatch_note)]);
-  if (p.reject_reason) rows.push(['変更依頼の理由', `${esc(p.reject_reason)}<div class="text-secondary" style="font-size:12px">${esc(p.rejected_at || '')}</div>`]);
-  if (p.cancel_reason) rows.push(['取消理由', esc(p.cancel_reason)]);
-  if (p.arrived_at) rows.push(['着車時間', `${esc(p.arrived_at)}${p.receipt_number ? `　伝票番号 No.${p.receipt_number}` : ''}`]);
-  if (p.weight != null) rows.push(
-    ['正味重量', `<b>${kg(p.weight)}</b>`],
-    ['申告との差異', `${p.diff > 0 ? '+' : ''}${num(p.diff)} kg`]);
-  if (p.weigh_memo) rows.push(['計量時の備考', esc(p.weigh_memo)]);
-  return {
-    title:`予約詳細 ${p.id}`,
-    body: dl(rows),
-    foot:`<button class="btn btn-outline-secondary" data-act="closeModal">閉じる</button>`
-  };
-};
+
+Object.assign(ACTIONS, {
+  selApproval: d => { state.approval.sel = d.id; render(); },
+  openApprove: d => {
+    const m = state.modal;
+  const p = pk(d.id), pl = plant(p.plant_id);
+        const s = slotOf(pl, p) || (pl.slots || [])[0] || {};
+        openModal('approve', {id:d.id, date:p.date, slotId:s.id,
+          begin_time:p.begin_time, end_time:p.end_time, dispatch_note:p.dispatch_note || '', comment:''});
+  },
+  openReject: d => { openModal('reject', {id:d.id, reason:''}); },
+  pickAlt: d => {
+    const m = state.modal;
+  m.reason = (m.reason ? m.reason.replace(/\s*$/,'') + '\n' : '') + `代替候補：${d.label}（${d.sub}）`;
+        renderModal();
+  },
+  doApprove: d => {
+    const m = state.modal;
+  const p = pk(m.id), pl = plant(p.plant_id);
+        if (m.date && m.date < D(0)) { m.err = '過去の日付は指定できません。'; renderModal(); return; }
+        if (p.type === 'drop') {
+          const s = (pl.slots || []).find(x => x.id === m.slotId);
+          if (!s) { m.err = '受入時間枠を選択してください。'; renderModal(); return; }
+          p.date = m.date || p.date; p.begin_time = s.from; p.end_time = s.to;
+        } else {
+          if (!m.date || !m.begin_time || !m.end_time) { m.err = '訪問日時を入力してください。'; renderModal(); return; }
+          if (m.end_time <= m.begin_time) { m.err = '終了時刻は開始時刻より後にしてください。'; renderModal(); return; }
+          Object.assign(p, {date:m.date, begin_time:m.begin_time, end_time:m.end_time, dispatch_note:m.dispatch_note || ''});
+        }
+        p.status = 'approved'; p.approved_at = `${D(0)} ${nowHm()}`; p.approved_by = `${ME.role} ${ME.name.split(' ')[0]}`;
+        if (m.comment) p.approve_comment = m.comment;
+        closeModal(); state.approval.sel = null;
+        toast(`${p.id} を承認しました。取引先へ通知を送信しました。`);
+        render();
+  },
+  doReject: d => {
+    const m = state.modal;
+  if (!m.reason || !m.reason.trim()) { m.err = '理由を入力してください。'; renderModal(); return; }
+        const p = pk(m.id);
+        p.status = 'rejected'; p.reject_reason = m.reason.trim();
+        p.rejected_at = `${D(0)} ${nowHm()}`; p.rejected_by = `${ME.role} ${ME.name.split(' ')[0]}`;
+        closeModal(); state.approval.sel = null;
+        toast(`${p.id} に変更依頼を送りました。取引先が修正して再申請します。`, 'warn');
+        render();
+  },
+});
+
+INPUT_HOOKS.push((e, d, val) => {
+  if (d.act === 'apFilter') { state.approval[d.key] = val; render(); return true; }
+});
+CHANGE_HOOKS.push((e, d, val, structural) => {
+  if (d.act === 'apFilter') { state.approval[d.key] = val; if (structural) render(); return true; }
+});
+
+/* ===== board ===== */
 
 /* =========================================================================
    確定した予約（日別）
@@ -1752,7 +2156,7 @@ function viewBoard() {
 }
 
 /* ---------- 受入時間枠の変更 ---------- */
-var MODALS_CHANGESLOT = m => {
+MODALS.changeSlot = m => {
   const p = pk(m.id), pl = plant(p.plant_id);
   const slotOpts = (pl.slots || []).map(s => ({v:s.id, t:`${s.name}　${s.from} 〜 ${s.to}`}));
   return {
@@ -1770,7 +2174,7 @@ var MODALS_CHANGESLOT = m => {
 };
 
 /* ---------- 訪問日時の変更 ---------- */
-var MODALS_CHANGEVISIT = m => {
+MODALS.changeVisit = m => {
   const p = pk(m.id);
   return {
     title:`${p.id} の訪問日時を変更`,
@@ -1793,7 +2197,7 @@ var MODALS_CHANGEVISIT = m => {
 };
 
 /* ---------- 取消 ---------- */
-var MODALS_CANCEL = m => {
+MODALS.cancel = m => {
   const p = pk(m.id);
   return {
     title:`${p.id} を取消`,
@@ -1806,6 +2210,69 @@ var MODALS_CANCEL = m => {
   };
 };
 
+Object.assign(ACTIONS, {
+  boardShift: d => { state.board.date = dstr(addDays(parseD(state.board.date), Number(d.n))); render(); },
+  boardToday: d => { state.board.date = D(0); render(); },
+  boardTab: d => { state.board.tab = d.tab; render(); },
+  openChangeSlot: d => {
+    const m = state.modal;
+  const p = pk(d.id), pl = plant(p.plant_id), s = slotOf(pl, p) || (pl.slots || [])[0] || {};
+        openModal('changeSlot', {id:d.id, date:p.date, slotId:s.id, reason:''});
+  },
+  doChangeSlot: d => {
+    const m = state.modal;
+  if (!m.reason || !m.reason.trim()) { m.err = '変更理由を入力してください。'; renderModal(); return; }
+        if (m.date < D(0)) { m.err = '過去の日付は指定できません。'; renderModal(); return; }
+        const p = pk(m.id), pl = plant(p.plant_id);
+        const s = (pl.slots || []).find(x => x.id === m.slotId);
+        if (!s) { m.err = '受入時間枠を選択してください。'; renderModal(); return; }
+        const before = `${fmtMd(p.date)} ${timeRange(p)}`;
+        p.date = m.date; p.begin_time = s.from; p.end_time = s.to;
+        closeModal(); toast(`${p.id} の受入時間枠を変更し、取引先へ通知しました。`); render();
+  },
+  openChangeVisit: d => {
+    const m = state.modal;
+  const p = pk(d.id);
+        openModal('changeVisit', {id:d.id, date:p.date, begin_time:p.begin_time, end_time:p.end_time,
+          dispatch_note:p.dispatch_note || '', reason:''});
+  },
+  doChangeVisit: d => {
+    const m = state.modal;
+  if (!m.reason || !m.reason.trim()) { m.err = '変更理由を入力してください。'; renderModal(); return; }
+        if (m.date < D(0)) { m.err = '過去の日付は指定できません。'; renderModal(); return; }
+        if (m.end_time <= m.begin_time) { m.err = '終了時刻は開始時刻より後にしてください。'; renderModal(); return; }
+        const p = pk(m.id);
+        Object.assign(p, {date:m.date, begin_time:m.begin_time, end_time:m.end_time, dispatch_note:m.dispatch_note});
+        closeModal(); toast(`${p.id} の訪問日時を変更し、取引先へ通知しました。`); render();
+  },
+  openCancel: d => { openModal('cancel', {id:d.id, reason:''}, 'modal-md'); },
+  doCancel: d => {
+    const m = state.modal;
+  if (!m.reason || !m.reason.trim()) { m.err = '取消理由を入力してください。'; renderModal(); return; }
+        const p = pk(m.id);
+        p.status = 'canceled'; p.cancel_reason = m.reason.trim(); p.canceled_at = `${D(0)} ${nowHm()}`;
+        closeModal(); toast(`${p.id} を取消しました。`, 'warn'); render();
+  },
+  exportBoard: d => {
+    const m = state.modal;
+  const ds = state.board.date;
+        const rows = [['日付','受付番号','区分','ステータス','拠点','時間','取引先','品目・申告数量','車両ナンバー','引取場所','住所','メモ']];
+        PICKUPS.filter(p => p.date === ds && inScope(p) && !['pending','rejected'].includes(p.status))
+          .forEach(p => rows.push([ds, p.id, typeLabel(p.type), STATUS[p.status].t, plant(p.plant_id).name,
+            timeRange(p), company(p.company_id).name, linesText(p.id),
+            p.car_number || '', p.site_name || '', p.site_addr || '', (p.type === 'drop' ? p.note : p.dispatch_note) || '']));
+        downloadCsv(`予約一覧_${ds}.csv`, rows);
+        toast('CSVを出力しました。');
+  },
+});
+
+CHANGE_HOOKS.push((e, d, val) => {
+  if (d.act === 'boardDate') { state.board.date = val; render(); return true; }
+  if (d.act === 'boardVoid') { state.board.showVoid = val; render(); return true; }
+});
+
+/* ===== proxy ===== */
+
 /* =========================================================================
    予約の代行作成（電話で受けた予約・集荷依頼を社内が入力）
    ========================================================================= */
@@ -1817,10 +2284,6 @@ const blankProxy = () => ({
   car_number:'', site_name:'', site_addr:'',
   note:'', errors:[]
 });
-function nextPickupNo() {
-  const n = PICKUPS.map(p => Number(p.id.slice(-4))).reduce((a,b) => Math.max(a,b), 0);
-  return 'R-2026-' + String(n + 1).padStart(4, '0');
-}
 
 function viewProxy() {
   if (!state.proxy) state.proxy = blankProxy();
@@ -1955,6 +2418,35 @@ function pxSubmit() {
   render();
 }
 
+Object.assign(ACTIONS, {
+  pxType: d => { state.proxy.type = d.v; state.proxy.slotId = ''; state.proxy.errors = []; render(); },
+  pxAddLine: d => { state.proxy.lines.push(blankLine()); render(); },
+  pxRemoveLine: d => {
+    const m = state.modal;
+  state.proxy.lines.splice(Number(d.idx), 1);
+        if (!state.proxy.lines.length) state.proxy.lines.push(blankLine());
+        render();
+  },
+  pxReset: d => { state.proxy = blankProxy(); render(); },
+  pxSubmit: d => { pxSubmit(); },
+});
+
+INPUT_HOOKS.push((e, d, val) => {
+  if (!d.px) return;
+  setPath(state.proxy, d.px, val);
+  if (d.px === 'date') render();
+  return true;
+});
+CHANGE_HOOKS.push((e, d, val, structural) => {
+  if (!d.px) return;
+  setPath(state.proxy, d.px, val);
+  if (d.px === 'plant_id') state.proxy.slotId = '';
+  if (structural) render();
+  return true;
+});
+
+/* ===== hours ===== */
+
 /* =========================================================================
    受付時間・休業日の設定（拠点ごと）
    ========================================================================= */
@@ -2075,7 +2567,7 @@ function viewHours() {
 }
 
 /* ---------- 受入時間枠の追加・編集 ---------- */
-var MODALS_SLOT = m => {
+MODALS.slot = m => {
   const pl = plant(m.plantId);
   const s = (pl.slots || []).find(x => x.id === m.slotId) || {};
   return {
@@ -2095,7 +2587,7 @@ var MODALS_SLOT = m => {
 };
 
 /* ---------- 持込受入・引取対応の切替（誤操作防止のため確認を挟む） ---------- */
-var MODALS_PLANTFLAG = m => {
+MODALS.plantFlag = m => {
   const pl = plant(m.plantId), on = pl[m.flag];
   const label = m.flag === 'is_delivery' ? '持込の受入' : '引取（集荷）';
   const type = m.flag === 'is_delivery' ? 'drop' : 'pickup';
@@ -2117,7 +2609,7 @@ var MODALS_PLANTFLAG = m => {
 };
 
 /* ---------- 臨時休業日 ---------- */
-var MODALS_HOLIDAY = m => {
+MODALS.holiday = m => {
   const pl = plant(m.plantId), hol = holidayOf(pl.id, m.date);
   const dow = parseD(m.date).getDay();
   const isDow = (pl.closed_dows || []).includes(dow);
@@ -2140,21 +2632,90 @@ var MODALS_HOLIDAY = m => {
   };
 };
 
+Object.assign(ACTIONS, {
+  hoursPlant: d => { state.hours.plantId = d.id; render(); },
+  hoursMonth: d => { state.hours.month = shiftMonth(state.hours.month, Number(d.n)); render(); },
+  openSlot: d => { openModal('slot', {plantId:d.plant, slotId:d.slot || null}, 'modal-md'); },
+  saveSlot: d => {
+    const m = state.modal;
+  const pl = plant(m.plantId);
+        const s = (pl.slots || []).find(x => x.id === m.slotId);
+        const name = m.name != null ? m.name : (s ? s.name : '');
+        const from = m.from != null ? m.from : (s ? s.from : '');
+        const to   = m.to   != null ? m.to   : (s ? s.to   : '');
+        if (!name.trim() || !from || !to) { m.err = '名称・開始・終了をすべて入力してください。'; renderModal(); return; }
+        if (to <= from) { m.err = '終了は開始より後にしてください。'; renderModal(); return; }
+        if (s) { Object.assign(s, {name:name.trim(), from, to}); }
+        else {
+          pl.slots.push({id:'s' + Date.now().toString(36), name:name.trim(), from, to});
+          pl.slots.sort((x,y) => x.from < y.from ? -1 : 1);
+        }
+        closeModal(); toast('受入時間枠を保存しました。'); render();
+  },
+  delSlot: d => {
+    const m = state.modal;
+  const pl = plant(d.plant);
+        const s = pl.slots.find(x => x.id === d.slot);
+        if (!confirm(`受入時間枠「${s.name} ${s.from}〜${s.to}」を削除します。よろしいですか？`)) return;
+        pl.slots = pl.slots.filter(x => x.id !== d.slot);
+        toast('受入時間枠を削除しました。', 'warn'); render();
+  },
+  saveHours: d => {
+    const m = state.modal;
+  const pl = plant(d.id);
+        const b = document.querySelector('[data-hours="begin_time"]').value;
+        const t = document.querySelector('[data-hours="end_time"]').value;
+        if (!b || !t || t <= b) { toast('引取対応時間を確認してください。', 'err'); return; }
+        pl.begin_time = b; pl.end_time = t;
+        toast('引取対応時間を保存しました。'); render();
+  },
+  saveDeadline: d => {
+    const m = state.modal;
+  const pl = plant(d.id);
+        pl.deadline_days = Number(document.querySelector('[data-deadline="days"]').value);
+        pl.deadline_time = document.querySelector('[data-deadline="time"]').value || '17:00';
+        toast(`予約の締切を「${deadlineLabel(pl)}」に設定しました。`); render();
+  },
+  saveDows: d => {
+    const m = state.modal;
+  const pl = plant(d.id);
+        pl.closed_dows = [...document.querySelectorAll('[data-dow]')].filter(x => x.checked).map(x => Number(x.dataset.dow));
+        toast('定休日を保存しました。'); render();
+  },
+  openPlantFlag: d => { openModal('plantFlag', {plantId:d.plant, flag:d.flag, ack:false}, 'modal-md'); },
+  doPlantFlag: d => {
+    const m = state.modal;
+  if (!m.ack) { m.err = '内容を確認してチェックを入れてください。'; renderModal(); return; }
+        const pl = plant(m.plantId);
+        pl[m.flag] = !pl[m.flag];
+        closeModal();
+        toast(`${pl.name} の${m.flag === 'is_delivery' ? '持込受入' : '引取対応'}を${pl[m.flag] ? '開始' : '停止'}しました。`, pl[m.flag] ? '' : 'warn');
+        render();
+  },
+  openHoliday: d => { openModal('holiday', {plantId:state.hours.plantId, date:d.date}, 'modal-md'); },
+  saveHoliday: d => {
+    const m = state.modal;
+  if (!m.reason || !String(m.reason).trim()) { m.err = '理由を入力してください。'; renderModal(); return; }
+        const pl = plant(m.plantId), ex = holidayOf(pl.id, d.date);
+        if (ex) ex.reason = String(m.reason).trim();
+        else HOLIDAYS.push({id:'h' + Date.now().toString(36), plant_id:pl.id, date:d.date, reason:String(m.reason).trim()});
+        closeModal(); toast(`${fmtMd(d.date)} を臨時休業にしました。`); render();
+  },
+  delHoliday: d => {
+    const m = state.modal;
+  const h = HOLIDAYS.find(x => x.id === d.id);
+        HOLIDAYS = HOLIDAYS.filter(x => x.id !== d.id);
+        closeModal(); toast('臨時休業を解除しました。'); render();
+  },
+});
+
+/* ===== reception ===== */
+
 /* =========================================================================
    計量入力
    構内では品目ごとの計量ができないため、記録するのは
    「総正味重量」と「含まれていた品目」「着車時間」「備考」のみ
    ========================================================================= */
-/* 申告数量の重量換算（kg）。t/kg 以外の単位は換算しない */
-function declaredKg(pickupId) {
-  return linesOf(pickupId).reduce((s,l) => {
-    const u = unit(l.unit_id).name;
-    if (l.qty == null) return s;
-    if (u === 't') return s + Number(l.qty) * 1000;
-    if (u === 'kg') return s + Number(l.qty);
-    return s;
-  }, 0);
-}
 const dayList = ds => PICKUPS.filter(p => p.date === ds && inScope(p) && ['approved','done'].includes(p.status));
 function nextReceiptNumber(plantId, ds) {
   const n = PICKUPS.filter(p => p.plant_id === plantId && p.date === ds && p.receipt_number)
@@ -2233,7 +2794,7 @@ function itemChecks(lines, checked, prefix) {
   }).join('')}</div>`;
 }
 
-var MODALS_WEIGH = m => {
+MODALS.weigh = m => {
   const p = pk(m.id), dk = declaredKg(p.id);
   const w = Number(m.weight);
   const diff = m.weight !== '' && !isNaN(w) ? w - dk : null;
@@ -2259,7 +2820,7 @@ var MODALS_WEIGH = m => {
 };
 
 /* ---------- 飛び込み搬入 ---------- */
-var MODALS_SPOT = m => ({
+MODALS.spot = m => ({
   title:'飛び込み搬入の登録',
   body:`<div class="row g-3 mb-3">
       <div class="col-12 col-md-6"><label class="form-label">取引先<span class="req">必須</span></label>
@@ -2283,7 +2844,7 @@ var MODALS_SPOT = m => ({
 });
 
 /* ---------- 受入不可・集荷不可 ---------- */
-var MODALS_REFUSE = m => {
+MODALS.refuse = m => {
   const p = pk(m.id);
   return {
     title:`${p.id} を${p.type === 'drop' ? '受入不可' : '集荷不可'}として記録`,
@@ -2298,6 +2859,73 @@ var MODALS_REFUSE = m => {
           <button class="btn btn-outline-danger" data-act="doRefuse" data-id="${p.id}">記録する</button>`
   };
 };
+
+Object.assign(ACTIONS, {
+  recShift: d => { state.reception.date = dstr(addDays(parseD(state.reception.date), Number(d.n))); render(); },
+  recToday: d => { state.reception.date = D(0); render(); },
+  openWeigh: d => { openModal('weigh', weighInit(d.id), 'modal-lg'); },
+  doWeigh: d => {
+    const m = state.modal;
+  const p = pk(m.id), w = Number(m.weight);
+        if (!m.arrived_at) { m.err = '着車時間を入力してください。'; renderModal(); return; }
+        if (m.weight === '' || isNaN(w) || w <= 0) { m.err = '正味重量を数字で入力してください。'; renderModal(); return; }
+        if (!m.items.length) { m.err = '含まれていた品目を1つ以上選んでください。'; renderModal(); return; }
+        const dk = declaredKg(p.id);
+        const before = linesOf(p.id);
+        PICKUP_ITEMS = PICKUP_ITEMS.filter(l => l.pickup_id !== p.id);
+        m.items.forEach(id => {
+          const old = before.find(l => l.item_id === id);
+          PICKUP_ITEMS.push(old || {id:'pi' + (++_pi), pickup_id:p.id, item_id:id, unit_id:'u2', qty:null});
+        });
+        Object.assign(p, {status:'done', arrived_at:m.arrived_at, weight:w,
+          diff: dk ? w - dk : 0, weigh_memo:m.memo || '',
+          receipt_number: p.receipt_number || nextReceiptNumber(p.plant_id, p.date)});
+        closeModal();
+        toast(`${p.id} の実績を確定しました（正味 ${num(w)} kg／伝票 No.${p.receipt_number}）。`);
+        render();
+  },
+  openSpot: d => {
+    const m = state.modal;
+  openModal('spot', {company_id:'', plant_id:PLANTS.filter(p => p.is_delivery)[0].id,
+        items:[], car_number:'', weight:'', arrived_at:nowHm(), memo:''});
+  },
+  doSpot: d => {
+    const m = state.modal;
+  const w = Number(m.weight);
+        if (!m.company_id) { m.err = '取引先を選択してください。'; renderModal(); return; }
+        if (m.weight === '' || isNaN(w) || w <= 0) { m.err = '正味重量を数字で入力してください。'; renderModal(); return; }
+        if (!m.items.length) { m.err = '含まれていた品目を1つ以上選んでください。'; renderModal(); return; }
+        const id = nextPickupNo();
+        PICKUPS.unshift({id, type:'drop', status:'done', company_id:m.company_id, plant_id:m.plant_id,
+          date:recDate(), begin_time:m.arrived_at, end_time:m.arrived_at,
+          car_number:m.car_number || '',
+          applied_at:`${D(0)} ${nowHm()}`, via:'飛び込み',
+          approved_at:`${D(0)} ${nowHm()}`, approved_by:`${ME.role} ${ME.name.split(' ')[0]}`,
+          arrived_at:m.arrived_at, receipt_number:nextReceiptNumber(m.plant_id, recDate()),
+          weight:w, diff:0, weigh_memo:m.memo || ''});
+        m.items.forEach(it => PICKUP_ITEMS.push({id:'pi' + (++_pi), pickup_id:id, item_id:it, unit_id:'u2', qty:null}));
+        closeModal();
+        toast(`飛び込み搬入 ${id} を実績登録しました。`);
+        render();
+  },
+  openRefuse: d => { closeModal(); setTimeout(() => openModal('refuse', {id:d.id, reason:''}, 'modal-md'), 250); },
+  doRefuse: d => {
+    const m = state.modal;
+  if (!m.reason) { m.err = '理由を選択してください。'; renderModal(); return; }
+        const p = pk(m.id);
+        p.status = 'canceled'; p.cancel_reason = m.reason; p.canceled_at = `${D(0)} ${nowHm()}`;
+        closeModal(); toast(`${p.id} を「${m.reason}」として記録しました。`, 'warn'); render();
+  },
+});
+
+INPUT_HOOKS.push((e, d, val) => {
+  if (d.act === 'recQ') { state.reception.q = val; render(); return true; }
+});
+CHANGE_HOOKS.push((e, d, val) => {
+  if (d.act === 'recDate') { state.reception.date = val; render(); return true; }
+});
+
+/* ===== actuals ===== */
 
 /* =========================================================================
    実績一覧
@@ -2368,14 +2996,34 @@ function viewActuals() {
   ${list.length > 200 ? `<p class="hint mt-2">先頭200件を表示（全 ${list.length} 件）。CSVは全件出力されます。</p>` : ''}`;
 }
 
+Object.assign(ACTIONS, {
+  exportActuals: d => {
+    const m = state.modal;
+  const rows = [['受付番号','日付','伝票番号','区分','取引先','拠点','引取場所','車両ナンバー','着車時間','品目','申告(kg)','正味重量(kg)','差異(kg)','備考']];
+        filteredActuals().forEach(p => rows.push([
+          p.id, p.date, p.receipt_number || '', typeLabel(p.type), company(p.company_id).name, plant(p.plant_id).name,
+          p.site_name || '', p.car_number || '',
+          p.arrived_at || '', linesOf(p.id).map(l => item(l.item_id).name).join('／'),
+          declaredKg(p.id) || '', p.weight, p.diff, p.weigh_memo || '']));
+        downloadCsv(`実績一覧_${state.actuals.from}_${state.actuals.to}.csv`, rows);
+        toast(`実績 ${filteredActuals().length} 件をCSV出力しました。`);
+  },
+});
+
+INPUT_HOOKS.push((e, d, val) => {
+  if (d.act === 'acFilter') { state.actuals[d.key] = val; render(); return true; }
+});
+CHANGE_HOOKS.push((e, d, val, structural) => {
+  if (d.act === 'acFilter') { state.actuals[d.key] = val; if (structural) render(); return true; }
+});
+
+/* ===== companies ===== */
+
 /* =========================================================================
    取引先マスタ
    社内では情報を登録せず、登録用URLを取引先に渡すだけ。
    URLは1本を使い回し、必要なときだけ再発行する（再発行すると旧URLは無効）。
    ========================================================================= */
-const INVITE_BASE = 'https://sanpai.example.jp/invite/';
-const randToken = () => Math.random().toString(36).slice(2,10) + Math.random().toString(36).slice(2,4);
-
 function viewCompanies() {
   const list = COMPANIES.filter(c => c.status === 'active');
   const rows = list.map(c => {
@@ -2417,7 +3065,7 @@ function viewCompanies() {
 }
 
 /* ---------- 登録用URLの再発行 ---------- */
-var MODALS_REISSUE = m => ({
+MODALS.reissue = m => ({
   title:'登録用URLを再発行',
   body:`<div class="warnbox danger mb-3">${ic('alert',16)}<span>再発行すると現在のURLは使えなくなります。
       すでにURLを送付済みで未登録の取引先には、新しいURLを送り直す必要があります。</span></div>
@@ -2432,7 +3080,7 @@ var MODALS_REISSUE = m => ({
 });
 
 /* ---------- 取引先の編集 ---------- */
-var MODALS_COMPANY = m => {
+MODALS.company = m => {
   const d = m.row;
   const f = (k, label, type) => `<label class="form-label">${label}</label>
     <input type="${type || 'text'}" class="form-control" data-mod="row.${k}" value="${esc(d[k] || '')}">`;
@@ -2465,6 +3113,55 @@ var MODALS_COMPANY = m => {
   };
 };
 
+
+Object.assign(ACTIONS, {
+  openReissue: d => { openModal('reissue', {ack:false}, 'modal-md'); },
+  doReissue: d => {
+    const m = state.modal;
+  if (!m.ack) { m.err = '内容を確認してチェックを入れてください。'; renderModal(); return; }
+        INVITE_LINK = {token:randToken(), issued_at:`${D(0)} ${nowHm()}`};
+        closeModal();
+        toast('登録用URLを再発行しました。旧URLは使えません。', 'warn');
+        render();
+  },
+  copyInvite: d => {
+    const m = state.modal;
+  const url = INVITE_BASE + d.token;
+        if (navigator.clipboard) navigator.clipboard.writeText(url).catch(() => {});
+        toast('登録用URLをコピーしました。');
+  },
+  openInvitePage: d => {
+    if (IS_SINGLE) { closeModal(); state.invite = {token:d.token, form:null, done:false}; gotoRoute('invite'); }
+    else { saveData(); location.href = 'invite.html?t=' + encodeURIComponent(d.token); }
+  },
+  editCompany: d => { openModal('company', {i:Number(d.i), row:JSON.parse(JSON.stringify(COMPANIES[Number(d.i)]))}); },
+  saveCompany: d => {
+    const m = state.modal;
+  if (!m.row.name || !m.row.name.trim()) { m.err = '取引先名を入力してください。'; renderModal(); return; }
+        Object.assign(COMPANIES[m.i], m.row);
+        closeModal(); toast('保存しました。'); render();
+  },
+  delCompany: d => {
+    const m = state.modal;
+  const c = COMPANIES[Number(d.i)];
+        const used = PICKUPS.filter(p => p.company_id === c.id).length;
+        if (used) { toast(`「${c.name}」には予約・実績が ${used} 件あります。削除できません。`, 'err'); return; }
+        if (!confirm(`取引先「${c.name}」を削除します。よろしいですか？`)) return;
+        COMPANIES.splice(Number(d.i), 1);
+        toast('削除しました。', 'warn'); render();
+  },
+  csvCompanies: d => {
+    const m = state.modal;
+  const rows = [['取引先名','フリガナ','排出事業者','運搬業者','担当者','メールアドレス','電話番号','郵便番号','都道府県','住所','インボイス登録番号','振込先口座','与信区分','登録日時']];
+        COMPANIES.filter(c => c.status === 'active').forEach(c => rows.push([c.name, c.kana, c.is_generator ? '○' : '', c.is_transporter ? '○' : '',
+          c.contact, c.email, c.phone, c.postalcode, c.pref, c.address, c.invoice, c.bank, c.credit,
+          c.registered_at || '']));
+        downloadCsv('取引先マスタ.csv', rows);
+        toast('CSVを出力しました。');
+  },
+});
+
+/* ===== invite ===== */
 /* =========================================================================
    取引先の本登録画面　※本番では取引先側アプリの画面。モック用に同梱
    ========================================================================= */
@@ -2527,15 +3224,46 @@ function viewInvite() {
   </div>`;
 }
 
+
+Object.assign(ACTIONS, {
+  doInvite: d => {
+    const m = state.modal;
+  const f = state.invite.form, e2 = [];
+        if (!f.name.trim()) e2.push('会社名を入力してください。');
+        if (!f.is_generator && !f.is_transporter) e2.push('区分を1つ以上選択してください。');
+        if (!f.contact.trim()) e2.push('ご担当者名を入力してください。');
+        if (!f.phone.trim()) e2.push('電話番号を入力してください。');
+        if (!f.email.trim()) e2.push('メールアドレスを入力してください。');
+        else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(f.email.trim())) e2.push('メールアドレスの形式を確認してください。');
+        if (f.password.length < 8) e2.push('パスワードは8文字以上で入力してください。');
+        if (f.password !== f.password2) e2.push('パスワード（確認）が一致しません。');
+        f.errors = e2;
+        if (e2.length) { render(); return; }
+        let n = COMPANIES.length + 1;
+        while (COMPANIES.find(x => x.id === 'c' + n)) n++;
+        COMPANIES.push({id:'c' + n, name:f.name.trim(), kana:f.kana,
+          is_generator:!!f.is_generator, is_transporter:!!f.is_transporter,
+          contact:f.contact, email:f.email, phone:f.phone,
+          postalcode:f.postalcode, pref:f.pref, address:f.address,
+          invoice:f.invoice, bank:f.bank, credit:'',
+          status:'active', registered_at:`${D(0)} ${nowHm()}`});
+        state.invite.done = true;
+        toast('本登録が完了しました。');
+        render();
+  },
+});
+
+INPUT_HOOKS.push((e, d, val) => {
+  if (!d.inv) return;
+  state.invite.form[d.inv] = val;
+  return true;
+});
+CHANGE_HOOKS.push(INPUT_HOOKS[INPUT_HOOKS.length - 1]);
+
+/* ===== masters ===== */
 /* =========================================================================
    拠点・品目・単位マスタ
    ========================================================================= */
-function getPath(o, p) { return p.split('.').reduce((t,k) => (t == null ? t : t[k]), o); }
-function setPath(o, p, v) {
-  const ks = p.split('.'); let t = o;
-  for (let i = 0; i < ks.length - 1; i++) { if (t[ks[i]] == null) t[ks[i]] = {}; t = t[ks[i]]; }
-  t[ks[ks.length-1]] = v;
-}
 const MASTERS = {
   m_plants: {
     title:'拠点', data:() => PLANTS,
@@ -2591,7 +3319,7 @@ function viewMaster(route) {
     </tr>`).join('') : `<tr><td colspan="${cols.length + 1}" class="text-center text-secondary py-4">登録がありません</td></tr>`}</tbody>
   </table></div>`;
 }
-var MODALS_MASTER = m => {
+MODALS.master = m => {
   const mm = MASTERS[m.m], d = m.row;
   const field = c => {
     const v = getPath(d, c.k);
@@ -2611,556 +3339,100 @@ var MODALS_MASTER = m => {
   };
 };
 
+Object.assign(ACTIONS, {
+  mAdd: d => {
+    const m = state.modal;
+  const mm = MASTERS[d.m], row = {};
+        mm.cols.forEach(c => setPath(row, c.k, c.type === 'bool' ? false : ''));
+        if (d.m === 'm_plants') Object.assign(row, {slots:[], closed_dows:[0], begin_time:'08:00', end_time:'17:00'});
+        openModal('master', {m:d.m, idx:null, row});
+  },
+  mEdit: d => {
+    const m = state.modal;
+  openModal('master', {m:d.m, idx:Number(d.i), row:JSON.parse(JSON.stringify(MASTERS[d.m].data()[Number(d.i)]))});
+  },
+  mDel: d => {
+    const m = state.modal;
+  const arr = MASTERS[d.m].data(), i = Number(d.i), row = arr[i];
+        /* 使用中のマスタは削除させない（予約・実績の参照が壊れるため） */
+        const used = d.m === 'm_plants' ? PICKUPS.filter(p => p.plant_id === row.id).length
+                   : d.m === 'm_items'  ? PICKUP_ITEMS.filter(l => l.item_id === row.id).length
+                   : d.m === 'm_units'  ? PICKUP_ITEMS.filter(l => l.unit_id === row.id).length : 0;
+        if (used) { toast(`「${row.name}」は予約・実績で ${used} 件使われています。削除できません。`, 'err'); return; }
+        if (!confirm(`${MASTERS[d.m].title}の「${row.name}」を削除します。よろしいですか？`)) return;
+        arr.splice(i, 1);
+        if (d.m === 'm_plants') {                       /* 選択中の拠点が消えたら戻す */
+          if (state.plantId === row.id) state.plantId = 'all';
+          if (state.hours.plantId === row.id) state.hours.plantId = (PLANTS[0] || {}).id;
+        }
+        toast('削除しました。', 'warn'); render();
+  },
+  mSave: d => {
+    const m = state.modal;
+  const mm = MASTERS[m.m], arr = mm.data();
+        const miss = mm.cols.filter(c => c.req && !getPath(m.row, c.k));
+        if (miss.length) { m.err = `必須項目が未入力です：${miss.map(c => c.label).join('、')}`; renderModal(); return; }
+        if (m.idx == null) {
+          const pref = (arr[0] && arr[0].id ? String(arr[0].id).replace(/\d+$/,'') : 'x');
+          let n = arr.length + 1;
+          while (arr.find(x => x.id === pref + n)) n++;
+          m.row.id = pref + n;
+          arr.push(m.row);
+        } else {
+          Object.assign(arr[m.idx], m.row);
+        }
+        closeModal(); toast('保存しました。'); render();
+  },
+  mCsv: d => {
+    const m = state.modal;
+  const mm = MASTERS[d.m];
+        const rows = [mm.cols.map(c => c.label)];
+        mm.data().forEach(r => rows.push(mm.cols.map(c => {
+          const v = getPath(r, c.k);
+          return typeof v === 'boolean' ? (v ? '○' : '') : (v == null ? '' : v);
+        })));
+        downloadCsv(`${mm.title}.csv`, rows);
+        toast('CSVを出力しました。');
+  },
+  goHours: d => { state.hours.plantId = d.id; go('hours'); },
+});
+
+
 /* =========================================================================
-   ルーティング・描画
+   単一ファイル版のルーティング（分割版ではページ遷移で切り替える）
    ========================================================================= */
+const EMITTER_HTML = (document.getElementById('emitterHtml').textContent || '')
+  .replace(/<\\\/script>/g, '<\/script>');
 const VIEWS = {
-  approvals: viewApprovals, board: viewBoard, proxy: viewProxy,
-  hours: viewHours, reception: viewReception, actuals: viewActuals,
-  m_companies: viewCompanies, invite: viewInvite
+  index:viewIndex, approvals:viewApprovals, board:viewBoard, proxy:viewProxy,
+  hours:viewHours, reception:viewReception, actuals:viewActuals,
+  m_companies:viewCompanies, m_plants:() => viewMaster('m_plants'),
+  m_items:() => viewMaster('m_items'), m_units:() => viewMaster('m_units'),
+  invite:viewInvite,
+  emitter:() => `<iframe id="elEmitFrame" class="emitframe-inline" title="排出者ポータル"></iframe>`
 };
-Object.keys(MASTERS).forEach(k => VIEWS[k] = () => viewMaster(k));
-
-const MODALS = {
-  approve: MODALS_APPROVE, reject: MODALS_REJECT, pickup: MODALS_PICKUP,
-  changeSlot: MODALS_CHANGESLOT, changeVisit: MODALS_CHANGEVISIT, cancel: MODALS_CANCEL,
-  slot: MODALS_SLOT, holiday: MODALS_HOLIDAY, plantFlag: MODALS_PLANTFLAG,
-  weigh: MODALS_WEIGH, spot: MODALS_SPOT, refuse: MODALS_REFUSE,
-  reissue: MODALS_REISSUE, company: MODALS_COMPANY, master: MODALS_MASTER
+const AFTER = {
+  emitter:() => {
+    const f = document.getElementById('elEmitFrame');
+    if (f && !f.dataset.loaded) { f.srcdoc = EMITTER_HTML; f.dataset.loaded = '1'; }
+  }
 };
-
-/* 同じファイルに排出者ポータルが同梱されていれば、その場で切り替える。
-   同梱されていない（processor-admin.html 単体）場合はヘッダーのリンクで遷移する */
-const EMITTER_HTML = ((document.getElementById('emitterHtml') || {}).textContent || '')
-  .replace(/<\\\/script>/g, '<\/script>');   /* 埋め込み時にエスケープした終了タグを戻す */
-
-const nowHm = () => { const d = new Date(); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
-let lastRoute = null;
-
-function focusKey(el) {
-  if (!el || !el.dataset) return null;
-  const d = el.dataset;
-  if (d.px)  return 'px:'  + d.px;
-  if (d.mod) return 'mod:' + d.mod;
-  if (d.inv) return 'inv:' + d.inv;
-  if (d.key) return 'key:' + d.key;
-  return null;
-}
-function restoreFocus(key, pos) {
-  if (!key) return;
-  const i = key.indexOf(':'), t = key.slice(0, i), v = key.slice(i+1);
-  const el = document.querySelector(`[data-${t}="${window.CSS && CSS.escape ? CSS.escape(v) : v}"]`);
-  if (!el) return;
-  el.focus({preventScroll:true});
-  try { el.setSelectionRange(pos, pos); } catch (e) {}
-}
-
-function renderSidebar() {
-  document.getElementById('elSidebar').innerHTML = NAV.map(sec => {
-    const items = sec.items.map(it => {
-      const cnt = it.badge ? pendingCount() : 0;
-      return `<a href="#${it.route}" class="navitem ${state.route === it.route ? 'active' : ''}" data-act="go" data-route="${it.route}">
-        <span class="ico">${ic(it.ico, 17)}</span><span>${it.label}</span>
-        ${cnt ? `<span class="cnt">${cnt}</span>` : ''}</a>`;
-    }).join('');
-    return `<div class="navsec">${sec.sec}</div>${items}`;
-  }).join('');
-}
-
-function renderChrome() {
-  const ps = document.getElementById('elPlantSel');
-  if (!ps.options.length) {
-    ps.innerHTML = `<option value="all">すべての拠点</option>` +
-      PLANTS.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
-    document.getElementById('elMenuBtn').innerHTML = ic('menu');
-    document.getElementById('elEmitterBtn').innerHTML = ic('login',15) + '排出者側の画面';
-  }
-  ps.value = state.plantId;
-  const n = pendingCount();
-  document.getElementById('elNotifBtn').innerHTML =
-    ic('bell') + (n ? ` <span class="badge b-rejected b-sq" style="padding:1px 6px">${n}</span>` : '');
-}
-
-const BRAND_HTML = '産廃予約管理システム<span>株式会社エコクリーン埼玉（処理業者）</span>';
-const BRAND_INVITE = '産廃予約システム<span>取引先アカウント登録</span>';
-
-function render() {
-  const y = window.scrollY;
-  /* 排出者ポータル表示中は管理画面のガワを隠す */
-  const frame = document.getElementById('elEmitFrame'), back = document.getElementById('elBackBtn');
-  frame.hidden = !state.emitter; back.hidden = !state.emitter;
-  document.querySelector('.topbar').style.display = state.emitter ? 'none' : '';
-  document.getElementById('elSidebar').style.display = state.emitter ? 'none' : '';
-  document.getElementById('elView').style.display = state.emitter ? 'none' : '';
-  if (state.emitter) {
-    if (!frame.dataset.loaded) { frame.srcdoc = EMITTER_HTML; frame.dataset.loaded = '1'; }
-    back.innerHTML = ic('login',15) + '処理業者側の画面に戻る';
-    if (location.hash !== '#emitter') history.replaceState(null, '', '#emitter');
-    return;
-  }
-  const isInvite = state.route === 'invite';
-  document.body.classList.toggle('invite-mode', isInvite);
-  document.querySelector('.topbar .brand').innerHTML = isInvite ? BRAND_INVITE : BRAND_HTML;
-  ['elPlantSel','elNotifBtn','elEmitterBtn','elMenuBtn'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.style.display = isInvite ? 'none' : '';
-  });
-  const af = document.activeElement, fk = focusKey(af);
-  const pos = af && af.setSelectionRange ? (af.selectionStart || 0) : 0;
-  renderChrome();
-  renderSidebar();
-  document.getElementById('elView').innerHTML = VIEWS[state.route]();
-  if (state.route !== lastRoute) { window.scrollTo(0,0); lastRoute = state.route; }
-  else window.scrollTo(0, y);
-  restoreFocus(fk, pos);
-  const hash = state.route === 'invite' ? `#invite/${state.invite.token}` : '#' + state.route;
-  if (location.hash !== hash) history.replaceState(null, '', hash);
-}
-function go(route) {
-  state.route = route;
-  document.getElementById('elSidebar').classList.remove('open');
+function gotoRoute(r) {
+  if (!VIEWS[r]) r = 'index';
+  PAGE = {route:r, view:VIEWS[r], after:AFTER[r], chrome:(r === 'invite' ? 'plain' : 'admin')};
+  if (r === 'invite' && !state.invite.token) state.invite = {token:INVITE_LINK.token, form:null, done:false};
+  applyChromeMode();
   render();
+  if (location.hash !== '#' + r) history.replaceState(null, '', '#' + r);
 }
-
-/* =========================================================================
-   イベント
-   ========================================================================= */
-document.addEventListener('input', e => {
-  const d = e.target.dataset;
-  const val = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
-  if (d.px)  { setPath(state.proxy, d.px, val); if (d.px === 'date') render(); return; }
-  if (d.mod) { modBind(d.mod, val); if (d.rerender) renderModal(); return; }
-  if (d.inv) { state.invite.form[d.inv] = val; return; }
-  if (d.act === 'apFilter') { state.approval[d.key] = val; render(); return; }
-  if (d.act === 'recQ')     { state.reception.q = val; render(); return; }
-  if (d.act === 'acFilter') { state.actuals[d.key] = val; render(); return; }
-});
-/* テキスト入力の change は blur 時に発火し、再描画するとクリック対象のボタンが
-   作り直されてクリックが失われる。再描画はセレクト・チェック・日付のみに限定する */
-document.addEventListener('change', e => {
-  const d = e.target.dataset;
-  const val = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
-  const structural = e.target.tagName === 'SELECT' || ['checkbox','radio','date'].includes(e.target.type);
-  if (d.px) {
-    setPath(state.proxy, d.px, val);
-    if (d.px === 'plant_id') { state.proxy.slotId = ''; }
-    if (d.px === 'date') state.proxy.slotId = state.proxy.slotId;
-    if (structural) render();
-    return;
-  }
-  if (d.mod) { modBind(d.mod, val); if (structural) renderModal(); return; }
-  if (d.inv) { state.invite.form[d.inv] = val; return; }
-  if (d.act === 'boardDate')   { state.board.date = val; render(); return; }
-  if (d.act === 'recDate')     { state.reception.date = val; render(); return; }
-  if (d.act === 'boardVoid')   { state.board.showVoid = val; render(); return; }
-  if (d.act === 'acFilter')    { state.actuals[d.key] = val; if (structural) render(); return; }
-  if (d.act === 'apFilter')    { state.approval[d.key] = val; if (structural) render(); return; }
-  if (d.act === 'switchPlant') { state.plantId = val; state.approval.sel = null; render(); return; }
+const startRoute = location.hash.slice(1) || 'index';
+mount(startRoute, VIEWS[startRoute] || viewIndex);
+gotoRoute(startRoute);
+window.addEventListener('hashchange', () => {
+  const r = location.hash.slice(1);
+  if (VIEWS[r] && r !== PAGE.route) gotoRoute(r);
 });
 
-function modBind(key, val) {
-  const m = state.modal; if (!m) return;
-  if (key.startsWith('row.')) { setPath(m.row, key.slice(4), val); return; }
-  if (key.startsWith('pi.')) {          /* 計量時の「含まれていた品目」 */
-    const id = key.slice(3);
-    m.items = m.items || [];
-    if (val) { if (!m.items.includes(id)) m.items.push(id); }
-    else m.items = m.items.filter(x => x !== id);
-    return;
-  }
-  setPath(m, key, val);
-}
-
-document.addEventListener('click', e => {
-  const el = e.target.closest('[data-act]'); if (!el) return;
-  const a = el.dataset.act, d = el.dataset;
-  if (el.tagName === 'A' && a !== 'openEmitter') e.preventDefault();
-  if (['SELECT','INPUT','TEXTAREA'].includes(el.tagName)) return;
-  const m = state.modal;
-
-  switch (a) {
-    /* ---- 共通 ---- */
-    case 'go': go(d.route); break;
-    case 'openEmitter':
-      if (!EMITTER_HTML) return;            /* 単体ファイルのときはリンクとして遷移させる */
-      e.preventDefault();
-      state.emitter = true;
-      document.getElementById('elSidebar').classList.remove('open');
-      render(); break;
-    case 'backToAdmin': state.emitter = false; render(); break;
-    case 'toggleNav': document.getElementById('elSidebar').classList.toggle('open'); break;
-    case 'closeModal': closeModal(); render(); break;
-    case 'openNotif':
-      toast(`承認待ち ${pendingCount()} 件（通知チャネルはLINE／LINE WORKS等を想定・要確定）`);
-      go('approvals'); break;
-
-    /* ---- 予約の承認 ---- */
-    case 'selApproval': state.approval.sel = d.id; render(); break;
-    case 'openPickupDetail': openModal('pickup', {id:d.id}); break;
-    case 'openApprove': {
-      const p = pk(d.id), pl = plant(p.plant_id);
-      const s = slotOf(pl, p) || (pl.slots || [])[0] || {};
-      openModal('approve', {id:d.id, date:p.date, slotId:s.id,
-        begin_time:p.begin_time, end_time:p.end_time, dispatch_note:p.dispatch_note || '', comment:''});
-      break;
-    }
-    case 'openReject': openModal('reject', {id:d.id, reason:''}); break;
-    case 'pickAlt':
-      m.reason = (m.reason ? m.reason.replace(/\s*$/,'') + '\n' : '') + `代替候補：${d.label}（${d.sub}）`;
-      renderModal(); break;
-    case 'doApprove': {
-      const p = pk(m.id), pl = plant(p.plant_id);
-      if (m.date && m.date < D(0)) { m.err = '過去の日付は指定できません。'; renderModal(); return; }
-      if (p.type === 'drop') {
-        const s = (pl.slots || []).find(x => x.id === m.slotId);
-        if (!s) { m.err = '受入時間枠を選択してください。'; renderModal(); return; }
-        p.date = m.date || p.date; p.begin_time = s.from; p.end_time = s.to;
-      } else {
-        if (!m.date || !m.begin_time || !m.end_time) { m.err = '訪問日時を入力してください。'; renderModal(); return; }
-        if (m.end_time <= m.begin_time) { m.err = '終了時刻は開始時刻より後にしてください。'; renderModal(); return; }
-        Object.assign(p, {date:m.date, begin_time:m.begin_time, end_time:m.end_time, dispatch_note:m.dispatch_note || ''});
-      }
-      p.status = 'approved'; p.approved_at = `${D(0)} ${nowHm()}`; p.approved_by = `${ME.role} ${ME.name.split(' ')[0]}`;
-      if (m.comment) p.approve_comment = m.comment;
-      closeModal(); state.approval.sel = null;
-      toast(`${p.id} を承認しました。取引先へ通知を送信しました。`);
-      render(); break;
-    }
-    case 'doReject': {
-      if (!m.reason || !m.reason.trim()) { m.err = '理由を入力してください。'; renderModal(); return; }
-      const p = pk(m.id);
-      p.status = 'rejected'; p.reject_reason = m.reason.trim();
-      p.rejected_at = `${D(0)} ${nowHm()}`; p.rejected_by = `${ME.role} ${ME.name.split(' ')[0]}`;
-      closeModal(); state.approval.sel = null;
-      toast(`${p.id} に変更依頼を送りました。取引先が修正して再申請します。`, 'warn');
-      render(); break;
-    }
-
-    /* ---- 確定した予約 ---- */
-    case 'boardShift': state.board.date = dstr(addDays(parseD(state.board.date), Number(d.n))); render(); break;
-    case 'boardToday': state.board.date = D(0); render(); break;
-    case 'boardTab': state.board.tab = d.tab; render(); break;
-    case 'openChangeSlot': {
-      const p = pk(d.id), pl = plant(p.plant_id), s = slotOf(pl, p) || (pl.slots || [])[0] || {};
-      openModal('changeSlot', {id:d.id, date:p.date, slotId:s.id, reason:''}); break;
-    }
-    case 'doChangeSlot': {
-      if (!m.reason || !m.reason.trim()) { m.err = '変更理由を入力してください。'; renderModal(); return; }
-      if (m.date < D(0)) { m.err = '過去の日付は指定できません。'; renderModal(); return; }
-      const p = pk(m.id), pl = plant(p.plant_id);
-      const s = (pl.slots || []).find(x => x.id === m.slotId);
-      if (!s) { m.err = '受入時間枠を選択してください。'; renderModal(); return; }
-      const before = `${fmtMd(p.date)} ${timeRange(p)}`;
-      p.date = m.date; p.begin_time = s.from; p.end_time = s.to;
-      closeModal(); toast(`${p.id} の受入時間枠を変更し、取引先へ通知しました。`); render(); break;
-    }
-    case 'openChangeVisit': {
-      const p = pk(d.id);
-      openModal('changeVisit', {id:d.id, date:p.date, begin_time:p.begin_time, end_time:p.end_time,
-        dispatch_note:p.dispatch_note || '', reason:''}); break;
-    }
-    case 'doChangeVisit': {
-      if (!m.reason || !m.reason.trim()) { m.err = '変更理由を入力してください。'; renderModal(); return; }
-      if (m.date < D(0)) { m.err = '過去の日付は指定できません。'; renderModal(); return; }
-      if (m.end_time <= m.begin_time) { m.err = '終了時刻は開始時刻より後にしてください。'; renderModal(); return; }
-      const p = pk(m.id);
-      Object.assign(p, {date:m.date, begin_time:m.begin_time, end_time:m.end_time, dispatch_note:m.dispatch_note});
-      closeModal(); toast(`${p.id} の訪問日時を変更し、取引先へ通知しました。`); render(); break;
-    }
-    case 'openCancel': openModal('cancel', {id:d.id, reason:''}, 'modal-md'); break;
-    case 'doCancel': {
-      if (!m.reason || !m.reason.trim()) { m.err = '取消理由を入力してください。'; renderModal(); return; }
-      const p = pk(m.id);
-      p.status = 'canceled'; p.cancel_reason = m.reason.trim(); p.canceled_at = `${D(0)} ${nowHm()}`;
-      closeModal(); toast(`${p.id} を取消しました。`, 'warn'); render(); break;
-    }
-    case 'exportBoard': {
-      const ds = state.board.date;
-      const rows = [['日付','受付番号','区分','ステータス','拠点','時間','取引先','品目・申告数量','車両ナンバー','引取場所','住所','メモ']];
-      PICKUPS.filter(p => p.date === ds && inScope(p) && !['pending','rejected'].includes(p.status))
-        .forEach(p => rows.push([ds, p.id, typeLabel(p.type), STATUS[p.status].t, plant(p.plant_id).name,
-          timeRange(p), company(p.company_id).name, linesText(p.id),
-          p.car_number || '', p.site_name || '', p.site_addr || '', (p.type === 'drop' ? p.note : p.dispatch_note) || '']));
-      downloadCsv(`予約一覧_${ds}.csv`, rows);
-      toast('CSVを出力しました。'); break;
-    }
-
-    /* ---- 予約の代行作成 ---- */
-    case 'pxType': state.proxy.type = d.v; state.proxy.slotId = ''; state.proxy.errors = []; render(); break;
-    case 'pxAddLine': state.proxy.lines.push(blankLine()); render(); break;
-    case 'pxRemoveLine':
-      state.proxy.lines.splice(Number(d.idx), 1);
-      if (!state.proxy.lines.length) state.proxy.lines.push(blankLine());
-      render(); break;
-    case 'pxReset': state.proxy = blankProxy(); render(); break;
-    case 'pxSubmit': pxSubmit(); break;
-
-    /* ---- 受付時間・休業日 ---- */
-    case 'hoursPlant': state.hours.plantId = d.id; render(); break;
-    case 'hoursMonth': state.hours.month = shiftMonth(state.hours.month, Number(d.n)); render(); break;
-    case 'goHours': state.hours.plantId = d.id; go('hours'); break;
-    case 'openSlot': openModal('slot', {plantId:d.plant, slotId:d.slot || null}, 'modal-md'); break;
-    case 'saveSlot': {
-      const pl = plant(m.plantId);
-      const s = (pl.slots || []).find(x => x.id === m.slotId);
-      const name = m.name != null ? m.name : (s ? s.name : '');
-      const from = m.from != null ? m.from : (s ? s.from : '');
-      const to   = m.to   != null ? m.to   : (s ? s.to   : '');
-      if (!name.trim() || !from || !to) { m.err = '名称・開始・終了をすべて入力してください。'; renderModal(); return; }
-      if (to <= from) { m.err = '終了は開始より後にしてください。'; renderModal(); return; }
-      if (s) { Object.assign(s, {name:name.trim(), from, to}); }
-      else {
-        pl.slots.push({id:'s' + Date.now().toString(36), name:name.trim(), from, to});
-        pl.slots.sort((x,y) => x.from < y.from ? -1 : 1);
-      }
-      closeModal(); toast('受入時間枠を保存しました。'); render(); break;
-    }
-    case 'delSlot': {
-      const pl = plant(d.plant);
-      const s = pl.slots.find(x => x.id === d.slot);
-      if (!confirm(`受入時間枠「${s.name} ${s.from}〜${s.to}」を削除します。よろしいですか？`)) return;
-      pl.slots = pl.slots.filter(x => x.id !== d.slot);
-      toast('受入時間枠を削除しました。', 'warn'); render(); break;
-    }
-    case 'saveHours': {
-      const pl = plant(d.id);
-      const b = document.querySelector('[data-hours="begin_time"]').value;
-      const t = document.querySelector('[data-hours="end_time"]').value;
-      if (!b || !t || t <= b) { toast('引取対応時間を確認してください。', 'err'); return; }
-      pl.begin_time = b; pl.end_time = t;
-      toast('引取対応時間を保存しました。'); render(); break;
-    }
-    case 'saveDeadline': {
-      const pl = plant(d.id);
-      pl.deadline_days = Number(document.querySelector('[data-deadline="days"]').value);
-      pl.deadline_time = document.querySelector('[data-deadline="time"]').value || '17:00';
-      toast(`予約の締切を「${deadlineLabel(pl)}」に設定しました。`); render(); break;
-    }
-    case 'saveDows': {
-      const pl = plant(d.id);
-      pl.closed_dows = [...document.querySelectorAll('[data-dow]')].filter(x => x.checked).map(x => Number(x.dataset.dow));
-      toast('定休日を保存しました。'); render(); break;
-    }
-    case 'openPlantFlag': openModal('plantFlag', {plantId:d.plant, flag:d.flag, ack:false}, 'modal-md'); break;
-    case 'doPlantFlag': {
-      if (!m.ack) { m.err = '内容を確認してチェックを入れてください。'; renderModal(); return; }
-      const pl = plant(m.plantId);
-      pl[m.flag] = !pl[m.flag];
-      closeModal();
-      toast(`${pl.name} の${m.flag === 'is_delivery' ? '持込受入' : '引取対応'}を${pl[m.flag] ? '開始' : '停止'}しました。`, pl[m.flag] ? '' : 'warn');
-      render(); break;
-    }
-    case 'openHoliday': openModal('holiday', {plantId:state.hours.plantId, date:d.date}, 'modal-md'); break;
-    case 'saveHoliday': {
-      if (!m.reason || !String(m.reason).trim()) { m.err = '理由を入力してください。'; renderModal(); return; }
-      const pl = plant(m.plantId), ex = holidayOf(pl.id, d.date);
-      if (ex) ex.reason = String(m.reason).trim();
-      else HOLIDAYS.push({id:'h' + Date.now().toString(36), plant_id:pl.id, date:d.date, reason:String(m.reason).trim()});
-      closeModal(); toast(`${fmtMd(d.date)} を臨時休業にしました。`); render(); break;
-    }
-    case 'delHoliday': {
-      const h = HOLIDAYS.find(x => x.id === d.id);
-      HOLIDAYS = HOLIDAYS.filter(x => x.id !== d.id);
-      closeModal(); toast('臨時休業を解除しました。'); render(); break;
-    }
-
-    /* ---- 入場受付・計量 ---- */
-    case 'recShift': state.reception.date = dstr(addDays(parseD(state.reception.date), Number(d.n))); render(); break;
-    case 'recToday': state.reception.date = D(0); render(); break;
-    case 'openWeigh': openModal('weigh', weighInit(d.id), 'modal-lg'); break;
-    case 'doWeigh': {
-      const p = pk(m.id), w = Number(m.weight);
-      if (!m.arrived_at) { m.err = '着車時間を入力してください。'; renderModal(); return; }
-      if (m.weight === '' || isNaN(w) || w <= 0) { m.err = '正味重量を数字で入力してください。'; renderModal(); return; }
-      if (!m.items.length) { m.err = '含まれていた品目を1つ以上選んでください。'; renderModal(); return; }
-      const dk = declaredKg(p.id);
-      const before = linesOf(p.id);
-      PICKUP_ITEMS = PICKUP_ITEMS.filter(l => l.pickup_id !== p.id);
-      m.items.forEach(id => {
-        const old = before.find(l => l.item_id === id);
-        PICKUP_ITEMS.push(old || {id:'pi' + (++_pi), pickup_id:p.id, item_id:id, unit_id:'u2', qty:null});
-      });
-      Object.assign(p, {status:'done', arrived_at:m.arrived_at, weight:w,
-        diff: dk ? w - dk : 0, weigh_memo:m.memo || '',
-        receipt_number: p.receipt_number || nextReceiptNumber(p.plant_id, p.date)});
-      closeModal();
-      toast(`${p.id} の実績を確定しました（正味 ${num(w)} kg／伝票 No.${p.receipt_number}）。`);
-      render(); break;
-    }
-    case 'openSpot': openModal('spot', {company_id:'', plant_id:PLANTS.filter(p => p.is_delivery)[0].id,
-      items:[], car_number:'', weight:'', arrived_at:nowHm(), memo:''}); break;
-    case 'doSpot': {
-      const w = Number(m.weight);
-      if (!m.company_id) { m.err = '取引先を選択してください。'; renderModal(); return; }
-      if (m.weight === '' || isNaN(w) || w <= 0) { m.err = '正味重量を数字で入力してください。'; renderModal(); return; }
-      if (!m.items.length) { m.err = '含まれていた品目を1つ以上選んでください。'; renderModal(); return; }
-      const id = nextPickupNo();
-      PICKUPS.unshift({id, type:'drop', status:'done', company_id:m.company_id, plant_id:m.plant_id,
-        date:recDate(), begin_time:m.arrived_at, end_time:m.arrived_at,
-        car_number:m.car_number || '',
-        applied_at:`${D(0)} ${nowHm()}`, via:'飛び込み',
-        approved_at:`${D(0)} ${nowHm()}`, approved_by:`${ME.role} ${ME.name.split(' ')[0]}`,
-        arrived_at:m.arrived_at, receipt_number:nextReceiptNumber(m.plant_id, recDate()),
-        weight:w, diff:0, weigh_memo:m.memo || ''});
-      m.items.forEach(it => PICKUP_ITEMS.push({id:'pi' + (++_pi), pickup_id:id, item_id:it, unit_id:'u2', qty:null}));
-      closeModal();
-      toast(`飛び込み搬入 ${id} を実績登録しました。`);
-      render(); break;
-    }
-    case 'openRefuse': closeModal(); setTimeout(() => openModal('refuse', {id:d.id, reason:''}, 'modal-md'), 250); break;
-    case 'doRefuse': {
-      if (!m.reason) { m.err = '理由を選択してください。'; renderModal(); return; }
-      const p = pk(m.id);
-      p.status = 'canceled'; p.cancel_reason = m.reason; p.canceled_at = `${D(0)} ${nowHm()}`;
-      closeModal(); toast(`${p.id} を「${m.reason}」として記録しました。`, 'warn'); render(); break;
-    }
-
-    /* ---- 実績一覧 ---- */
-    case 'exportActuals': {
-      const rows = [['受付番号','日付','伝票番号','区分','取引先','拠点','引取場所','車両ナンバー','着車時間','品目','申告(kg)','正味重量(kg)','差異(kg)','備考']];
-      filteredActuals().forEach(p => rows.push([
-        p.id, p.date, p.receipt_number || '', typeLabel(p.type), company(p.company_id).name, plant(p.plant_id).name,
-        p.site_name || '', p.car_number || '',
-        p.arrived_at || '', linesOf(p.id).map(l => item(l.item_id).name).join('／'),
-        declaredKg(p.id) || '', p.weight, p.diff, p.weigh_memo || '']));
-      downloadCsv(`実績一覧_${state.actuals.from}_${state.actuals.to}.csv`, rows);
-      toast(`実績 ${filteredActuals().length} 件をCSV出力しました。`); break;
-    }
-
-    /* ---- 取引先マスタ ---- */
-    case 'openReissue': openModal('reissue', {ack:false}, 'modal-md'); break;
-    case 'doReissue': {
-      if (!m.ack) { m.err = '内容を確認してチェックを入れてください。'; renderModal(); return; }
-      INVITE_LINK = {token:randToken(), issued_at:`${D(0)} ${nowHm()}`};
-      closeModal();
-      toast('登録用URLを再発行しました。旧URLは使えません。', 'warn');
-      render(); break;
-    }
-    case 'copyInvite': {
-      const url = INVITE_BASE + d.token;
-      if (navigator.clipboard) navigator.clipboard.writeText(url).catch(() => {});
-      toast('登録用URLをコピーしました。'); break;
-    }
-    case 'openInvitePage':
-      closeModal();
-      state.invite = {token:d.token, form:null, done:false};
-      go('invite'); break;
-    case 'doInvite': {
-      const f = state.invite.form, e2 = [];
-      if (!f.name.trim()) e2.push('会社名を入力してください。');
-      if (!f.is_generator && !f.is_transporter) e2.push('区分を1つ以上選択してください。');
-      if (!f.contact.trim()) e2.push('ご担当者名を入力してください。');
-      if (!f.phone.trim()) e2.push('電話番号を入力してください。');
-      if (!f.email.trim()) e2.push('メールアドレスを入力してください。');
-      else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(f.email.trim())) e2.push('メールアドレスの形式を確認してください。');
-      if (f.password.length < 8) e2.push('パスワードは8文字以上で入力してください。');
-      if (f.password !== f.password2) e2.push('パスワード（確認）が一致しません。');
-      f.errors = e2;
-      if (e2.length) { render(); return; }
-      let n = COMPANIES.length + 1;
-      while (COMPANIES.find(x => x.id === 'c' + n)) n++;
-      COMPANIES.push({id:'c' + n, name:f.name.trim(), kana:f.kana,
-        is_generator:!!f.is_generator, is_transporter:!!f.is_transporter,
-        contact:f.contact, email:f.email, phone:f.phone,
-        postalcode:f.postalcode, pref:f.pref, address:f.address,
-        invoice:f.invoice, bank:f.bank, credit:'',
-        status:'active', registered_at:`${D(0)} ${nowHm()}`});
-      state.invite.done = true;
-      toast('本登録が完了しました。');
-      render(); break;
-    }
-    case 'editCompany': openModal('company', {i:Number(d.i), row:JSON.parse(JSON.stringify(COMPANIES[Number(d.i)]))}); break;
-    case 'saveCompany': {
-      if (!m.row.name || !m.row.name.trim()) { m.err = '取引先名を入力してください。'; renderModal(); return; }
-      Object.assign(COMPANIES[m.i], m.row);
-      closeModal(); toast('保存しました。'); render(); break;
-    }
-    case 'delCompany': {
-      const c = COMPANIES[Number(d.i)];
-      const used = PICKUPS.filter(p => p.company_id === c.id).length;
-      if (used) { toast(`「${c.name}」には予約・実績が ${used} 件あります。削除できません。`, 'err'); return; }
-      if (!confirm(`取引先「${c.name}」を削除します。よろしいですか？`)) return;
-      COMPANIES.splice(Number(d.i), 1);
-      toast('削除しました。', 'warn'); render(); break;
-    }
-    case 'csvCompanies': {
-      const rows = [['取引先名','フリガナ','排出事業者','運搬業者','担当者','メールアドレス','電話番号','郵便番号','都道府県','住所','インボイス登録番号','振込先口座','与信区分','登録日時']];
-      COMPANIES.filter(c => c.status === 'active').forEach(c => rows.push([c.name, c.kana, c.is_generator ? '○' : '', c.is_transporter ? '○' : '',
-        c.contact, c.email, c.phone, c.postalcode, c.pref, c.address, c.invoice, c.bank, c.credit,
-        c.registered_at || '']));
-      downloadCsv('取引先マスタ.csv', rows);
-      toast('CSVを出力しました。'); break;
-    }
-
-    /* ---- 拠点・品目・単位マスタ ---- */
-    case 'mAdd': {
-      const mm = MASTERS[d.m], row = {};
-      mm.cols.forEach(c => setPath(row, c.k, c.type === 'bool' ? false : ''));
-      if (d.m === 'm_plants') Object.assign(row, {slots:[], closed_dows:[0], begin_time:'08:00', end_time:'17:00'});
-      openModal('master', {m:d.m, idx:null, row}); break;
-    }
-    case 'mEdit': openModal('master', {m:d.m, idx:Number(d.i), row:JSON.parse(JSON.stringify(MASTERS[d.m].data()[Number(d.i)]))}); break;
-    case 'mDel': {
-      const arr = MASTERS[d.m].data(), i = Number(d.i), row = arr[i];
-      /* 使用中のマスタは削除させない（予約・実績の参照が壊れるため） */
-      const used = d.m === 'm_plants' ? PICKUPS.filter(p => p.plant_id === row.id).length
-                 : d.m === 'm_items'  ? PICKUP_ITEMS.filter(l => l.item_id === row.id).length
-                 : d.m === 'm_units'  ? PICKUP_ITEMS.filter(l => l.unit_id === row.id).length : 0;
-      if (used) { toast(`「${row.name}」は予約・実績で ${used} 件使われています。削除できません。`, 'err'); return; }
-      if (!confirm(`${MASTERS[d.m].title}の「${row.name}」を削除します。よろしいですか？`)) return;
-      arr.splice(i, 1);
-      if (d.m === 'm_plants') {                       /* 選択中の拠点が消えたら戻す */
-        if (state.plantId === row.id) state.plantId = 'all';
-        if (state.hours.plantId === row.id) state.hours.plantId = (PLANTS[0] || {}).id;
-      }
-      toast('削除しました。', 'warn'); render(); break;
-    }
-    case 'mSave': {
-      const mm = MASTERS[m.m], arr = mm.data();
-      const miss = mm.cols.filter(c => c.req && !getPath(m.row, c.k));
-      if (miss.length) { m.err = `必須項目が未入力です：${miss.map(c => c.label).join('、')}`; renderModal(); return; }
-      if (m.idx == null) {
-        const pref = (arr[0] && arr[0].id ? String(arr[0].id).replace(/\d+$/,'') : 'x');
-        let n = arr.length + 1;
-        while (arr.find(x => x.id === pref + n)) n++;
-        m.row.id = pref + n;
-        arr.push(m.row);
-      } else {
-        Object.assign(arr[m.idx], m.row);
-      }
-      closeModal(); toast('保存しました。'); render(); break;
-    }
-    case 'mCsv': {
-      const mm = MASTERS[d.m];
-      const rows = [mm.cols.map(c => c.label)];
-      mm.data().forEach(r => rows.push(mm.cols.map(c => {
-        const v = getPath(r, c.k);
-        return typeof v === 'boolean' ? (v ? '○' : '') : (v == null ? '' : v);
-      })));
-      downloadCsv(`${mm.title}.csv`, rows);
-      toast('CSVを出力しました。'); break;
-    }
-  }
-});
-
-/* =========================================================================
-   初期化
-   ========================================================================= */
-function applyHash() {
-  const h = location.hash.slice(1);
-  if (h === 'emitter' && EMITTER_HTML) { state.emitter = true; return true; }
-  if (state.emitter) state.emitter = false;
-  if (h.startsWith('invite/')) {
-    state.invite = {token:h.slice(7), form:null, done:false};
-    state.route = 'invite';
-    return true;
-  }
-  if (VIEWS[h] && h !== 'invite') { state.route = h; return true; }
-  return false;
-}
-applyHash();
-window.addEventListener('hashchange', () => { if (applyHash()) render(); });
-render();
 </script>
 </body>
 </html>

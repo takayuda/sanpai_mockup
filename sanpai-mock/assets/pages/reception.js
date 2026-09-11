@@ -4,16 +4,6 @@
    構内では品目ごとの計量ができないため、記録するのは
    「総正味重量」と「含まれていた品目」「着車時間」「備考」のみ
    ========================================================================= */
-/* 申告数量の重量換算（kg）。t/kg 以外の単位は換算しない */
-function declaredKg(pickupId) {
-  return linesOf(pickupId).reduce((s,l) => {
-    const u = unit(l.unit_id).name;
-    if (l.qty == null) return s;
-    if (u === 't') return s + Number(l.qty) * 1000;
-    if (u === 'kg') return s + Number(l.qty);
-    return s;
-  }, 0);
-}
 const dayList = ds => PICKUPS.filter(p => p.date === ds && inScope(p) && ['approved','done'].includes(p.status));
 function nextReceiptNumber(plantId, ds) {
   const n = PICKUPS.filter(p => p.plant_id === plantId && p.date === ds && p.receipt_number)
@@ -92,7 +82,7 @@ function itemChecks(lines, checked, prefix) {
   }).join('')}</div>`;
 }
 
-var MODALS_WEIGH = m => {
+MODALS.weigh = m => {
   const p = pk(m.id), dk = declaredKg(p.id);
   const w = Number(m.weight);
   const diff = m.weight !== '' && !isNaN(w) ? w - dk : null;
@@ -118,7 +108,7 @@ var MODALS_WEIGH = m => {
 };
 
 /* ---------- 飛び込み搬入 ---------- */
-var MODALS_SPOT = m => ({
+MODALS.spot = m => ({
   title:'飛び込み搬入の登録',
   body:`<div class="row g-3 mb-3">
       <div class="col-12 col-md-6"><label class="form-label">取引先<span class="req">必須</span></label>
@@ -142,7 +132,7 @@ var MODALS_SPOT = m => ({
 });
 
 /* ---------- 受入不可・集荷不可 ---------- */
-var MODALS_REFUSE = m => {
+MODALS.refuse = m => {
   const p = pk(m.id);
   return {
     title:`${p.id} を${p.type === 'drop' ? '受入不可' : '集荷不可'}として記録`,
@@ -157,3 +147,68 @@ var MODALS_REFUSE = m => {
           <button class="btn btn-outline-danger" data-act="doRefuse" data-id="${p.id}">記録する</button>`
   };
 };
+
+Object.assign(ACTIONS, {
+  recShift: d => { state.reception.date = dstr(addDays(parseD(state.reception.date), Number(d.n))); render(); },
+  recToday: d => { state.reception.date = D(0); render(); },
+  openWeigh: d => { openModal('weigh', weighInit(d.id), 'modal-lg'); },
+  doWeigh: d => {
+    const m = state.modal;
+  const p = pk(m.id), w = Number(m.weight);
+        if (!m.arrived_at) { m.err = '着車時間を入力してください。'; renderModal(); return; }
+        if (m.weight === '' || isNaN(w) || w <= 0) { m.err = '正味重量を数字で入力してください。'; renderModal(); return; }
+        if (!m.items.length) { m.err = '含まれていた品目を1つ以上選んでください。'; renderModal(); return; }
+        const dk = declaredKg(p.id);
+        const before = linesOf(p.id);
+        PICKUP_ITEMS = PICKUP_ITEMS.filter(l => l.pickup_id !== p.id);
+        m.items.forEach(id => {
+          const old = before.find(l => l.item_id === id);
+          PICKUP_ITEMS.push(old || {id:'pi' + (++_pi), pickup_id:p.id, item_id:id, unit_id:'u2', qty:null});
+        });
+        Object.assign(p, {status:'done', arrived_at:m.arrived_at, weight:w,
+          diff: dk ? w - dk : 0, weigh_memo:m.memo || '',
+          receipt_number: p.receipt_number || nextReceiptNumber(p.plant_id, p.date)});
+        closeModal();
+        toast(`${p.id} の実績を確定しました（正味 ${num(w)} kg／伝票 No.${p.receipt_number}）。`);
+        render();
+  },
+  openSpot: d => {
+    const m = state.modal;
+  openModal('spot', {company_id:'', plant_id:PLANTS.filter(p => p.is_delivery)[0].id,
+        items:[], car_number:'', weight:'', arrived_at:nowHm(), memo:''});
+  },
+  doSpot: d => {
+    const m = state.modal;
+  const w = Number(m.weight);
+        if (!m.company_id) { m.err = '取引先を選択してください。'; renderModal(); return; }
+        if (m.weight === '' || isNaN(w) || w <= 0) { m.err = '正味重量を数字で入力してください。'; renderModal(); return; }
+        if (!m.items.length) { m.err = '含まれていた品目を1つ以上選んでください。'; renderModal(); return; }
+        const id = nextPickupNo();
+        PICKUPS.unshift({id, type:'drop', status:'done', company_id:m.company_id, plant_id:m.plant_id,
+          date:recDate(), begin_time:m.arrived_at, end_time:m.arrived_at,
+          car_number:m.car_number || '',
+          applied_at:`${D(0)} ${nowHm()}`, via:'飛び込み',
+          approved_at:`${D(0)} ${nowHm()}`, approved_by:`${ME.role} ${ME.name.split(' ')[0]}`,
+          arrived_at:m.arrived_at, receipt_number:nextReceiptNumber(m.plant_id, recDate()),
+          weight:w, diff:0, weigh_memo:m.memo || ''});
+        m.items.forEach(it => PICKUP_ITEMS.push({id:'pi' + (++_pi), pickup_id:id, item_id:it, unit_id:'u2', qty:null}));
+        closeModal();
+        toast(`飛び込み搬入 ${id} を実績登録しました。`);
+        render();
+  },
+  openRefuse: d => { closeModal(); setTimeout(() => openModal('refuse', {id:d.id, reason:''}, 'modal-md'), 250); },
+  doRefuse: d => {
+    const m = state.modal;
+  if (!m.reason) { m.err = '理由を選択してください。'; renderModal(); return; }
+        const p = pk(m.id);
+        p.status = 'canceled'; p.cancel_reason = m.reason; p.canceled_at = `${D(0)} ${nowHm()}`;
+        closeModal(); toast(`${p.id} を「${m.reason}」として記録しました。`, 'warn'); render();
+  },
+});
+
+INPUT_HOOKS.push((e, d, val) => {
+  if (d.act === 'recQ') { state.reception.q = val; render(); return true; }
+});
+CHANGE_HOOKS.push((e, d, val) => {
+  if (d.act === 'recDate') { state.reception.date = val; render(); return true; }
+});

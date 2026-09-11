@@ -1,14 +1,3 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>産廃DX｜処理業者 管理画面 モック（第1期）</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<style>
 /* =========================================================================
    デザイントークン（排出元ポータル ワイヤーフレームと共通）
    ========================================================================= */
@@ -189,72 +178,15 @@ body.invite-mode .topbar .brand span{color:#C9D2FF;}
   .sidebar.open{transform:none;box-shadow:0 0 0 100vw rgba(0,0,0,.4);}
   .content{padding:calc(var(--topbar-h) + 16px) 14px 64px;}
 }
-</style>
-</head>
-<body>
 
-<header class="topbar">
-  <button class="btn btn-outline-secondary btn-sm btn-icon d-lg-none" data-act="toggleNav" aria-label="メニュー" id="elMenuBtn"></button>
-  <div class="brand">産廃予約管理システム<span>株式会社エコクリーン埼玉（処理業者）</span></div>
-  <div class="ms-auto d-flex align-items-center gap-2">
-    <a class="btn btn-outline-secondary btn-sm mockbtn" href="emitter-portal.html" id="elEmitterBtn" data-act="openEmitter">排出者側の画面</a>
-    <select class="form-select form-select-sm" style="width:auto;" data-act="switchPlant" id="elPlantSel" aria-label="拠点"></select>
-    <button class="btn btn-outline-secondary btn-sm btn-icon" data-act="openNotif" aria-label="通知" id="elNotifBtn"></button>
-  </div>
-</header>
+/* 画面一覧のカード */
+.portal-card{display:flex;gap:12px;align-items:flex-start;background:var(--white);border:1px solid var(--line);
+  border-radius:var(--radius);padding:16px;text-decoration:none;color:var(--ink);height:100%;}
+.portal-card:hover{border-color:var(--blue-800);background:var(--blue-100);}
+.portal-card .ico{color:var(--blue-800);flex:none;margin-top:2px;}
+.portal-card b{display:block;font-size:15px;}
+.portal-card small{display:block;font-size:12px;color:var(--ink-sub);line-height:1.5;margin-top:2px;}
 
-<nav class="sidebar" id="elSidebar" aria-label="メインメニュー"></nav>
-<main class="content" id="elView"></main>
-
-<div class="modal fade" id="appModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-scrollable" id="elModalDialog">
-    <div class="modal-content">
-      <div class="modal-header"><h5 class="modal-title" id="elModalTitle"></h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
-      <div class="modal-body" id="elModalBody"></div>
-      <div class="modal-footer" id="elModalFoot"></div>
-    </div>
-  </div>
-</div>
-<div class="toast-host" id="elToast"></div>
-<iframe id="elEmitFrame" class="emitframe" title="排出者ポータル" hidden></iframe>
-<button id="elBackBtn" class="backbtn mockbtn" data-act="backToAdmin" hidden></button>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-/* =========================================================================
-   アイコン（線画SVG・stroke は currentColor）
-   ========================================================================= */
-const ICONS = {
-  inbox:'<polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>',
-  clipboard:'<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="13" y2="16"/>',
-  phone:'<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>',
-  clock:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
-  truck:'<rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>',
-  chart:'<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',
-  users:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
-  factory:'<path d="M3 21h18"/><path d="M5 21V9l6 4V9l6 4V5h2v16"/><line x1="8" y1="17" x2="8" y2="17.01"/><line x1="13" y1="17" x2="13" y2="17.01"/>',
-  box:'<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>',
-  hash:'<line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/>',
-  file:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>',
-  bell:'<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>',
-  menu:'<line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>',
-  plus:'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
-  download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
-  copy:'<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
-  link:'<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
-  mail:'<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>',
-  check:'<polyline points="20 6 9 17 4 12"/>',
-  alert:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
-  x:'<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
-  calendar:'<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
-  left:'<polyline points="15 18 9 12 15 6"/>',
-  right:'<polyline points="9 18 15 12 9 6"/>',
-  edit:'<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>',
-  trash:'<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
-  search:'<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
-  login:'<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/>',
-  chevronDown:'<polyline points="6 9 12 15 18 9"/>',
-  chevronRight:'<polyline points="9 18 15 12 9 6"/>'
-};
-const ic = (n, size) => `<svg class="ic" width="${size || 18}" height="${size || 18}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n] || ''}</svg>`;
+/* 単一ファイル版：排出者ポータルを枠内に表示する */
+.emitframe-inline{width:100%;height:calc(100vh - var(--topbar-h) - 60px);border:1px solid var(--line);
+  border-radius:var(--radius);background:var(--white);}

@@ -10,10 +10,6 @@ const blankProxy = () => ({
   car_number:'', site_name:'', site_addr:'',
   note:'', errors:[]
 });
-function nextPickupNo() {
-  const n = PICKUPS.map(p => Number(p.id.slice(-4))).reduce((a,b) => Math.max(a,b), 0);
-  return 'R-2026-' + String(n + 1).padStart(4, '0');
-}
 
 function viewProxy() {
   if (!state.proxy) state.proxy = blankProxy();
@@ -147,3 +143,30 @@ function pxSubmit() {
   toast(`${p.id} を登録しました。`);
   render();
 }
+
+Object.assign(ACTIONS, {
+  pxType: d => { state.proxy.type = d.v; state.proxy.slotId = ''; state.proxy.errors = []; render(); },
+  pxAddLine: d => { state.proxy.lines.push(blankLine()); render(); },
+  pxRemoveLine: d => {
+    const m = state.modal;
+  state.proxy.lines.splice(Number(d.idx), 1);
+        if (!state.proxy.lines.length) state.proxy.lines.push(blankLine());
+        render();
+  },
+  pxReset: d => { state.proxy = blankProxy(); render(); },
+  pxSubmit: d => { pxSubmit(); },
+});
+
+INPUT_HOOKS.push((e, d, val) => {
+  if (!d.px) return;
+  setPath(state.proxy, d.px, val);
+  if (d.px === 'date') render();
+  return true;
+});
+CHANGE_HOOKS.push((e, d, val, structural) => {
+  if (!d.px) return;
+  setPath(state.proxy, d.px, val);
+  if (d.px === 'plant_id') state.proxy.slotId = '';
+  if (structural) render();
+  return true;
+});

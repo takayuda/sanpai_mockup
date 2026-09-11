@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>産廃DX｜排出元ポータル ワイヤーフレーム</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blue-900:#000B5F; --blue-800:#0017C1; --blue-100:#E8F1FE;
+  --ink:#1A1A1C; --ink-sub:#626264;
+  --line:#D8D8DB; --line-strong:#767676;
+  --bg:#F2F2F2; --white:#FFFFFF;
+  --error:#CE0000; --error-bg:#FDEEEE;
+  --success:#197A4B; --success-bg:#E6F5EC;
+  --warn:#B75200; --warn-bg:#FDF3E6;
+  --radius:8px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{font-family:"Noto Sans JP","Hiragino Sans","Yu Gothic",sans-serif;color:var(--ink);background:var(--bg);font-size:16px;line-height:1.7;-webkit-font-smoothing:antialiased;}
+:focus-visible{outline:3px solid #FFD43D;outline-offset:0;box-shadow:0 0 0 5px var(--ink);border-radius:2px;}
+
+/* header */
+.appbar{background:var(--white);border-bottom:1px solid var(--line);}
+.appbar-inner{max-width:1040px;margin:0 auto;padding:0 24px;display:flex;align-items:center;gap:32px;min-height:64px;}
+.brand{font-weight:700;font-size:18px;white-space:nowrap;}
+.brand span{display:block;font-size:11px;font-weight:400;color:var(--ink-sub);line-height:1.3;}
+.gnav{display:flex;gap:4px;}
+.gnav button{font:inherit;font-size:15px;font-weight:500;color:var(--ink);background:none;border:0;border-bottom:3px solid transparent;padding:20px 16px 17px;cursor:pointer;}
+.gnav button:hover{background:var(--blue-100);}
+.gnav button[aria-current="page"]{color:var(--blue-800);border-bottom-color:var(--blue-800);font-weight:700;}
+
+/* layout */
+.wrap{max-width:840px;margin:0 auto;padding:32px 24px 96px;}
+.wrap.wide{max-width:1040px;}
+h1{font-size:28px;line-height:1.4;margin:0 0 8px;font-weight:700;}
+h2{font-size:19px;line-height:1.5;margin:0 0 16px;font-weight:700;}
+.lead{color:var(--ink-sub);font-size:15px;margin:0 0 28px;}
+.card{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:24px 28px 28px;margin-bottom:16px;}
+
+/* stepper */
+.stepper{display:flex;margin:0 0 28px;padding:0;list-style:none;flex-wrap:wrap;}
+.stepper li{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-sub);padding:0 14px 0 0;}
+.stepper li::after{content:"";width:16px;height:1px;background:var(--line-strong);margin-left:6px;}
+.stepper li:last-child::after{display:none;}
+.stepper .num{width:24px;height:24px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:12px;font-weight:700;background:var(--white);border:1px solid var(--line-strong);color:var(--ink-sub);}
+.stepper li.done .num{background:var(--blue-100);border-color:var(--blue-800);color:var(--blue-800);}
+.stepper li.current .num{background:var(--blue-800);border-color:var(--blue-800);color:var(--white);}
+.stepper li.current{color:var(--ink);font-weight:700;}
+
+/* forms */
+.field{margin-bottom:22px;}
+.field:last-child{margin-bottom:0;}
+.label{display:block;font-weight:700;font-size:15px;margin-bottom:6px;}
+.req{font-size:12px;font-weight:700;color:var(--error);border:1px solid var(--error);border-radius:4px;padding:0 5px;margin-left:8px;vertical-align:2px;}
+.opt{font-size:12px;font-weight:500;color:var(--ink-sub);border:1px solid var(--line-strong);border-radius:4px;padding:0 5px;margin-left:8px;vertical-align:2px;}
+.hint{font-size:13px;color:var(--ink-sub);margin:0 0 6px;}
+input[type="text"],input[type="tel"],select,textarea{font:inherit;width:100%;padding:10px 12px;border:1px solid var(--line-strong);border-radius:var(--radius);background:var(--white);color:var(--ink);}
+select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--ink) 50%),linear-gradient(135deg,var(--ink) 50%,transparent 50%);background-position:calc(100% - 20px) 50%,calc(100% - 14px) 50%;background-size:6px 6px,6px 6px;background-repeat:no-repeat;padding-right:44px;}
+textarea{min-height:88px;resize:vertical;}
+.row{display:flex;gap:16px;flex-wrap:wrap;}
+.checkline{display:flex;gap:10px;align-items:flex-start;font-size:15px;}
+.checkline input{margin-top:6px;width:20px;height:20px;flex:none;}
+.procinfo{font-size:13px;color:var(--ink-sub);margin-top:8px;}
+
+/* time picker */
+.timeset{display:flex;gap:24px;flex-wrap:wrap;}
+.timeset > div{flex:0 0 auto;}
+.hm{display:flex;align-items:center;gap:6px;}
+.hm select{width:auto;min-width:84px;}
+.hm .sep{font-weight:700;}
+.hm .unit{font-size:14px;color:var(--ink-sub);}
+
+/* radio cards */
+.optionlist{display:flex;gap:12px;flex-wrap:wrap;}
+.optionitem{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--line-strong);border-radius:var(--radius);padding:14px 16px;background:var(--white);cursor:pointer;flex:1 1 300px;}
+.optionitem:hover{background:var(--blue-100);}
+.optionitem input{margin-top:4px;width:20px;height:20px;flex:none;}
+.optionitem .t{font-weight:700;display:block;}
+.optionitem .d{font-size:13px;color:var(--ink-sub);display:block;}
+.optionitem.selected{border-color:var(--blue-800);border-width:2px;padding:13px 15px;background:var(--blue-100);}
+
+/* date & slot buttons */
+.datebtns{display:flex;flex-wrap:wrap;gap:10px;}
+.datebtn{font:inherit;font-size:15px;border:1px solid var(--line-strong);border-radius:var(--radius);background:var(--white);padding:10px 16px;cursor:pointer;text-align:center;min-width:112px;}
+.datebtn .dow{display:block;font-size:12px;color:var(--ink-sub);}
+.datebtn:hover:not(:disabled){background:var(--blue-100);}
+.datebtn[aria-pressed="true"]{border:2px solid var(--blue-800);background:var(--blue-100);padding:9px 15px;font-weight:700;}
+.datebtn:disabled{background:var(--bg);color:#9A9A9C;border-color:var(--line);cursor:not-allowed;}
+.slot{font:inherit;font-size:15px;border:1px solid var(--line-strong);border-radius:var(--radius);background:var(--white);padding:12px 24px;cursor:pointer;min-width:180px;text-align:center;}
+.slot:hover{background:var(--blue-100);}
+.slot[aria-pressed="true"]{border:2px solid var(--blue-800);background:var(--blue-100);padding:11px 23px;font-weight:700;}
+.subblock{margin-top:20px;padding-top:20px;border-top:1px solid var(--line);}
+
+/* buttons */
+.actions{display:flex;gap:12px;margin-top:8px;flex-wrap:wrap;align-items:center;}
+.btn{font:inherit;font-weight:700;border-radius:var(--radius);padding:12px 28px;cursor:pointer;border:1px solid transparent;}
+.btn-primary{background:var(--blue-800);color:var(--white);}
+.btn-primary:hover{background:var(--blue-900);}
+.btn-secondary{background:var(--white);color:var(--blue-800);border-color:var(--blue-800);}
+.btn-secondary:hover{background:var(--blue-100);}
+.btn-sm{padding:7px 18px;font-size:14px;}
+.spacer{flex:1;}
+
+/* confirm */
+.reviewgroup{border:1px solid var(--line);border-radius:var(--radius);background:var(--white);margin-bottom:16px;overflow:hidden;}
+.reviewhead{background:#FAFAFA;border-bottom:1px solid var(--line);padding:10px 16px;font-weight:700;font-size:15px;}
+.reviewtable{width:100%;border-collapse:collapse;}
+.reviewtable th{width:32%;text-align:left;vertical-align:top;font-weight:500;color:var(--ink-sub);padding:12px 16px;border-bottom:1px solid var(--line);background:var(--white);font-size:14px;}
+.reviewtable td{padding:12px 16px;border-bottom:1px solid var(--line);vertical-align:top;}
+.reviewtable tr:last-child th,.reviewtable tr:last-child td{border-bottom:0;}
+.reviewtable td.val{font-weight:500;}
+.reviewtable td.act{width:92px;text-align:right;padding-left:0;}
+.reviewtable tr.editing th{background:var(--blue-100);color:var(--ink);font-weight:700;}
+.reviewtable tr.editing td{background:var(--blue-100);}
+.editbtn{font:inherit;font-size:13px;background:var(--white);border:1px solid var(--blue-800);color:var(--blue-800);border-radius:var(--radius);padding:4px 10px;cursor:pointer;white-space:nowrap;}
+.editbtn:hover{background:var(--blue-100);}
+.editactions{display:flex;gap:8px;margin-top:14px;}
+.itemline{border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:12px;}
+.linehead{display:flex;align-items:center;justify-content:space-between;font-weight:700;font-size:14px;margin-bottom:12px;color:var(--ink-sub);}
+.btn-danger{border-color:var(--error);color:var(--error);}
+.btn-danger:hover{background:var(--error-bg);}
+.groupfoot{padding:12px 16px;border-top:1px solid var(--line);}
+.empty-val{color:var(--ink-sub);}
+
+/* list */
+.tbl{width:100%;border-collapse:collapse;background:var(--white);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;font-size:14px;}
+.tbl thead th{background:#FAFAFA;text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);font-weight:700;white-space:nowrap;}
+.tbl td{padding:14px;border-bottom:1px solid var(--line);vertical-align:top;}
+.tbl tbody tr:last-child td{border-bottom:0;}
+.tbl .num{font-variant-numeric:tabular-nums;white-space:nowrap;}
+.badge{display:inline-block;font-size:12px;font-weight:700;border-radius:99px;padding:3px 12px;white-space:nowrap;}
+.badge.pending{background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn);}
+.badge.approved{background:var(--success-bg);color:var(--success);border:1px solid var(--success);}
+.badge.rejected{background:var(--error-bg);color:var(--error);border:1px solid var(--error);}
+.badge.method{background:var(--blue-100);color:var(--blue-900);border:1px solid var(--blue-800);}
+
+/* misc */
+.alert{border-radius:var(--radius);padding:16px 20px;margin-bottom:24px;border:2px solid;}
+.alert.error{background:var(--error-bg);border-color:var(--error);}
+.alert h3{margin:0;font-size:16px;color:var(--error);}
+.alert ul{margin:8px 0 0;padding-left:20px;}
+.alert li{font-size:14px;}
+.done-hero{background:var(--success-bg);border:2px solid var(--success);border-radius:var(--radius);padding:28px;text-align:center;margin-bottom:16px;}
+.done-hero h1{color:var(--success);font-size:24px;margin-bottom:4px;}
+.done-hero p{margin:0;}
+.emptystate{background:var(--white);border:1px dashed var(--line-strong);border-radius:var(--radius);padding:56px 24px;text-align:center;color:var(--ink-sub);}
+.dialog-back{position:fixed;inset:0;background:rgba(0,0,0,.45);display:grid;place-items:center;padding:24px;z-index:50;}
+.dialog{background:var(--white);border-radius:var(--radius);max-width:640px;width:100%;max-height:86vh;overflow:auto;}
+.dialog-head{display:flex;align-items:center;gap:16px;padding:20px 24px;border-bottom:1px solid var(--line);}
+.dialog-head h2{margin:0;font-size:18px;flex:1;}
+.dialog-body{padding:24px;}
+.dialog-foot{padding:16px 24px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;}
+.mocklink{margin-left:auto;font-size:13px;font-weight:700;color:var(--blue-800);border:1px solid var(--blue-800);border-radius:var(--radius);padding:6px 14px;text-decoration:none;white-space:nowrap;position:relative;background:var(--white);}
+.mocklink:hover{background:var(--blue-100);}
+.mocklink::after{content:"MOCK";position:absolute;top:-8px;right:-10px;background:var(--warn);color:#fff;font-size:9px;font-weight:700;border-radius:3px;padding:0 4px;letter-spacing:.04em;}
+@media (max-width:600px){
+  .appbar-inner{flex-wrap:wrap;gap:0 16px;padding:8px 16px;}
+  .mocklink{margin-left:0;order:2;font-size:12px;padding:4px 10px;}
+  .gnav{order:3;width:100%;overflow-x:auto;}
+  .gnav button{padding:12px;font-size:14px;}
+  .wrap{padding:24px 16px 72px;}
+  .card{padding:20px 16px 24px;}
+  h1{font-size:22px;}
+  .reviewtable th{width:38%;}
+  .tbl{font-size:13px;}
+  .timeset{gap:16px;}
+}
+</style>
+</head>
+<body>
+
+<header class="appbar">
+  <div class="appbar-inner">
+    <div class="brand">産廃予約システム<span>株式会社サンプル建設（排出元）</span></div>
+    <nav class="gnav" id="elGnav" aria-label="メインメニュー"></nav>
+    <a class="mocklink" href="approvals.html">処理業者側の画面</a>
+  </div>
+</header>
+
+<main id="elMain"></main>
+<div id="elDialog"></div>
+
+<script>
+/* ===== ダミーデータ ===== */
+const PROCESSORS = [
+  {id:'p1', name:'株式会社エコクリーン埼玉', area:'埼玉県さいたま市北区宮原町0-0-0', permit:'産業廃棄物 収集運搬業／中間処理業'},
+  {id:'p2', name:'グリーンリサイクル株式会社', area:'埼玉県川口市領家0-0-0', permit:'産業廃棄物 収集運搬業'},
+  {id:'p3', name:'中央環境サービス株式会社', area:'東京都足立区入谷0-0-0', permit:'産業廃棄物 収集運搬業／積替保管'}
+];
+const MASTER = {
+  items:['廃プラスチック類','木くず','金属くず','ガラス・コンクリート・陶磁器くず','汚泥','紙くず','混合廃棄物'],
+  units:['kg','t','m3','個','台'],
+  vehicleClasses:['軽トラック','2tトラック（平ボディ）','2tトラック（ダンプ）','4tトラック','10tトラック','ユニック車（4t）']
+};
+const SITES = [
+  {id:'s1', name:'大宮第一現場', addr:'埼玉県さいたま市大宮区桜木町0-0-0'},
+  {id:'s2', name:'川越倉庫', addr:'埼玉県川越市脇田本町0-0-0'}
+];
+const SLOT_DEFS = [{id:'am',label:'9:00 〜 12:00'},{id:'pm',label:'13:00 〜 16:00'}];
+const HOURS = Array.from({length:15},(_,i)=>String(i+6).padStart(2,'0')); // 06〜20時
+const MINUTES = ['00','30'];
+
+function buildDates(){
+  const out=[], d=new Date(); d.setDate(d.getDate()+2);
+  while(out.length<8){ if(d.getDay()!==0) out.push(new Date(d)); d.setDate(d.getDate()+1); }
+  return out;
+}
+const DATES = buildDates();
+const DOW = ['日','月','火','水','木','金','土'];
+const fmtKey = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const fmtJp  = d => `${d.getMonth()+1}月${d.getDate()}日`;
+const fmtFull= key => { if(!key) return ''; const [y,m,dd]=key.split('-'); const dt=new Date(+y,+m-1,+dd); return `${y}年${+m}月${+dd}日（${DOW[dt.getDay()]}）`; };
+const dateAvailable = idx => idx!==3;   // 処理業者が受付停止にした日のサンプル
+
+/* ===== 状態 ===== */
+const emptyLine = () => ({item:'', qty:'', unit:'', memo:''});
+const blank = () => ({
+  processorId:null, method:null,
+  date:null, slotId:null,
+  startH:'', startM:'', endH:'', endM:'',
+  addr:'', siteId:'', saveSite:false, siteName:'',
+  lines:[emptyLine()],
+  vClass:'', plate:''
+});
+const clone = o => JSON.parse(JSON.stringify(o));
+function setPath(obj,path,v){
+  const p=path.split('.'); let t=obj;
+  for(let i=0;i<p.length-1;i++) t=t[p[i]];
+  t[p[p.length-1]]=v;
+}
+const lineText = ln => ln.item ? `${ln.item}　${ln.qty?ln.qty+' '+ln.unit:''}${ln.memo?'　／　'+ln.memo:''}` : '';
+const state = {
+  page:'input', errors:[], editing:null, snapshot:null, lastNo:null, detailNo:null,
+  data:blank(),
+  reservations:[
+    {no:'R-2026-0148', processorId:'p1', method:'drop', dateLabel:'2026年8月28日（金） 9:00 〜 12:00', status:'approved',
+     lines:[{item:'廃プラスチック類', qty:'320', unit:'kg', memo:'フレコンバッグ4袋'}],
+     vClass:'2tトラック（平ボディ）', plate:'大宮 100 あ 12-34'},
+    {no:'R-2026-0152', processorId:'p2', method:'pickup', dateLabel:'2026年8月31日（月） 10:00 〜 11:30', status:'pending',
+     lines:[{item:'木くず', qty:'1.2', unit:'t', memo:'搬出口は建物裏手'},{item:'金属くず', qty:'80', unit:'kg', memo:''},{item:'混合廃棄物', qty:'2', unit:'m3', memo:''}],
+     addr:'埼玉県さいたま市大宮区桜木町0-0-0', siteName:'大宮第一現場'},
+    {no:'R-2026-0155', processorId:'p1', method:'pickup', dateLabel:'2026年9月2日（水） 14:00 〜 15:00', status:'rejected',
+     lines:[{item:'混合廃棄物', qty:'3', unit:'m3', memo:''}],
+     rejectReason:'指定日の収集ルートが満車のため。別日での再申請をお願いします。', addr:'埼玉県川越市脇田本町0-0-0', siteName:'川越倉庫'}
+  ]
+};
+const proc = id => PROCESSORS.find(p=>p.id===id) || {};
+const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const opts = (list,cur,ph) => `<option value="">${ph||'選択してください'}</option>`+list.map(v=>`<option value="${esc(v)}"${v===cur?' selected':''}>${esc(v)}</option>`).join('');
+const timeStr = (h,m) => (h&&m) ? `${h}:${m}` : '';
+const toMin = (h,m) => Number(h)*60+Number(m);
+
+function stepper(cur){
+  return `<ol class="stepper">${['入力','確認','完了'].map((l,i)=>{
+    const n=i+1, cls = n===cur?'current':(n<cur?'done':'');
+    return `<li class="${cls}"><span class="num">${n<cur?'✓':n}</span>${l}</li>`;
+  }).join('')}</ol>`;
+}
+function errorBox(){
+  if(!state.errors.length) return '';
+  return `<div class="alert error" role="alert" tabindex="-1" id="elErrors"><h3>入力内容を確認してください</h3>
+    <ul>${state.errors.map(e=>`<li>${esc(e)}</li>`).join('')}</ul></div>`;
+}
+
+/* ===== 共通パーツ ===== */
+function dateButtons(){
+  const d=state.data;
+  return `<div class="datebtns" role="group">
+    ${DATES.map((dt,i)=>{
+      const key=fmtKey(dt), ok=dateAvailable(i);
+      return `<button type="button" class="datebtn" aria-pressed="${d.date===key}" ${ok?'':'disabled'}
+        data-act="pickDate" data-date="${key}">${fmtJp(dt)}<span class="dow">${ok?DOW[dt.getDay()]:'受付停止'}</span></button>`;
+    }).join('')}</div>`;
+}
+function slotButtons(){
+  const d=state.data;
+  return `<div class="datebtns" role="group">
+    ${SLOT_DEFS.map(s=>`<button type="button" class="slot" aria-pressed="${d.slotId===s.id}" data-act="pickSlot" data-slot="${s.id}">${s.label}</button>`).join('')}</div>`;
+}
+function timePicker(idPrefix){
+  const d=state.data;
+  const g=(lbl,hKey,mKey)=>`<div>
+    <p class="hint">${lbl}</p>
+    <div class="hm">
+      <select id="${idPrefix}${hKey}" data-bind="${hKey}" aria-label="${lbl}の時">${opts(HOURS,d[hKey],'--')}</select><span class="unit">時</span>
+      <select data-bind="${mKey}" aria-label="${lbl}の分">${opts(MINUTES,d[mKey],'--')}</select><span class="unit">分</span>
+    </div></div>`;
+  return `<div class="timeset">${g('開始','startH','startM')}${g('終了','endH','endM')}</div>`;
+}
+
+/* ===== 入力画面 ===== */
+function viewInput(){
+  const d=state.data, p=proc(d.processorId);
+  const optCard=(v,t,desc)=>`<label class="optionitem ${d.method===v?'selected':''}">
+    <input type="radio" name="method" value="${v}" ${d.method===v?'checked':''} data-bind="method">
+    <span><span class="t">${t}</span><span class="d">${desc}</span></span></label>`;
+
+  let html = `<div class="card">
+    <h2>申請先</h2>
+    <div class="field">
+      <label class="label" for="elProc">処理業者<span class="req">必須</span></label>
+      <select id="elProc" data-bind="processorId">
+        <option value="">選択してください</option>
+        ${PROCESSORS.map(x=>`<option value="${x.id}" ${d.processorId===x.id?'selected':''}>${esc(x.name)}</option>`).join('')}
+      </select>
+      ${d.processorId?`<p class="procinfo">${esc(p.area)}／${esc(p.permit)}</p>`:''}
+    </div>
+    <div class="field">
+      <span class="label" id="elMethodLbl">受入方法<span class="req">必須</span></span>
+      <div class="optionlist" role="radiogroup" aria-labelledby="elMethodLbl">
+        ${optCard('pickup','引取','処理業者が現場まで収集に来ます')}
+        ${optCard('drop','持込','自社の車両で処理業者の施設へ搬入します')}
+      </div>
+    </div>
+  </div>`;
+
+  const head = `<div class="wrap"><h1>予約を作成する</h1>
+    <p class="lead">処理業者への搬入・引取の予約を申請します。申請後、処理業者の承認をもって予約が確定します。</p>
+    ${stepper(1)}${errorBox()}`;
+
+  if(!d.method){
+    return head+html+`<div class="card" style="color:var(--ink-sub);">受入方法を選ぶと、日時と内容の入力欄が表示されます。</div></div>`;
+  }
+
+  html += `<div class="card">
+    <h2>日時</h2>
+    <div class="field">
+      <span class="label">${d.method==='drop'?'搬入日':'引取希望日'}<span class="req">必須</span></span>
+      ${dateButtons()}
+    </div>`;
+  if(d.date && d.method==='drop'){
+    html += `<div class="subblock"><span class="label">時間枠<span class="req">必須</span></span>
+      <p class="hint">${fmtFull(d.date)} の受入枠です。</p>${slotButtons()}</div>`;
+  }
+  if(d.date && d.method==='pickup'){
+    html += `<div class="subblock"><span class="label">引取希望時間<span class="req">必須</span></span>
+      <p class="hint">分は30分単位で選べます。</p>${timePicker('el')}</div>`;
+  }
+  html += `</div>`;
+
+  if(d.method==='pickup'){
+    html += `<div class="card">
+      <h2>引取場所</h2>
+      <div class="field">
+        <label class="label" for="elSite">登録済みの現場から選ぶ<span class="opt">任意</span></label>
+        <select id="elSite" data-bind="siteId" data-act="pickSite">
+          <option value="">選択しない（住所を直接入力）</option>
+          ${SITES.map(s=>`<option value="${s.id}" ${d.siteId===s.id?'selected':''}>${esc(s.name)}（${esc(s.addr)}）</option>`).join('')}
+        </select>
+      </div>
+      <div class="field">
+        <label class="label" for="elAddr">住所<span class="req">必須</span></label>
+        <input type="text" id="elAddr" data-bind="addr" value="${esc(d.addr)}" placeholder="例：埼玉県さいたま市大宮区桜木町0-0-0">
+      </div>
+      <div class="field">
+        <label class="checkline"><input type="checkbox" data-bind="saveSite" ${d.saveSite?'checked':''}>
+        <span>この住所を現場マスタに登録する</span></label>
+        ${d.saveSite?`<div style="margin-top:12px;padding-left:30px;">
+          <label class="label" for="elSiteName">現場名<span class="req">必須</span></label>
+          <p class="hint">次回以降、この名前でプルダウンから選べるようになります。</p>
+          <input type="text" id="elSiteName" data-bind="siteName" value="${esc(d.siteName)}" placeholder="例：大宮第二現場">
+        </div>`:''}
+      </div>
+    </div>`;
+  }
+
+  html += `<div class="card">
+    <h2>廃棄物の内容</h2>
+    <p class="hint">品目ごとに1行ずつ入力してください。</p>
+    ${d.lines.map((ln,i)=>`
+      <div class="itemline">
+        <div class="linehead"><span>品目 ${i+1}</span>
+          ${d.lines.length>1?`<button type="button" class="editbtn btn-danger" data-act="removeLine" data-idx="${i}">削除</button>`:''}
+        </div>
+        <div class="row">
+          <div class="field" style="flex:2 1 240px;margin-bottom:16px;">
+            <label class="label" for="ln${i}item">品目<span class="req">必須</span></label>
+            <select id="ln${i}item" data-bind="lines.${i}.item">${opts(MASTER.items,ln.item)}</select></div>
+          <div class="field" style="flex:1 1 120px;margin-bottom:16px;">
+            <label class="label" for="ln${i}qty">数量<span class="req">必須</span></label>
+            <input type="text" inputmode="decimal" id="ln${i}qty" data-bind="lines.${i}.qty" value="${esc(ln.qty)}" placeholder="例：320"></div>
+          <div class="field" style="flex:1 1 120px;margin-bottom:16px;">
+            <label class="label" for="ln${i}unit">単位<span class="req">必須</span></label>
+            <select id="ln${i}unit" data-bind="lines.${i}.unit">${opts(MASTER.units,ln.unit)}</select></div>
+        </div>
+        <div class="field">
+          <label class="label" for="ln${i}memo">備考<span class="opt">任意</span></label>
+          <input type="text" id="ln${i}memo" data-bind="lines.${i}.memo" value="${esc(ln.memo)}" placeholder="荷姿、搬出場所、当日の連絡事項など"></div>
+      </div>`).join('')}
+    <button type="button" class="btn btn-secondary btn-sm" data-act="addLine">＋ 品目を追加</button>
+  </div>`;
+
+  if(d.method==='drop'){
+    html += `<div class="card">
+      <h2>車両</h2>
+      <p class="hint">1回の予約につき1台です。複数台で搬入する場合は、台数ぶん予約を作成してください。</p>
+      <div class="row">
+        <div class="field" style="flex:2 1 260px;">
+          <label class="label" for="elVClass">車格<span class="req">必須</span></label>
+          <select id="elVClass" data-bind="vClass">${opts(MASTER.vehicleClasses,d.vClass)}</select></div>
+        <div class="field" style="flex:2 1 260px;">
+          <label class="label" for="elPlate">車両ナンバー<span class="req">必須</span></label>
+          <input type="text" id="elPlate" data-bind="plate" value="${esc(d.plate)}" placeholder="例：大宮 100 あ 12-34"></div>
+      </div>
+    </div>`;
+  }
+
+  html += `<div class="actions"><span class="spacer"></span>
+    <button type="button" class="btn btn-primary" data-act="toConfirm">入力内容を確認</button></div>`;
+  return head+html+`</div>`;
+}
+
+/* ===== 確認画面（インライン編集） ===== */
+function rrow(key,label,value,editor){
+  if(state.editing===key){
+    return `<tr class="editing"><th>${label}</th><td colspan="2">${editor}
+      <div class="editactions">
+        <button type="button" class="btn btn-primary btn-sm" data-act="applyEdit">確定</button>
+        <button type="button" class="btn btn-secondary btn-sm" data-act="cancelEdit">キャンセル</button>
+      </div></td></tr>`;
+  }
+  const v=(value===''||value==null)?'<span class="empty-val">未入力</span>':esc(value);
+  return `<tr><th>${label}</th><td class="val">${v}</td>
+    <td class="act"><button type="button" class="editbtn" data-act="edit" data-key="${key}" aria-label="${label}を編集">✎ 編集</button></td></tr>`;
+}
+const edSelect = (bind,list,cur)=>`<select data-bind="${bind}" data-focus="1">${opts(list,cur)}</select>`;
+const edText = (bind,cur,ph)=>`<input type="text" data-bind="${bind}" value="${esc(cur)}" placeholder="${ph||''}" data-focus="1">`;
+
+function lineEditor(i){
+  const ln=state.data.lines[i];
+  return `<div class="row">
+      <div style="flex:2 1 200px;"><p class="hint">品目</p><select data-bind="lines.${i}.item" data-focus="1">${opts(MASTER.items,ln.item)}</select></div>
+      <div style="flex:1 1 110px;"><p class="hint">数量</p><input type="text" inputmode="decimal" data-bind="lines.${i}.qty" value="${esc(ln.qty)}"></div>
+      <div style="flex:1 1 110px;"><p class="hint">単位</p><select data-bind="lines.${i}.unit">${opts(MASTER.units,ln.unit)}</select></div>
+    </div>
+    <div style="margin-top:12px;"><p class="hint">備考</p><input type="text" data-bind="lines.${i}.memo" value="${esc(ln.memo)}" placeholder="荷姿、搬出場所、当日の連絡事項など"></div>
+    ${state.data.lines.length>1?`<div style="margin-top:12px;"><button type="button" class="editbtn btn-danger" data-act="removeLine" data-idx="${i}">この品目を削除</button></div>`:''}`;
+}
+function itemsBlock(){
+  const d=state.data;
+  return `<div class="reviewgroup"><div class="reviewhead">廃棄物の内容</div>
+    <table class="reviewtable">
+      ${d.lines.map((ln,i)=>rrow('line'+i, `品目 ${i+1}`, lineText(ln), lineEditor(i))).join('')}
+    </table>
+    <div class="groupfoot"><button type="button" class="btn btn-secondary btn-sm" data-act="addLine">＋ 品目を追加</button></div>
+  </div>`;
+}
+function viewConfirm(){
+  const d=state.data, p=proc(d.processorId);
+  const methodEditor = `<div class="optionlist">
+    ${[['pickup','引取'],['drop','持込']].map(([v,t])=>`<label class="optionitem ${d.method===v?'selected':''}" style="flex:0 1 auto;">
+      <input type="radio" name="cmethod" value="${v}" ${d.method===v?'checked':''} data-bind="method"><span class="t">${t}</span></label>`).join('')}
+    </div><p class="hint" style="margin:8px 0 0;">受入方法を変えると、日時や車両などの項目が入れ替わります。</p>`;
+  let blocks = `<div class="reviewgroup"><div class="reviewhead">申請先</div><table class="reviewtable">
+    ${rrow('processorId','処理業者', p.name,
+      `<select data-bind="processorId" data-focus="1"><option value="">選択してください</option>
+        ${PROCESSORS.map(x=>`<option value="${x.id}" ${d.processorId===x.id?'selected':''}>${esc(x.name)}</option>`).join('')}</select>`)}
+    ${rrow('method','受入方法', d.method?(d.method==='drop'?'持込（自社車両で搬入）':'引取（処理業者が収集）'):'', methodEditor)}
+  </table></div>`;
+
+  if(d.method==='drop'){
+    blocks += `<div class="reviewgroup"><div class="reviewhead">日時</div><table class="reviewtable">
+      ${rrow('date','搬入日', fmtFull(d.date), dateButtons())}
+      ${rrow('slotId','時間枠', SLOT_DEFS.find(s=>s.id===d.slotId)?.label||'',
+        d.date?slotButtons():`<p class="hint" style="margin:0;">先に搬入日を選んでください。</p>`)}
+    </table></div>
+    ${itemsBlock()}
+    <div class="reviewgroup"><div class="reviewhead">車両</div><table class="reviewtable">
+      ${rrow('vClass','車格', d.vClass, edSelect('vClass',MASTER.vehicleClasses,d.vClass))}
+      ${rrow('plate','車両ナンバー', d.plate, edText('plate',d.plate,'例：大宮 100 あ 12-34'))}
+    </table></div>`;
+  }else if(d.method==='pickup'){
+    const site = SITES.find(s=>s.id===d.siteId);
+    const siteEditor = `<select data-bind="siteId" data-act="pickSite" data-focus="1">
+      <option value="">選択しない（住所を直接入力）</option>
+      ${SITES.map(s=>`<option value="${s.id}" ${d.siteId===s.id?'selected':''}>${esc(s.name)}</option>`).join('')}</select>
+      <p class="hint" style="margin:8px 0 0;">選ぶと住所も置き換わります。</p>`;
+    blocks += `<div class="reviewgroup"><div class="reviewhead">日時</div><table class="reviewtable">
+      ${rrow('date','引取希望日', fmtFull(d.date), dateButtons())}
+      ${rrow('time','引取希望時間', (d.startH&&d.startM&&d.endH&&d.endM)?`${timeStr(d.startH,d.startM)} 〜 ${timeStr(d.endH,d.endM)}`:'', timePicker('c'))}
+    </table></div>
+    <div class="reviewgroup"><div class="reviewhead">引取場所</div><table class="reviewtable">
+      ${rrow('siteId','現場', site?site.name:'（マスタ未登録）', siteEditor)}
+      ${rrow('addr','住所', d.addr, edText('addr',d.addr,'例：埼玉県さいたま市大宮区桜木町0-0-0'))}
+      ${rrow('saveSite','現場マスタへの登録', d.saveSite?`登録する（現場名：${d.siteName||'未入力'}）`:'登録しない',
+        `<label class="checkline"><input type="checkbox" data-bind="saveSite" ${d.saveSite?'checked':''} data-focus="1"><span>この住所を現場マスタに登録する</span></label>
+         ${d.saveSite?`<div style="margin-top:12px;padding-left:30px;"><p class="hint">現場名</p>
+           <input type="text" data-bind="siteName" value="${esc(d.siteName)}" placeholder="例：大宮第二現場"></div>`:''}`)}
+    </table></div>
+    ${itemsBlock()}`;
+  }
+
+  return `<div class="wrap"><h1>入力内容の確認</h1>
+    <p class="lead">修正する場合は各項目の「✎ 編集」を押してください。この画面のまま直せます。</p>
+    ${stepper(2)}${errorBox()}
+    ${blocks}
+    <div class="actions">
+      <button type="button" class="btn btn-secondary" data-act="backToInput">入力に戻る</button>
+      <span class="spacer"></span>
+      <button type="button" class="btn btn-primary" data-act="submit">この内容で申請する</button>
+    </div></div>`;
+}
+
+/* ===== 完了 ===== */
+function viewDone(){
+  const r = state.reservations.find(x=>x.no===state.lastNo) || {};
+  return `<div class="wrap">${stepper(3)}
+    <div class="done-hero"><h1>申請しました</h1><p>受付番号　<b>${esc(r.no||'')}</b></p></div>
+    <div class="card">
+      <p style="margin-top:0;">${esc(proc(r.processorId).name)} が内容を確認します。承認されると予約が確定し、メールでお知らせします。現在のステータスは <span class="badge pending">申請中</span> です。</p>
+      <div class="actions">
+        <button type="button" class="btn btn-secondary" data-act="newReservation">続けて予約を作成</button>
+        <span class="spacer"></span>
+        <button type="button" class="btn btn-primary" data-act="goList">予約一覧を見る</button>
+      </div></div></div>`;
+}
+
+/* ===== 予約一覧 ===== */
+const STATUS = {pending:['申請中','pending'], approved:['承認済（予約確定）','approved'], rejected:['差戻し','rejected']};
+function viewList(){
+  const rows = state.reservations.map(r=>{
+    const [t,c]=STATUS[r.status];
+    return `<tr><td class="num">${esc(r.no)}</td><td>${esc(proc(r.processorId).name)}</td>
+      <td><span class="badge method">${r.method==='drop'?'持込':'引取'}</span></td>
+      <td>${esc(r.dateLabel)}</td>
+      <td>${esc(r.lines[0].item)}　${esc(r.lines[0].qty)} ${esc(r.lines[0].unit)}${r.lines.length>1?`<br><span style="color:var(--ink-sub);font-size:12px;">ほか ${r.lines.length-1} 品目</span>`:''}</td>
+      <td><span class="badge ${c}">${t}</span></td>
+      <td><button type="button" class="btn btn-secondary btn-sm" data-act="detail" data-no="${esc(r.no)}">詳細</button></td></tr>`;
+  }).join('');
+  return `<div class="wrap wide"><h1>予約一覧</h1>
+    <p class="lead">申請した予約と、処理業者の承認状況を確認できます。</p>
+    ${state.reservations.length ? `<table class="tbl">
+      <thead><tr><th>受付番号</th><th>処理業者</th><th>方法</th><th>日時</th><th>品目・数量</th><th>ステータス</th><th></th></tr></thead>
+      <tbody>${rows}</tbody></table>` :
+      `<div class="emptystate">まだ予約がありません。<br><button type="button" class="btn btn-primary" style="margin-top:16px;" data-act="newReservation">予約を作成する</button></div>`}
+    </div>`;
+}
+function viewDetailDialog(){
+  const r = state.reservations.find(x=>x.no===state.detailNo); if(!r) return '';
+  const [t,c]=STATUS[r.status];
+  const line=(k,v)=>`<tr><th>${k}</th><td class="val">${v?esc(v):'<span class="empty-val">—</span>'}</td></tr>`;
+  return `<div class="dialog-back" data-act="closeDetail">
+    <div class="dialog" role="dialog" aria-modal="true" aria-label="予約詳細" onclick="event.stopPropagation()">
+      <div class="dialog-head"><h2>${esc(r.no)}</h2><span class="badge ${c}">${t}</span></div>
+      <div class="dialog-body">
+        ${r.status==='rejected'&&r.rejectReason?`<div class="alert error"><h3>差戻しの理由</h3><p style="margin:8px 0 0;font-size:14px;">${esc(r.rejectReason)}</p></div>`:''}
+        <div class="reviewgroup"><table class="reviewtable">
+          ${line('処理業者', proc(r.processorId).name)}
+          ${line('受入方法', r.method==='drop'?'持込':'引取')}
+          ${line('日時', r.dateLabel)}
+          ${r.method==='pickup'?line('引取場所',(r.siteName?r.siteName+'／':'')+(r.addr||'')):''}
+          ${r.lines.map((ln,i)=>line(`品目 ${i+1}`, `${ln.item}　${ln.qty} ${ln.unit}${ln.memo?'　／　'+ln.memo:''}`)).join('')}
+          ${r.method==='drop'?line('車格',r.vClass)+line('車両ナンバー',r.plate):''}
+        </table></div>
+      </div>
+      <div class="dialog-foot"><button type="button" class="btn btn-secondary" data-act="closeDetail">閉じる</button></div>
+    </div></div>`;
+}
+
+function viewSettings(){
+  return `<div class="wrap"><h1>設定</h1>
+    <p class="lead">アカウントとマスタの設定を行います。</p>
+    <div class="emptystate">この画面は未実装です。</div></div>`;
+}
+
+/* ===== バリデーション ===== */
+function validate(){
+  const d=state.data, e=[];
+  if(!d.processorId) e.push('処理業者を選択してください。');
+  if(!d.method) e.push('受入方法を選択してください。');
+  if(d.method){
+    if(!d.date) e.push('日付を選択してください。');
+    if(d.method==='drop'){
+      if(d.date && !d.slotId) e.push('時間枠を選択してください。');
+      if(!d.vClass) e.push('車格を選択してください。');
+      if(!d.plate.trim()) e.push('車両ナンバーを入力してください。');
+    }else{
+      if(!d.startH||!d.startM) e.push('引取希望時間の開始を選択してください。');
+      if(!d.endH||!d.endM) e.push('引取希望時間の終了を選択してください。');
+      if(d.startH&&d.startM&&d.endH&&d.endM&&toMin(d.endH,d.endM)<=toMin(d.startH,d.startM))
+        e.push('終了時間は開始時間より後にしてください。');
+      if(!d.addr.trim()) e.push('引取場所の住所を入力してください。');
+      if(d.saveSite && !d.siteName.trim()) e.push('現場マスタに登録する現場名を入力してください。');
+    }
+    d.lines.forEach((ln,i)=>{
+      const n=`品目 ${i+1}：`;
+      if(!ln.item) e.push(n+'品目を選択してください。');
+      if(!String(ln.qty).trim()) e.push(n+'数量を入力してください。');
+      else if(isNaN(Number(ln.qty))) e.push(n+'数量は数字で入力してください。');
+      if(!ln.unit) e.push(n+'単位を選択してください。');
+    });
+  }
+  state.errors=e;
+  return e.length===0;
+}
+
+/* ===== 描画 ===== */
+function render(){
+  const y = window.scrollY;
+  const pages={input:'予約作成', list:'予約一覧', settings:'設定'};
+  const current = (state.page==='confirm'||state.page==='done') ? 'input' : state.page;
+  document.getElementById('elGnav').innerHTML = Object.entries(pages)
+    .map(([k,v])=>`<button type="button" data-act="go" data-page="${k}" ${current===k?'aria-current="page"':''}>${v}</button>`).join('');
+  const views={input:viewInput, confirm:viewConfirm, done:viewDone, list:viewList, settings:viewSettings};
+  document.getElementById('elMain').innerHTML = views[state.page]();
+  document.getElementById('elDialog').innerHTML = state.detailNo ? viewDetailDialog() : '';
+
+  if(state.errors.length){
+    const b=document.getElementById('elErrors'); if(b){ b.scrollIntoView({block:'center'}); b.focus(); }
+  }else if(state.editing){
+    window.scrollTo(0,y);
+    const f=document.querySelector('tr.editing [data-focus]'); if(f) f.focus({preventScroll:true});
+  }else if(state.keepScroll){
+    window.scrollTo(0,y); state.keepScroll=false;
+  }else{
+    window.scrollTo(0,0);
+  }
+}
+
+/* ===== イベント ===== */
+document.addEventListener('input', e=>{
+  const key=e.target.dataset.bind; if(!key) return;
+  const val = e.target.type==='checkbox' ? e.target.checked : e.target.value;
+  if(key.indexOf('.')>=0){ setPath(state.data,key,val); return; }
+  state.data[key] = val;
+  if(key==='method'){
+    if(state.data.method==='drop'){ state.data.startH=state.data.startM=state.data.endH=state.data.endM=''; }
+    else { state.data.slotId=null; }
+    state.errors=[]; state.keepScroll=true; render(); return;
+  }
+  if(key==='processorId'){ state.errors=[]; state.keepScroll=true; render(); return; }
+  if(key==='saveSite'){ state.errors=[]; state.keepScroll=true; render(); return; }
+  if(key==='addr'){
+    const sel=SITES.find(s=>s.id===state.data.siteId);
+    if(sel && sel.addr!==state.data.addr){ state.data.siteId=''; const el=document.querySelector('[data-bind="siteId"]'); if(el) el.value=''; }
+  }
+});
+document.addEventListener('change', e=>{
+  if(e.target.dataset.act==='pickSite'){
+    const s=SITES.find(x=>x.id===e.target.value);
+    state.data.siteId=e.target.value;
+    if(s){ state.data.addr=s.addr; state.data.saveSite=false; }
+    state.keepScroll=true; render();
+  }
+});
+document.addEventListener('click', e=>{
+  const el=e.target.closest('[data-act]'); if(!el) return;
+  switch(el.dataset.act){
+    case 'go':
+      if(el.dataset.page==='input') state.data=blank();
+      state.page=el.dataset.page; state.errors=[]; state.editing=null; state.detailNo=null; render(); break;
+    case 'newReservation': state.data=blank(); state.page='input'; state.errors=[]; state.editing=null; render(); break;
+    case 'goList': state.page='list'; state.errors=[]; render(); break;
+    case 'pickDate':
+      state.data.date=el.dataset.date; state.data.slotId=null;
+      state.errors=[]; state.keepScroll=true; render(); break;
+    case 'pickSlot': state.data.slotId=el.dataset.slot; state.errors=[]; state.keepScroll=true; render(); break;
+    case 'addLine':
+      if(state.page==='confirm') state.snapshot=clone(state.data);
+      state.data.lines.push(emptyLine());
+      state.errors=[]; state.keepScroll=true;
+      if(state.page==='confirm') state.editing='line'+(state.data.lines.length-1);
+      render(); break;
+    case 'removeLine':
+      state.data.lines.splice(Number(el.dataset.idx),1);
+      if(!state.data.lines.length) state.data.lines.push(emptyLine());
+      state.editing=null; state.snapshot=null; state.errors=[]; state.keepScroll=true; render(); break;
+    case 'toConfirm': if(validate()){ state.page='confirm'; state.errors=[]; } render(); break;
+    case 'backToInput': state.page='input'; state.errors=[]; state.editing=null; render(); break;
+    case 'edit':
+      state.snapshot=clone(state.data);
+      state.editing=el.dataset.key; state.errors=[]; state.keepScroll=true; render(); break;
+    case 'applyEdit': state.editing=null; state.snapshot=null; state.keepScroll=true; render(); break;
+    case 'cancelEdit':
+      if(state.snapshot) state.data=state.snapshot;
+      state.editing=null; state.snapshot=null; state.keepScroll=true; render(); break;
+    case 'submit': state.editing=null; state.snapshot=null; submit(); break;
+    case 'detail': state.detailNo=el.dataset.no; render(); break;
+    case 'closeDetail': state.detailNo=null; render(); break;
+  }
+});
+
+function submit(){
+  if(!validate()){ render(); return; }
+  const d=state.data;
+  const no='R-2026-'+String(156+state.reservations.length-3).padStart(4,'0');
+  const dateLabel = d.method==='drop'
+    ? `${fmtFull(d.date)} ${SLOT_DEFS.find(s=>s.id===d.slotId)?.label||''}`
+    : `${fmtFull(d.date)} ${timeStr(d.startH,d.startM)} 〜 ${timeStr(d.endH,d.endM)}`;
+  const rec={no, processorId:d.processorId, method:d.method, dateLabel, lines:clone(d.lines), status:'pending'};
+  if(d.method==='drop') Object.assign(rec,{vClass:d.vClass,plate:d.plate});
+  else{
+    let siteName=(SITES.find(s=>s.id===d.siteId)||{}).name||'';
+    if(d.saveSite && d.siteName.trim()){
+      siteName=d.siteName.trim();
+      SITES.push({id:'s'+(SITES.length+1), name:siteName, addr:d.addr});
+    }
+    Object.assign(rec,{addr:d.addr, siteName});
+  }
+  state.reservations.unshift(rec);
+  state.lastNo=no; state.page='done'; state.errors=[];
+  render();
+}
+
+render();
+</script>
+</body>
+</html>

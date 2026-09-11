@@ -122,7 +122,7 @@ function approvalDetail(p) {
 }
 
 /* ---------- 承認 ---------- */
-var MODALS_APPROVE = m => {
+MODALS.approve = m => {
   const p = pk(m.id), pl = plant(p.plant_id), isDrop = p.type === 'drop';
   const slotOpts = (pl.slots || []).map(s => ({v:s.id, t:`${s.name}　${s.from} 〜 ${s.to}`}));
   const body = isDrop
@@ -155,7 +155,7 @@ var MODALS_APPROVE = m => {
 };
 
 /* ---------- 変更依頼 ---------- */
-var MODALS_REJECT = m => {
+MODALS.reject = m => {
   const p = pk(m.id), alts = findAlternatives(p);
   return {
     title:`${p.id} に変更依頼`,
@@ -171,36 +171,56 @@ var MODALS_REJECT = m => {
   };
 };
 
-/* ---------- 予約詳細 ---------- */
-var MODALS_PICKUP = m => {
-  const p = pk(m.id), co = company(p.company_id), pl = plant(p.plant_id);
-  const rows = [
-    ['受付番号', `<span class="mono">${p.id}</span>`],
-    ['ステータス', stBadge(p.status)],
-    ['区分', typeLabel(p.type)],
-    ['取引先', esc(co.name)],
-    ['拠点', esc(pl.name)],
-    ['日付', fmtJp(p.date)],
-    ['時間', timeRange(p)],
-    ['申請', `${esc(p.via)}　${esc(p.applied_at)}`]
-  ];
-  if (p.type === 'drop') rows.push(['車両ナンバー', esc(p.car_number)]);
-  else rows.push(['引取場所', `${esc(p.site_name || '')}／${esc(p.site_addr || '')}`]);
-  linesOf(p.id).forEach((l,i) => rows.push([`品目 ${i+1}`,
-    `${esc(item(l.item_id).name)}${l.qty != null ? `　申告 ${dec(l.qty)} ${esc(unit(l.unit_id).name)}` : '　<span class="text-secondary">（申告になし）</span>'}`]));
-  if (p.note) rows.push(['連絡事項', esc(p.note)]);
-  if (p.approved_at) rows.push(['承認', `${esc(p.approved_at)}／${esc(p.approved_by)}`]);
-  if (p.dispatch_note) rows.push(['集荷手配メモ', esc(p.dispatch_note)]);
-  if (p.reject_reason) rows.push(['変更依頼の理由', `${esc(p.reject_reason)}<div class="text-secondary" style="font-size:12px">${esc(p.rejected_at || '')}</div>`]);
-  if (p.cancel_reason) rows.push(['取消理由', esc(p.cancel_reason)]);
-  if (p.arrived_at) rows.push(['着車時間', `${esc(p.arrived_at)}${p.receipt_number ? `　伝票番号 No.${p.receipt_number}` : ''}`]);
-  if (p.weight != null) rows.push(
-    ['正味重量', `<b>${kg(p.weight)}</b>`],
-    ['申告との差異', `${p.diff > 0 ? '+' : ''}${num(p.diff)} kg`]);
-  if (p.weigh_memo) rows.push(['計量時の備考', esc(p.weigh_memo)]);
-  return {
-    title:`予約詳細 ${p.id}`,
-    body: dl(rows),
-    foot:`<button class="btn btn-outline-secondary" data-act="closeModal">閉じる</button>`
-  };
-};
+
+Object.assign(ACTIONS, {
+  selApproval: d => { state.approval.sel = d.id; render(); },
+  openApprove: d => {
+    const m = state.modal;
+  const p = pk(d.id), pl = plant(p.plant_id);
+        const s = slotOf(pl, p) || (pl.slots || [])[0] || {};
+        openModal('approve', {id:d.id, date:p.date, slotId:s.id,
+          begin_time:p.begin_time, end_time:p.end_time, dispatch_note:p.dispatch_note || '', comment:''});
+  },
+  openReject: d => { openModal('reject', {id:d.id, reason:''}); },
+  pickAlt: d => {
+    const m = state.modal;
+  m.reason = (m.reason ? m.reason.replace(/\s*$/,'') + '\n' : '') + `代替候補：${d.label}（${d.sub}）`;
+        renderModal();
+  },
+  doApprove: d => {
+    const m = state.modal;
+  const p = pk(m.id), pl = plant(p.plant_id);
+        if (m.date && m.date < D(0)) { m.err = '過去の日付は指定できません。'; renderModal(); return; }
+        if (p.type === 'drop') {
+          const s = (pl.slots || []).find(x => x.id === m.slotId);
+          if (!s) { m.err = '受入時間枠を選択してください。'; renderModal(); return; }
+          p.date = m.date || p.date; p.begin_time = s.from; p.end_time = s.to;
+        } else {
+          if (!m.date || !m.begin_time || !m.end_time) { m.err = '訪問日時を入力してください。'; renderModal(); return; }
+          if (m.end_time <= m.begin_time) { m.err = '終了時刻は開始時刻より後にしてください。'; renderModal(); return; }
+          Object.assign(p, {date:m.date, begin_time:m.begin_time, end_time:m.end_time, dispatch_note:m.dispatch_note || ''});
+        }
+        p.status = 'approved'; p.approved_at = `${D(0)} ${nowHm()}`; p.approved_by = `${ME.role} ${ME.name.split(' ')[0]}`;
+        if (m.comment) p.approve_comment = m.comment;
+        closeModal(); state.approval.sel = null;
+        toast(`${p.id} を承認しました。取引先へ通知を送信しました。`);
+        render();
+  },
+  doReject: d => {
+    const m = state.modal;
+  if (!m.reason || !m.reason.trim()) { m.err = '理由を入力してください。'; renderModal(); return; }
+        const p = pk(m.id);
+        p.status = 'rejected'; p.reject_reason = m.reason.trim();
+        p.rejected_at = `${D(0)} ${nowHm()}`; p.rejected_by = `${ME.role} ${ME.name.split(' ')[0]}`;
+        closeModal(); state.approval.sel = null;
+        toast(`${p.id} に変更依頼を送りました。取引先が修正して再申請します。`, 'warn');
+        render();
+  },
+});
+
+INPUT_HOOKS.push((e, d, val) => {
+  if (d.act === 'apFilter') { state.approval[d.key] = val; render(); return true; }
+});
+CHANGE_HOOKS.push((e, d, val, structural) => {
+  if (d.act === 'apFilter') { state.approval[d.key] = val; if (structural) render(); return true; }
+});

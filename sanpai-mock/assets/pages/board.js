@@ -108,7 +108,7 @@ function viewBoard() {
 }
 
 /* ---------- 受入時間枠の変更 ---------- */
-var MODALS_CHANGESLOT = m => {
+MODALS.changeSlot = m => {
   const p = pk(m.id), pl = plant(p.plant_id);
   const slotOpts = (pl.slots || []).map(s => ({v:s.id, t:`${s.name}　${s.from} 〜 ${s.to}`}));
   return {
@@ -126,7 +126,7 @@ var MODALS_CHANGESLOT = m => {
 };
 
 /* ---------- 訪問日時の変更 ---------- */
-var MODALS_CHANGEVISIT = m => {
+MODALS.changeVisit = m => {
   const p = pk(m.id);
   return {
     title:`${p.id} の訪問日時を変更`,
@@ -149,7 +149,7 @@ var MODALS_CHANGEVISIT = m => {
 };
 
 /* ---------- 取消 ---------- */
-var MODALS_CANCEL = m => {
+MODALS.cancel = m => {
   const p = pk(m.id);
   return {
     title:`${p.id} を取消`,
@@ -161,3 +161,64 @@ var MODALS_CANCEL = m => {
           <button class="btn btn-outline-danger" data-act="doCancel" data-id="${p.id}">取消する</button>`
   };
 };
+
+Object.assign(ACTIONS, {
+  boardShift: d => { state.board.date = dstr(addDays(parseD(state.board.date), Number(d.n))); render(); },
+  boardToday: d => { state.board.date = D(0); render(); },
+  boardTab: d => { state.board.tab = d.tab; render(); },
+  openChangeSlot: d => {
+    const m = state.modal;
+  const p = pk(d.id), pl = plant(p.plant_id), s = slotOf(pl, p) || (pl.slots || [])[0] || {};
+        openModal('changeSlot', {id:d.id, date:p.date, slotId:s.id, reason:''});
+  },
+  doChangeSlot: d => {
+    const m = state.modal;
+  if (!m.reason || !m.reason.trim()) { m.err = '変更理由を入力してください。'; renderModal(); return; }
+        if (m.date < D(0)) { m.err = '過去の日付は指定できません。'; renderModal(); return; }
+        const p = pk(m.id), pl = plant(p.plant_id);
+        const s = (pl.slots || []).find(x => x.id === m.slotId);
+        if (!s) { m.err = '受入時間枠を選択してください。'; renderModal(); return; }
+        const before = `${fmtMd(p.date)} ${timeRange(p)}`;
+        p.date = m.date; p.begin_time = s.from; p.end_time = s.to;
+        closeModal(); toast(`${p.id} の受入時間枠を変更し、取引先へ通知しました。`); render();
+  },
+  openChangeVisit: d => {
+    const m = state.modal;
+  const p = pk(d.id);
+        openModal('changeVisit', {id:d.id, date:p.date, begin_time:p.begin_time, end_time:p.end_time,
+          dispatch_note:p.dispatch_note || '', reason:''});
+  },
+  doChangeVisit: d => {
+    const m = state.modal;
+  if (!m.reason || !m.reason.trim()) { m.err = '変更理由を入力してください。'; renderModal(); return; }
+        if (m.date < D(0)) { m.err = '過去の日付は指定できません。'; renderModal(); return; }
+        if (m.end_time <= m.begin_time) { m.err = '終了時刻は開始時刻より後にしてください。'; renderModal(); return; }
+        const p = pk(m.id);
+        Object.assign(p, {date:m.date, begin_time:m.begin_time, end_time:m.end_time, dispatch_note:m.dispatch_note});
+        closeModal(); toast(`${p.id} の訪問日時を変更し、取引先へ通知しました。`); render();
+  },
+  openCancel: d => { openModal('cancel', {id:d.id, reason:''}, 'modal-md'); },
+  doCancel: d => {
+    const m = state.modal;
+  if (!m.reason || !m.reason.trim()) { m.err = '取消理由を入力してください。'; renderModal(); return; }
+        const p = pk(m.id);
+        p.status = 'canceled'; p.cancel_reason = m.reason.trim(); p.canceled_at = `${D(0)} ${nowHm()}`;
+        closeModal(); toast(`${p.id} を取消しました。`, 'warn'); render();
+  },
+  exportBoard: d => {
+    const m = state.modal;
+  const ds = state.board.date;
+        const rows = [['日付','受付番号','区分','ステータス','拠点','時間','取引先','品目・申告数量','車両ナンバー','引取場所','住所','メモ']];
+        PICKUPS.filter(p => p.date === ds && inScope(p) && !['pending','rejected'].includes(p.status))
+          .forEach(p => rows.push([ds, p.id, typeLabel(p.type), STATUS[p.status].t, plant(p.plant_id).name,
+            timeRange(p), company(p.company_id).name, linesText(p.id),
+            p.car_number || '', p.site_name || '', p.site_addr || '', (p.type === 'drop' ? p.note : p.dispatch_note) || '']));
+        downloadCsv(`予約一覧_${ds}.csv`, rows);
+        toast('CSVを出力しました。');
+  },
+});
+
+CHANGE_HOOKS.push((e, d, val) => {
+  if (d.act === 'boardDate') { state.board.date = val; render(); return true; }
+  if (d.act === 'boardVoid') { state.board.showVoid = val; render(); return true; }
+});

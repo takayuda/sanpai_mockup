@@ -119,7 +119,7 @@ function viewHours() {
 }
 
 /* ---------- 受入時間枠の追加・編集 ---------- */
-var MODALS_SLOT = m => {
+MODALS.slot = m => {
   const pl = plant(m.plantId);
   const s = (pl.slots || []).find(x => x.id === m.slotId) || {};
   return {
@@ -139,7 +139,7 @@ var MODALS_SLOT = m => {
 };
 
 /* ---------- 持込受入・引取対応の切替（誤操作防止のため確認を挟む） ---------- */
-var MODALS_PLANTFLAG = m => {
+MODALS.plantFlag = m => {
   const pl = plant(m.plantId), on = pl[m.flag];
   const label = m.flag === 'is_delivery' ? '持込の受入' : '引取（集荷）';
   const type = m.flag === 'is_delivery' ? 'drop' : 'pickup';
@@ -161,7 +161,7 @@ var MODALS_PLANTFLAG = m => {
 };
 
 /* ---------- 臨時休業日 ---------- */
-var MODALS_HOLIDAY = m => {
+MODALS.holiday = m => {
   const pl = plant(m.plantId), hol = holidayOf(pl.id, m.date);
   const dow = parseD(m.date).getDay();
   const isDow = (pl.closed_dows || []).includes(dow);
@@ -183,3 +183,80 @@ var MODALS_HOLIDAY = m => {
       ${isDow ? '' : `<button class="btn btn-primary" data-act="saveHoliday" data-date="${m.date}">臨時休業にする</button>`}`
   };
 };
+
+Object.assign(ACTIONS, {
+  hoursPlant: d => { state.hours.plantId = d.id; render(); },
+  hoursMonth: d => { state.hours.month = shiftMonth(state.hours.month, Number(d.n)); render(); },
+  openSlot: d => { openModal('slot', {plantId:d.plant, slotId:d.slot || null}, 'modal-md'); },
+  saveSlot: d => {
+    const m = state.modal;
+  const pl = plant(m.plantId);
+        const s = (pl.slots || []).find(x => x.id === m.slotId);
+        const name = m.name != null ? m.name : (s ? s.name : '');
+        const from = m.from != null ? m.from : (s ? s.from : '');
+        const to   = m.to   != null ? m.to   : (s ? s.to   : '');
+        if (!name.trim() || !from || !to) { m.err = '名称・開始・終了をすべて入力してください。'; renderModal(); return; }
+        if (to <= from) { m.err = '終了は開始より後にしてください。'; renderModal(); return; }
+        if (s) { Object.assign(s, {name:name.trim(), from, to}); }
+        else {
+          pl.slots.push({id:'s' + Date.now().toString(36), name:name.trim(), from, to});
+          pl.slots.sort((x,y) => x.from < y.from ? -1 : 1);
+        }
+        closeModal(); toast('受入時間枠を保存しました。'); render();
+  },
+  delSlot: d => {
+    const m = state.modal;
+  const pl = plant(d.plant);
+        const s = pl.slots.find(x => x.id === d.slot);
+        if (!confirm(`受入時間枠「${s.name} ${s.from}〜${s.to}」を削除します。よろしいですか？`)) return;
+        pl.slots = pl.slots.filter(x => x.id !== d.slot);
+        toast('受入時間枠を削除しました。', 'warn'); render();
+  },
+  saveHours: d => {
+    const m = state.modal;
+  const pl = plant(d.id);
+        const b = document.querySelector('[data-hours="begin_time"]').value;
+        const t = document.querySelector('[data-hours="end_time"]').value;
+        if (!b || !t || t <= b) { toast('引取対応時間を確認してください。', 'err'); return; }
+        pl.begin_time = b; pl.end_time = t;
+        toast('引取対応時間を保存しました。'); render();
+  },
+  saveDeadline: d => {
+    const m = state.modal;
+  const pl = plant(d.id);
+        pl.deadline_days = Number(document.querySelector('[data-deadline="days"]').value);
+        pl.deadline_time = document.querySelector('[data-deadline="time"]').value || '17:00';
+        toast(`予約の締切を「${deadlineLabel(pl)}」に設定しました。`); render();
+  },
+  saveDows: d => {
+    const m = state.modal;
+  const pl = plant(d.id);
+        pl.closed_dows = [...document.querySelectorAll('[data-dow]')].filter(x => x.checked).map(x => Number(x.dataset.dow));
+        toast('定休日を保存しました。'); render();
+  },
+  openPlantFlag: d => { openModal('plantFlag', {plantId:d.plant, flag:d.flag, ack:false}, 'modal-md'); },
+  doPlantFlag: d => {
+    const m = state.modal;
+  if (!m.ack) { m.err = '内容を確認してチェックを入れてください。'; renderModal(); return; }
+        const pl = plant(m.plantId);
+        pl[m.flag] = !pl[m.flag];
+        closeModal();
+        toast(`${pl.name} の${m.flag === 'is_delivery' ? '持込受入' : '引取対応'}を${pl[m.flag] ? '開始' : '停止'}しました。`, pl[m.flag] ? '' : 'warn');
+        render();
+  },
+  openHoliday: d => { openModal('holiday', {plantId:state.hours.plantId, date:d.date}, 'modal-md'); },
+  saveHoliday: d => {
+    const m = state.modal;
+  if (!m.reason || !String(m.reason).trim()) { m.err = '理由を入力してください。'; renderModal(); return; }
+        const pl = plant(m.plantId), ex = holidayOf(pl.id, d.date);
+        if (ex) ex.reason = String(m.reason).trim();
+        else HOLIDAYS.push({id:'h' + Date.now().toString(36), plant_id:pl.id, date:d.date, reason:String(m.reason).trim()});
+        closeModal(); toast(`${fmtMd(d.date)} を臨時休業にしました。`); render();
+  },
+  delHoliday: d => {
+    const m = state.modal;
+  const h = HOLIDAYS.find(x => x.id === d.id);
+        HOLIDAYS = HOLIDAYS.filter(x => x.id !== d.id);
+        closeModal(); toast('臨時休業を解除しました。'); render();
+  },
+});

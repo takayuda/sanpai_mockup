@@ -1,9 +1,11 @@
 
 /* =========================================================================
-   産廃DX 処理業者 管理画面モック（第1期スコープ）
+   ダミーデータ
    - テーブル構成は添付ER図（companies / plants / items / units /
      pickups / pickup_items）に準拠し、業務上必要な項目のみ追加している
-   - データはすべてブラウザ内のダミー。リロードで初期状態に戻る
+   - ページを移動しても内容が引き継がれるよう localStorage に保存する
+     （保存できない環境ではページ内だけで保持する）
+   - 日付は開いた日を基準に生成し、日付が変わったら作り直す
    ========================================================================= */
 
 /* ---------- 日付ユーティリティ ---------- */
@@ -28,6 +30,50 @@ function B(n) { return bizDay(n); }
 /* ---------- ログイン中の担当者（権限の切替は行わない） ---------- */
 const ME = {name:'田中 誠', role:'受入担当'};
 
+const ITEM_TYPES = [{v:1, t:'産業廃棄物'}, {v:2, t:'特別管理産業廃棄物'}, {v:3, t:'一般廃棄物'}];
+
+/* ---------- データ本体 ---------- */
+let PLANTS = [], HOLIDAYS = [], COMPANIES = [], ITEMS = [], UNITS = [],
+    PICKUPS = [], PICKUP_ITEMS = [], INVITE_LINK = {}, _pi = 0;
+
+let _seed = 20260727;
+const rnd = () => { _seed = (_seed * 1103515245 + 12345) % 2147483648; return _seed / 2147483648; };
+const pick = a => a[Math.floor(rnd()*a.length)];
+const round2 = n => Math.round(n*100)/100;
+
+function addPickup(p, lines) {
+  PICKUPS.push(p);
+  lines.forEach(l => PICKUP_ITEMS.push(Object.assign({id:'pi' + (++_pi), pickup_id:p.id}, l)));
+}
+
+/* ---------- 保存と復元 ---------- */
+const STORE_KEY = 'sanpai-mock-data';
+function saveData() {
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify({
+      seededOn: D(0), _pi, PLANTS, HOLIDAYS, COMPANIES, ITEMS, UNITS, PICKUPS, PICKUP_ITEMS, INVITE_LINK
+    }));
+  } catch (e) { /* 保存できない環境ではページ内だけで保持する */ }
+}
+function restoreData() {
+  try {
+    const o = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
+    if (!o || o.seededOn !== D(0)) return false;   /* 日付が変わったら作り直す */
+    PLANTS = o.PLANTS; HOLIDAYS = o.HOLIDAYS; COMPANIES = o.COMPANIES;
+    ITEMS = o.ITEMS; UNITS = o.UNITS; PICKUPS = o.PICKUPS; PICKUP_ITEMS = o.PICKUP_ITEMS;
+    INVITE_LINK = o.INVITE_LINK; _pi = o._pi || 0;
+    return true;
+  } catch (e) { return false; }
+}
+function resetData() {
+  try { localStorage.removeItem(STORE_KEY); } catch (e) {}
+  seedData(); saveData();
+}
+
+function seedData() {
+  _seed = 20260727; _pi = 0;
+  PICKUPS = []; PICKUP_ITEMS = [];
+
 /* =========================================================================
    plants：拠点（処理施設）マスタ
    - is_delivery … 持込の受入可否 / is_pickup … 引取（集荷）対応可否
@@ -35,7 +81,7 @@ const ME = {name:'田中 誠', role:'受入担当'};
    - slots …  受入時間枠（複数設定可）
    - deadline_days / deadline_time … 取引先が予約できる締切（既定：前日17時）
    ========================================================================= */
-let PLANTS = [
+  PLANTS = [
   {id:'pl1', name:'本社工場（さいたま中間処理場）', is_delivery:true, is_pickup:true,
    begin_time:'08:00', end_time:'17:00', deadline_days:1, deadline_time:'17:00',
    postalcode:'331-0812', pref:'埼玉県', address:'さいたま市北区宮原町0-0-0', phone:'048-000-1000',
@@ -50,7 +96,7 @@ let PLANTS = [
           {id:'s4', name:'午後', from:'13:00', to:'17:00'}]}
 ];
 /* 臨時休業日（拠点別） */
-let HOLIDAYS = [
+  HOLIDAYS = [
   {id:'h1', plant_id:'pl1', date:B(6), reason:'設備定期点検のため臨時休業'}
 ];
 
@@ -60,7 +106,7 @@ let HOLIDAYS = [
    - 取引先自身が入力する項目（メールアドレス・パスワード等）は
      登録用URLからの本登録で埋まる
    ========================================================================= */
-let COMPANIES = [
+  COMPANIES = [
   {id:'c1', name:'株式会社サンプル建設', kana:'カブシキガイシャサンプルケンセツ',
    is_generator:true, is_transporter:false,
    postalcode:'330-0854', pref:'埼玉県', address:'さいたま市大宮区桜木町0-0-0',
@@ -92,13 +138,12 @@ let COMPANIES = [
 ];
 
 /* 取引先の登録用URL。処理業者ごとに1本を使い回し、必要なときだけ再発行する */
-let INVITE_LINK = {token:'d4e5f6g7h8', issued_at:'2026-04-01 10:00'};
+  INVITE_LINK = {token:'d4e5f6g7h8', issued_at:'2026-04-01 10:00'};
 
 /* =========================================================================
    items：品目マスタ　/　units：単位マスタ
    ========================================================================= */
-const ITEM_TYPES = [{v:1, t:'産業廃棄物'}, {v:2, t:'特別管理産業廃棄物'}, {v:3, t:'一般廃棄物'}];
-let ITEMS = [
+  ITEMS = [
   {id:'i1', type:1, name:'廃プラスチック類', is_value:false},
   {id:'i2', type:1, name:'木くず',           is_value:false},
   {id:'i3', type:1, name:'金属くず',         is_value:true},
@@ -108,7 +153,7 @@ let ITEMS = [
   {id:'i7', type:1, name:'混合廃棄物',       is_value:false},
   {id:'i8', type:2, name:'廃油（引火性）',   is_value:false}
 ];
-let UNITS = [
+  UNITS = [
   {id:'u1', name:'kg'}, {id:'u2', name:'t'}, {id:'u3', name:'m3'},
   {id:'u4', name:'個'}, {id:'u5', name:'台'}, {id:'u6', name:'袋'}
 ];
@@ -122,14 +167,7 @@ let UNITS = [
    ※受付番号は排出元ポータルの仕様に合わせ「申請時」に採番する
      （ER図の receipt_number は当日の計量伝票番号として入場受付時に採番）
    ========================================================================= */
-let PICKUPS = [];
-let PICKUP_ITEMS = [];
 
-let _pi = 0;
-function addPickup(p, lines) {
-  PICKUPS.push(p);
-  lines.forEach(l => PICKUP_ITEMS.push(Object.assign({id:'pi' + (++_pi), pickup_id:p.id}, l)));
-}
 
 /* --- 承認待ち --- */
 addPickup({id:'R-2026-0152', type:'pickup', status:'pending', company_id:'c1', plant_id:'pl1',
@@ -252,12 +290,8 @@ addPickup({id:'R-2026-0171', type:'drop', status:'approved', company_id:'c1', pl
   [{item_id:'i1', unit_id:'u2', qty:0.9}]);
 
 /* --- 過去の実績（実績一覧の検証用に45日ぶん生成） --- */
-let _seed = 20260727;
-const rnd = () => { _seed = (_seed * 1103515245 + 12345) % 2147483648; return _seed / 2147483648; };
-const pick = a => a[Math.floor(rnd()*a.length)];
-const round2 = n => Math.round(n*100)/100;
 
-(function seedHistory(){
+  (function seedHistory(){
   let no = 100;
   for (let k = 45; k >= 1; k--) {
     const ds = D(-k), dow = parseD(ds).getDay();
@@ -284,4 +318,8 @@ const round2 = n => Math.round(n*100)/100;
         [{item_id:it.id, unit_id:'u2', qty}]);
     }
   }
-})();
+  })();
+
+}
+
+if (!restoreData()) { seedData(); saveData(); }

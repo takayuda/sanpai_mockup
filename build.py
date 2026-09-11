@@ -1,36 +1,98 @@
 #!/usr/bin/env python3
-"""モックのビルド。
+"""単一ファイル版のビルド。
 
-parts/ の各パーツから処理業者の管理画面を組み立て、排出者ポータル
-（emitter-portal.html）を <script type="text/html"> として同梱した
-単一ファイル sanpai-mock.html を出力する。
+sanpai-mock/ の各ファイル（CSS・JS・排出者ポータル）をひとつにまとめて
+sanpai-mock.html を出力する。分割版がソースで、こちらは配布用の副産物。
 
     python3 build.py
 """
 import pathlib, re
 
-ROOT  = pathlib.Path(__file__).parent
-PARTS = ROOT / 'parts'
-JS = ['02_data.js','03_util.js','04_approvals.js','05_board.js','06_proxy.js',
-      '07_hours.js','08_reception.js','09_actuals.js','10_masters.js','12_app.js']
+ROOT = pathlib.Path(__file__).parent
+SRC  = ROOT / 'sanpai-mock'
+PAGES = ['index','approvals','board','proxy','hours','reception','actuals',
+         'companies','invite','masters']
 
-admin = ((PARTS / '01_head.html').read_text(encoding='utf-8')
-         + ''.join((PARTS / f).read_text(encoding='utf-8') for f in JS)
-         + (PARTS / '99_tail.html').read_text(encoding='utf-8'))
+css = (SRC / 'assets/app.css').read_text(encoding='utf-8')
+js  = (SRC / 'assets/data.js').read_text(encoding='utf-8')
+js += (SRC / 'assets/core.js').read_text(encoding='utf-8')
+for name in PAGES:
+    js += f"\n/* ===== {name} ===== */\n" + (SRC / f'assets/pages/{name}.js').read_text(encoding='utf-8')
 
-emitter = (ROOT / 'emitter-portal.html').read_text(encoding='utf-8')
-# 同梱版では処理業者側へのリンクは持たせない（戻る導線は親側のボタンが担当）
+# 排出者ポータルは iframe で同梱する（互いのCSS・JSが干渉しないように）
+emitter = (SRC / 'emitter.html').read_text(encoding='utf-8')
 emitter = re.sub(r'\s*<a class="mocklink" href="[^"]*">[^<]*</a>', '', emitter)
-# <script> ブロック内に埋め込むため終了タグをエスケープする（読み出し時に戻す）
 emitter = emitter.replace('</script>', r'<\/script>')
 
-BOOTSTRAP = '<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>'
-merged = admin.replace(BOOTSTRAP, BOOTSTRAP
-    + '\n\n<!-- 排出者ポータル（添付モックをそのまま同梱。iframe で表示するため互いのCSS/JSは干渉しない） -->\n'
-    + '<script type="text/html" id="emitterHtml">\n' + emitter + '\n</script>')
-merged = merged.replace('<title>産廃DX｜処理業者 管理画面 モック（第1期）</title>',
-                        '<title>産廃DX モック（第1期）｜処理業者 管理画面＋排出者ポータル</title>')
+router = """
+/* =========================================================================
+   単一ファイル版のルーティング（分割版ではページ遷移で切り替える）
+   ========================================================================= */
+const EMITTER_HTML = (document.getElementById('emitterHtml').textContent || '')
+  .replace(/<\\\\\\/script>/g, '<\\/script>');
+const VIEWS = {
+  index:viewIndex, approvals:viewApprovals, board:viewBoard, proxy:viewProxy,
+  hours:viewHours, reception:viewReception, actuals:viewActuals,
+  m_companies:viewCompanies, m_plants:() => viewMaster('m_plants'),
+  m_items:() => viewMaster('m_items'), m_units:() => viewMaster('m_units'),
+  invite:viewInvite,
+  emitter:() => `<iframe id="elEmitFrame" class="emitframe-inline" title="排出者ポータル"></iframe>`
+};
+const AFTER = {
+  emitter:() => {
+    const f = document.getElementById('elEmitFrame');
+    if (f && !f.dataset.loaded) { f.srcdoc = EMITTER_HTML; f.dataset.loaded = '1'; }
+  }
+};
+function gotoRoute(r) {
+  if (!VIEWS[r]) r = 'index';
+  PAGE = {route:r, view:VIEWS[r], after:AFTER[r], chrome:(r === 'invite' ? 'plain' : 'admin')};
+  if (r === 'invite' && !state.invite.token) state.invite = {token:INVITE_LINK.token, form:null, done:false};
+  applyChromeMode();
+  render();
+  if (location.hash !== '#' + r) history.replaceState(null, '', '#' + r);
+}
+const startRoute = location.hash.slice(1) || 'index';
+mount(startRoute, VIEWS[startRoute] || viewIndex);
+gotoRoute(startRoute);
+window.addEventListener('hashchange', () => {
+  const r = location.hash.slice(1);
+  if (VIEWS[r] && r !== PAGE.route) gotoRoute(r);
+});
+"""
 
+html = f"""<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>産廃DX モック（第1期）｜処理業者 管理画面＋排出者ポータル</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+{css}
+</style>
+</head>
+<body>
+<main class="content" id="elView"></main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- 排出者ポータル（分割版の emitter.html をそのまま同梱） -->
+<script type="text/html" id="emitterHtml">
+{emitter}
+</script>
+
+<script>
+window.SINGLE_FILE = true;
+{js}
+{router}
+</script>
+</body>
+</html>
+"""
 out = ROOT / 'sanpai-mock.html'
-out.write_text(merged, encoding='utf-8')
-print(f'{out.name}: {len(merged):,} bytes')
+out.write_text(html, encoding='utf-8')
+print(f'{out.name}: {len(html):,} bytes')

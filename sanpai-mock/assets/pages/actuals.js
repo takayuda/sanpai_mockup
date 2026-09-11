@@ -67,3 +67,24 @@ function viewActuals() {
   </div>
   ${list.length > 200 ? `<p class="hint mt-2">先頭200件を表示（全 ${list.length} 件）。CSVは全件出力されます。</p>` : ''}`;
 }
+
+Object.assign(ACTIONS, {
+  exportActuals: d => {
+    const m = state.modal;
+  const rows = [['受付番号','日付','伝票番号','区分','取引先','拠点','引取場所','車両ナンバー','着車時間','品目','申告(kg)','正味重量(kg)','差異(kg)','備考']];
+        filteredActuals().forEach(p => rows.push([
+          p.id, p.date, p.receipt_number || '', typeLabel(p.type), company(p.company_id).name, plant(p.plant_id).name,
+          p.site_name || '', p.car_number || '',
+          p.arrived_at || '', linesOf(p.id).map(l => item(l.item_id).name).join('／'),
+          declaredKg(p.id) || '', p.weight, p.diff, p.weigh_memo || '']));
+        downloadCsv(`実績一覧_${state.actuals.from}_${state.actuals.to}.csv`, rows);
+        toast(`実績 ${filteredActuals().length} 件をCSV出力しました。`);
+  },
+});
+
+INPUT_HOOKS.push((e, d, val) => {
+  if (d.act === 'acFilter') { state.actuals[d.key] = val; render(); return true; }
+});
+CHANGE_HOOKS.push((e, d, val, structural) => {
+  if (d.act === 'acFilter') { state.actuals[d.key] = val; if (structural) render(); return true; }
+});
