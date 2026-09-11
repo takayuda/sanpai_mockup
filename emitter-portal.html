@@ -154,8 +154,12 @@ textarea{min-height:88px;resize:vertical;}
 .dialog-head h2{margin:0;font-size:18px;flex:1;}
 .dialog-body{padding:24px;}
 .dialog-foot{padding:16px 24px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;}
+.mocklink{margin-left:auto;font-size:13px;font-weight:700;color:var(--blue-800);border:1px solid var(--blue-800);border-radius:var(--radius);padding:6px 14px;text-decoration:none;white-space:nowrap;position:relative;background:var(--white);}
+.mocklink:hover{background:var(--blue-100);}
+.mocklink::after{content:"MOCK";position:absolute;top:-8px;right:-10px;background:var(--warn);color:#fff;font-size:9px;font-weight:700;border-radius:3px;padding:0 4px;letter-spacing:.04em;}
 @media (max-width:600px){
   .appbar-inner{flex-wrap:wrap;gap:0 16px;padding:8px 16px;}
+  .mocklink{margin-left:0;order:2;font-size:12px;padding:4px 10px;}
   .gnav{order:3;width:100%;overflow-x:auto;}
   .gnav button{padding:12px;font-size:14px;}
   .wrap{padding:24px 16px 72px;}
@@ -173,6 +177,7 @@ textarea{min-height:88px;resize:vertical;}
   <div class="appbar-inner">
     <div class="brand">産廃予約システム<span>株式会社サンプル建設（排出元）</span></div>
     <nav class="gnav" id="elGnav" aria-label="メインメニュー"></nav>
+    <a class="mocklink" href="processor-admin.html">処理業者側の画面</a>
   </div>
 </header>
 

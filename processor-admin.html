@@ -73,11 +73,8 @@ body{-webkit-font-smoothing:antialiased;}
 .sidebar a.navitem.active .ico{color:var(--blue-800);}
 .sidebar .navitem .cnt{margin-left:auto;font-size:11px;font-weight:700;background:var(--error);color:#fff;border-radius:99px;padding:1px 8px;}
 .content{margin-left:var(--sidebar-w);padding:22px 26px 80px;padding-top:calc(var(--topbar-h) + 22px);}
-.page-h{display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap;margin-bottom:6px;}
+.page-h{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px;}
 .page-h h1{font-size:23px;font-weight:700;margin:0;}
-.page-lead{color:var(--ink-sub);font-size:14px;margin:0 0 18px;}
-.fnids{display:flex;gap:6px;flex-wrap:wrap;}
-.fnid{font-size:11px;font-weight:700;color:var(--blue-900);background:var(--blue-100);border:1px solid var(--blue-800);border-radius:4px;padding:1px 7px;}
 
 /* カード・パネル */
 .card{border-color:var(--line);border-radius:var(--radius);overflow-x:auto;}
@@ -111,13 +108,9 @@ body{-webkit-font-smoothing:antialiased;}
 .b-dark{background:var(--blue-900);color:#fff;border-color:var(--blue-900);}
 .b-sq{border-radius:4px;}
 
-/* 事前チェック */
-.chk{display:flex;align-items:flex-start;gap:8px;font-size:13px;padding:8px 12px;border:1px solid var(--line);border-radius:var(--radius);background:var(--white);}
-.chk.ok{border-color:var(--success);background:var(--success-bg);}
-.chk.ng{border-color:var(--error);background:var(--error-bg);}
-.chk.wa{border-color:var(--warn);background:var(--warn-bg);}
-.chk .m{font-weight:700;flex:none;display:flex;align-items:center;gap:4px;}
-.chk.ok .m{color:var(--success);} .chk.ng .m{color:var(--error);} .chk.wa .m{color:var(--warn);}
+/* 注意書き（重要な警告のみ） */
+.warnbox{display:flex;align-items:flex-start;gap:8px;font-size:13px;padding:10px 12px;border:1px solid var(--warn);border-radius:var(--radius);background:var(--warn-bg);color:var(--warn);font-weight:500;}
+.warnbox.danger{border-color:var(--error);background:var(--error-bg);color:var(--error);}
 
 /* カレンダー */
 .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
@@ -138,14 +131,10 @@ body{-webkit-font-smoothing:antialiased;}
 .slotchip b{font-size:15px;}
 .slotchip .del{border:0;background:none;color:var(--error);padding:2px 4px;line-height:1;cursor:pointer;}
 
-/* 仕様メモ */
-.specnote{border:1px dashed var(--line-strong);border-radius:var(--radius);background:#FBFBFC;padding:0;margin-bottom:18px;}
-.specnote > button{width:100%;text-align:left;background:none;border:0;font:inherit;font-size:13px;font-weight:700;color:var(--ink-sub);padding:9px 14px;cursor:pointer;display:flex;align-items:center;gap:6px;}
-.specnote .in{padding:0 16px 14px;font-size:13px;}
-.specnote h6{font-size:12px;font-weight:700;color:var(--ink-sub);margin:10px 0 4px;}
-.specnote ul{margin:0;padding-left:18px;}
-.specnote li{margin-bottom:2px;}
-.specnote .q{color:var(--warn);font-weight:700;}
+/* ボード：持込・引取で列幅を揃える */
+.board-tbl{table-layout:fixed;min-width:1140px;}
+.board-tbl td.text-end{padding-left:2px;padding-right:10px;}
+.board-tbl td{word-break:break-word;}
 
 /* その他 */
 .empty{background:var(--white);border:1px dashed var(--line-strong);border-radius:var(--radius);padding:44px 24px;text-align:center;color:var(--ink-sub);}
@@ -169,10 +158,6 @@ body{-webkit-font-smoothing:antialiased;}
 .dl dt:nth-last-of-type(1),.dl dd:nth-last-of-type(1){border-bottom:0;}
 .urlbox{display:flex;gap:8px;align-items:center;background:#FAFAFA;border:1px solid var(--line-strong);border-radius:var(--radius);padding:10px 12px;font-size:13px;word-break:break-all;}
 .urlbox code{color:var(--blue-900);font-weight:700;}
-.flowsteps{list-style:none;margin:0 0 16px;padding:0;display:flex;flex-wrap:wrap;gap:8px;}
-.flowsteps li{flex:1 1 150px;border:1px solid var(--line);border-radius:var(--radius);background:var(--white);padding:10px 12px;font-size:12px;color:var(--ink-sub);}
-.flowsteps li b{display:block;font-size:13px;color:var(--ink);margin-bottom:2px;}
-.flowsteps li.on{border-color:var(--blue-800);background:var(--blue-100);}
 .invitewrap{max-width:560px;margin:0 auto;}
 .nowrap{white-space:nowrap;}
 /* 取引先の本登録画面（本番では取引先側アプリの画面）はガワを切り替える */
@@ -184,7 +169,7 @@ body.invite-mode .topbar .brand span{color:#C9D2FF;}
 @media (max-width:767px){
   .topbar{gap:8px;padding:0 12px;}
   .topbar .brand{font-size:14px;}
-  .topbar .who,.topbar #elPlantSel{display:none;}
+  .topbar #elPlantSel{display:none;}
 }
 @media (max-width:991px){
   :root{--sidebar-w:0px;}
@@ -203,7 +188,6 @@ body.invite-mode .topbar .brand span{color:#C9D2FF;}
     <a class="btn btn-outline-secondary btn-sm mockbtn" href="emitter-portal.html" id="elEmitterBtn">排出者側の画面</a>
     <select class="form-select form-select-sm" style="width:auto;" data-act="switchPlant" id="elPlantSel" aria-label="拠点"></select>
     <button class="btn btn-outline-secondary btn-sm btn-icon" data-act="openNotif" aria-label="通知" id="elNotifBtn"></button>
-    <span class="who" id="elWho"></span>
   </div>
 </header>
 
@@ -327,33 +311,33 @@ let COMPANIES = [
    postalcode:'330-0854', pref:'埼玉県', address:'さいたま市大宮区桜木町0-0-0',
    phone:'048-000-0001', email:'kanri@sample-kensetsu.example.jp', contact:'山田 太郎',
    invoice:'T1234567890123', bank:'埼玉りそな銀行 大宮支店 普通 1234567',
-   credit:'A', contract_file:'委託契約書_サンプル建設_2026.pdf',
+   credit:'A',
    status:'active', token:'a1b2c3d4e5', invited_at:'2026-04-02 10:00', registered_at:'2026-04-03 09:20'},
   {id:'c2', name:'大宮運輸株式会社', kana:'オオミヤウンユカブシキガイシャ',
    is_generator:false, is_transporter:true,
    postalcode:'331-0804', pref:'埼玉県', address:'さいたま市北区土呂町0-0-0',
    phone:'048-000-0002', email:'haisha@omiya-unyu.example.jp', contact:'鈴木 一郎',
    invoice:'T2345678901234', bank:'武蔵野銀行 大宮支店 普通 2345678',
-   credit:'B', contract_file:'運搬委託契約書_大宮運輸_2026.pdf',
+   credit:'B',
    status:'active', token:'b2c3d4e5f6', invited_at:'2026-04-02 10:05', registered_at:'2026-04-04 14:10'},
   {id:'c3', name:'埼玉建設工業株式会社', kana:'サイタマケンセツコウギョウカブシキガイシャ',
    is_generator:true, is_transporter:true,
    postalcode:'330-0061', pref:'埼玉県', address:'さいたま市浦和区常盤0-0-0',
    phone:'048-000-0003', email:'soumu@saitama-kk.example.jp', contact:'佐々木 花子',
    invoice:'T3456789012345', bank:'埼玉りそな銀行 浦和支店 普通 3456789',
-   credit:'A', contract_file:'委託契約書_埼玉建設工業_2026.pdf',
+   credit:'A',
    status:'active', token:'c3d4e5f6g7', invited_at:'2026-04-05 11:00', registered_at:'2026-04-06 08:45'},
-  {id:'c4', name:'株式会社グリーンハウス', kana:'カブシキガイシャグリーンハウス',
-   is_generator:true, is_transporter:false,
-   postalcode:'', pref:'', address:'', phone:'', email:'', contact:'高橋 誠',
-   invoice:'', bank:'', credit:'', contract_file:'委託契約書_グリーンハウス_2026.pdf',
+  /* 招待中：登録用URLを発行しただけの状態。社名を含め取引先が本登録で入力する */
+  {id:'c4', name:'', kana:'', is_generator:false, is_transporter:false,
+   postalcode:'', pref:'', address:'', phone:'', email:'', contact:'',
+   invoice:'', bank:'', credit:'',
    status:'invited', token:'d4e5f6g7h8', invited_at:D(-1)+' 16:30', registered_at:null},
   {id:'c5', name:'武蔵野解体株式会社', kana:'ムサシノカイタイカブシキガイシャ',
    is_generator:true, is_transporter:false,
    postalcode:'338-0001', pref:'埼玉県', address:'さいたま市中央区上落合0-0-0',
    phone:'048-000-0005', email:'info@musashino-kaitai.example.jp', contact:'渡辺 翔',
    invoice:'T5678901234567', bank:'りそな銀行 与野支店 普通 5678901',
-   credit:'B', contract_file:'委託契約書_武蔵野解体_2026.pdf',
+   credit:'B',
    status:'active', token:'e5f6g7h8i9', invited_at:'2026-08-01 09:00', registered_at:'2026-08-01 17:30'}
 ];
 
@@ -386,7 +370,6 @@ let UNITS = [
    ========================================================================= */
 let PICKUPS = [];
 let PICKUP_ITEMS = [];
-let AUDIT = [];
 
 let _pi = 0;
 function addPickup(p, lines) {
@@ -417,7 +400,7 @@ addPickup({id:'R-2026-0160', type:'pickup', status:'pending', company_id:'c3', p
   applied_at:D(0)+' 09:05', via:'取引先ポータル', note:'脱水済み'},
   [{item_id:'i5', unit_id:'u2', qty:3.5}]);
 
-addPickup({id:'R-2026-0161', type:'drop', status:'pending', company_id:'c4', plant_id:'pl1',
+addPickup({id:'R-2026-0161', type:'drop', status:'pending', company_id:'c5', plant_id:'pl1',
   date:B(4), begin_time:'13:00', end_time:'16:00',
   car_number:'所沢 400 さ 78-90', driver_name:'高橋 誠', driver_tel:'090-2222-2222',
   applied_at:D(0)+' 09:31', via:'取引先ポータル', note:''},
@@ -544,12 +527,6 @@ const round2 = n => Math.round(n*100)/100;
         [{item_id:it.id, unit_id:'u2', qty, actual_qty:round2(net/1000)}]);
     }
   }
-  AUDIT = [
-    {at:B(-2)+' 15:10', user:'受入担当 田中', target:'R-2026-0164', act:'承認',       detail:'持込予約を承認（9:00〜12:00）'},
-    {at:B(-3)+' 09:12', user:'配車担当 山本', target:'R-2026-0155', act:'変更依頼',   detail:'指定日の収集ルートが満車のため'},
-    {at:B(-5)+' 11:02', user:'受入担当 田中', target:'本社工場',    act:'時間設定変更', detail:'臨時休業日を追加（設備定期点検）'},
-    {at:D(-1)+' 16:30', user:'営業 中村',     target:'株式会社グリーンハウス', act:'取引先の招待', detail:'登録用URLを発行'}
-  ];
 })();
 
 /* =========================================================================
@@ -584,12 +561,12 @@ const kg = v => v == null || v === '' ? '—' : `${num(v)} kg` + (Math.abs(v) >=
 
 /* ---------- ステータス ---------- */
 const STATUS = {
-  pending:  {t:'申請中',            c:'b-pending'},
-  approved: {t:'承認済（予約確定）', c:'b-approved'},
-  rejected: {t:'差戻し',            c:'b-rejected'},
-  arrived:  {t:'入場受付済',        c:'b-dark'},
-  done:     {t:'実績記録済',        c:'b-neutral'},
-  canceled: {t:'取消',              c:'b-neutral'}
+  pending:  {t:'申請中', c:'b-pending'},
+  approved: {t:'承認済', c:'b-approved'},
+  rejected: {t:'差戻し', c:'b-rejected'},
+  arrived:  {t:'入場済', c:'b-dark'},
+  done:     {t:'計量済', c:'b-neutral'},
+  canceled: {t:'取消',   c:'b-neutral'}
 };
 const stBadge = s => `<span class="badge ${STATUS[s].c}">${STATUS[s].t}</span>`;
 const tBadge  = t => `<span class="badge b-method b-sq">${typeLabel(t)}</span>`;
@@ -617,41 +594,6 @@ const slotOf = (pl, p) => (pl.slots || []).find(s => s.from === p.begin_time && 
 const inHours = (pl, p) => p.begin_time >= pl.begin_time && p.end_time <= pl.end_time;
 
 /* =========================================================================
-   承認時の事前チェック（判断材料の提示のみ。可否は承認者が決める）
-   ========================================================================= */
-function checksOf(p) {
-  const out = [], co = company(p.company_id), pl = plant(p.plant_id);
-  /* 取引先の登録状態 */
-  if (co.status === 'active') out.push({lv:'ok', m:'取引先', t:`本登録済み（${companyKind(co)}）`});
-  else out.push({lv:'wa', m:'取引先', t:'招待中（本登録が完了していません）'});
-  /* 契約書の登録 */
-  if (co.contract_file) out.push({lv:'ok', m:'契約書', t:esc(co.contract_file)});
-  else out.push({lv:'wa', m:'契約書', t:'契約書が登録されていません'});
-  /* 拠点の対応可否 */
-  if (p.type === 'drop' && !pl.is_delivery) out.push({lv:'ng', m:'拠点', t:`${pl.name} は持込の受入に対応していません`});
-  else if (p.type === 'pickup' && !pl.is_pickup) out.push({lv:'ng', m:'拠点', t:`${pl.name} は引取に対応していません`});
-  else out.push({lv:'ok', m:'拠点', t:`${pl.name}（${p.type === 'drop' ? '持込受入' : '引取'}対応）`});
-  /* 稼働日 */
-  const cl = isClosed(p.plant_id, p.date);
-  if (cl) out.push({lv:'ng', m:'稼働日', t:`${fmtMd(p.date)} は休業（${cl.reason}）`});
-  /* 時間 */
-  if (p.type === 'drop') {
-    const s = slotOf(pl, p);
-    if (s) out.push({lv:'ok', m:'受入枠', t:`${s.name} ${s.from}〜${s.to}`});
-    else out.push({lv:'wa', m:'受入枠', t:`${timeRange(p)} は設定済みの受入時間枠と一致しません`});
-  } else {
-    if (inHours(pl, p)) out.push({lv:'ok', m:'引取対応時間', t:`${timeRange(p)}（対応時間 ${pl.begin_time}〜${pl.end_time} 内）`});
-    else out.push({lv:'wa', m:'引取対応時間', t:`${timeRange(p)} は対応時間 ${pl.begin_time}〜${pl.end_time} の外です`});
-  }
-  /* 参考：同日の予約状況 */
-  const c = countOf(p.plant_id, p.date);
-  out.push({lv:'ok', m:'同日の状況', t:`持込 ${c.drop} 件（うち申請中 ${c.pendingDrop}）／引取 ${c.pickup} 件（うち申請中 ${c.pendingPickup}）`});
-  return out;
-}
-const chkIcon = lv => lv === 'ok' ? ic('check',15) : lv === 'wa' ? ic('alert',15) : ic('x',15);
-const chkHtml = c => `<div class="chk ${c.lv}"><span class="m">${chkIcon(c.lv)}${esc(c.m)}</span><span>${esc(c.t)}</span></div>`;
-
-/* =========================================================================
    画面定義
    ========================================================================= */
 const NAV = [
@@ -672,9 +614,6 @@ const NAV = [
     {route:'m_plants',    label:'拠点',   ico:'factory'},
     {route:'m_items',     label:'品目',   ico:'box'},
     {route:'m_units',     label:'単位',   ico:'hash'}
-  ]},
-  {sec:'システム', items:[
-    {route:'audit', label:'監査ログ', ico:'file'}
   ]}
 ];
 
@@ -682,7 +621,7 @@ const NAV = [
    画面状態
    ========================================================================= */
 const state = {
-  route:'approvals', plantId:'all', modal:null, noteOpen:null,
+  route:'approvals', plantId:'all', modal:null,
   approval:{sel:null, type:'all', keyword:''},
   board:{date:D(0), tab:'all'},
   proxy:null,
@@ -695,13 +634,6 @@ const state = {
 /* ヘッダーの拠点セレクタで対象を絞り込む */
 const plantScope = () => state.plantId === 'all' ? PLANTS.map(p => p.id) : [state.plantId];
 const inScope = p => plantScope().includes(p.plant_id);
-
-/* ---------- 監査ログ ---------- */
-function audit(act, target, detail) {
-  const now = new Date();
-  AUDIT.unshift({at:`${D(0)} ${pad(now.getHours())}:${pad(now.getMinutes())}`,
-    user:`${ME.role} ${ME.name.split(' ')[0]}`, target, act, detail});
-}
 
 /* ---------- トースト ---------- */
 function toast(msg, kind) {
@@ -750,26 +682,9 @@ function downloadCsv(filename, rows) {
 }
 
 /* ---------- 共通パーツ ---------- */
-function pageHead(title, lead, ids, actions) {
-  return `<div class="page-h">
-    <div><h1>${title}</h1></div>
-    ${ids ? `<div class="fnids align-self-center">${ids.map(i => `<span class="fnid">${i}</span>`).join('')}</div>` : ''}
-    <div class="ms-auto d-flex gap-2 flex-wrap">${actions || ''}</div>
-  </div>
-  <p class="page-lead">${lead}</p>`;
-}
-function specNote(route) {
-  const n = SPEC_NOTES[route]; if (!n) return '';
-  const open = state.noteOpen === route;
-  return `<div class="specnote">
-    <button type="button" data-act="toggleNote" data-route="${route}">
-      ${ic(open ? 'chevronDown' : 'chevronRight', 14)}この画面の仕様メモ（第1期スコープ・確認事項）</button>
-    ${open ? `<div class="in">
-      ${n.rules ? `<h6>仕様</h6><ul>${n.rules.map(x => `<li>${x}</li>`).join('')}</ul>` : ''}
-      ${n.out   ? `<h6>第1期スコープ外</h6><ul>${n.out.map(x => `<li>${x}</li>`).join('')}</ul>` : ''}
-      ${n.q     ? `<h6>要確認</h6><ul>${n.q.map(x => `<li class="q">${x}</li>`).join('')}</ul>` : ''}
-    </div>` : ''}
-  </div>`;
+function pageHead(title, actions) {
+  return `<div class="page-h"><h1>${title}</h1>
+    <div class="ms-auto d-flex gap-2 flex-wrap">${actions || ''}</div></div>`;
 }
 function dl(pairs) {
   return `<dl class="dl">${pairs.map(([k,v]) => `<dt>${k}</dt><dd>${v == null || v === '' ? '<span class="text-secondary">—</span>' : v}</dd>`).join('')}</dl>`;
@@ -781,7 +696,7 @@ const pendingList = () => PICKUPS.filter(p => p.status === 'pending' && inScope(
 const pendingCount = () => pendingList().length;
 
 /* =========================================================================
-   承認キュー（本システムの中核画面）
+   承認キュー
    ========================================================================= */
 /* 変更依頼のときに提示する代替候補（稼働日と受入時間枠から作る） */
 function findAlternatives(p) {
@@ -793,10 +708,10 @@ function findAlternatives(p) {
     if (p.type === 'drop') {
       (pl.slots || []).forEach(s => {
         if (out.length >= 4) return;
-        out.push({date:ds, slotId:s.id, label:`${fmtMd(ds)} ${s.from}〜${s.to}`, sub:`持込 ${c.drop} 件`});
+        out.push({label:`${fmtMd(ds)} ${s.from}〜${s.to}`, sub:`持込 ${c.drop} 件`});
       });
     } else {
-      out.push({date:ds, label:fmtMd(ds), sub:`引取 ${c.pickup} 件`});
+      out.push({label:fmtMd(ds), sub:`引取 ${c.pickup} 件`});
     }
   }
   return out;
@@ -813,35 +728,24 @@ function viewApprovals() {
   list.sort((a,b) => a.date === b.date ? (a.applied_at < b.applied_at ? -1 : 1) : (a.date < b.date ? -1 : 1));
   if (!list.find(p => p.id === f.sel)) f.sel = list.length ? list[0].id : null;
 
-  const today = D(0);
-  const todays = PICKUPS.filter(p => p.date === today && inScope(p) && !['canceled','rejected','pending'].includes(p.status));
+  const todays = PICKUPS.filter(p => p.date === D(0) && inScope(p) && !['canceled','rejected','pending'].includes(p.status));
   const urgent = list.filter(p => p.date <= D(1)).length;
-  const issues = list.filter(p => checksOf(p).some(c => c.lv === 'ng')).length;
 
-  const rows = list.map(p => {
-    const ck = checksOf(p);
-    const ng = ck.filter(c => c.lv === 'ng').length, wa = ck.filter(c => c.lv === 'wa').length;
-    return `<tr class="clickable ${p.id === f.sel ? 'sel' : ''}" data-act="selApproval" data-id="${p.id}">
-      <td class="mono">${p.id}<div class="text-secondary" style="font-size:11px">${esc(p.applied_at)}</div></td>
+  const rows = list.map(p => `<tr class="clickable ${p.id === f.sel ? 'sel' : ''}" data-act="selApproval" data-id="${p.id}">
+      <td class="mono nowrap">${p.id}<div class="text-secondary" style="font-size:11px">${esc(p.applied_at)}</div></td>
       <td>${tBadge(p.type)}</td>
-      <td>${esc(company(p.company_id).name)}
-        ${company(p.company_id).status === 'invited' ? '<div><span class="badge b-pending b-sq" style="font-size:10px">招待中</span></div>' : ''}</td>
+      <td>${esc(company(p.company_id).name)}</td>
       <td class="mono nowrap">${fmtMd(p.date)}<div class="text-secondary" style="font-size:11px">${timeRange(p)}</div></td>
       <td class="nowrap" style="font-size:13px">${esc(plantShort(p.plant_id))}</td>
       <td style="font-size:13px">${esc(linesText(p.id))}</td>
-      <td>${ng ? `<span class="badge b-rejected">要確認 ${ng}</span>` : wa ? `<span class="badge b-pending">注意 ${wa}</span>` : `<span class="badge b-approved">OK</span>`}</td>
-    </tr>`;
-  }).join('');
+    </tr>`).join('');
 
-  return pageHead('承認キュー',
-    '取引先ポータル・代行入力から登録された予約／依頼は、すべてこの画面で承認または変更依頼を行います。自動確定は行いません。',
-    ['中核画面']) +
-  specNote('approvals') +
+  return pageHead('承認キュー') +
   `<div class="row g-3 mb-3">
     <div class="col-6 col-lg-3">${kpi('承認待ち', pendingCount() + ' <small>件</small>', urgent ? `うち明日まで ${urgent} 件` : '', urgent ? 'alert-kpi' : '')}</div>
-    <div class="col-6 col-lg-3">${kpi('要確認あり', issues + ' <small>件</small>')}</div>
     <div class="col-6 col-lg-3">${kpi('本日の持込', todays.filter(p => p.type === 'drop').length + ' <small>件</small>')}</div>
     <div class="col-6 col-lg-3">${kpi('本日の引取', todays.filter(p => p.type === 'pickup').length + ' <small>件</small>')}</div>
+    <div class="col-6 col-lg-3">${kpi('登録済の取引先', COMPANIES.filter(c => c.status === 'active').length + ' <small>社</small>')}</div>
   </div>
 
   <div class="filterbar">
@@ -849,18 +753,16 @@ function viewApprovals() {
       <select class="form-select form-select-sm" data-act="apFilter" data-key="type">
         ${opts([{v:'all',t:'すべて'},{v:'drop',t:'持込'},{v:'pickup',t:'引取'}], f.type, false)}
       </select></div>
-    <div class="f" style="flex:1"><label>キーワード（受付番号・取引先・品目）</label>
-      <input type="text" class="form-control form-control-sm" data-act="apFilter" data-key="keyword" value="${esc(f.keyword)}" placeholder="例：R-2026 / サンプル建設 / 汚泥"></div>
-    <div class="ms-auto align-self-center text-secondary" style="font-size:13px">
-      新着は担当者へ即時通知（通知チャネルは要確定）</div>
+    <div class="f" style="flex:1"><label>キーワード</label>
+      <input type="text" class="form-control form-control-sm" data-act="apFilter" data-key="keyword" value="${esc(f.keyword)}" placeholder="受付番号・取引先・品目"></div>
   </div>
 
   <div class="row g-3">
     <div class="col-12 col-xl-7">
       <div class="table-wrap">
         <table class="table table-hover mb-0">
-          <thead><tr><th>受付番号／申請日時</th><th>区分</th><th>取引先</th><th>希望日時</th><th>拠点</th><th>品目・申告数量</th><th>事前チェック</th></tr></thead>
-          <tbody>${rows || `<tr><td colspan="7" class="text-center text-secondary py-4">承認待ちはありません</td></tr>`}</tbody>
+          <thead><tr><th>受付番号</th><th>区分</th><th>取引先</th><th>希望日時</th><th>拠点</th><th>品目・申告数量</th></tr></thead>
+          <tbody>${rows || `<tr><td colspan="6" class="text-center text-secondary py-4">承認待ちはありません</td></tr>`}</tbody>
         </table>
       </div>
     </div>
@@ -873,118 +775,111 @@ function viewApprovals() {
 function approvalDetail(p) {
   if (!p) return '';
   const co = company(p.company_id), pl = plant(p.plant_id);
-  const base = [
+  const cl = isClosed(p.plant_id, p.date);
+  const rows = [
     ['受付番号', `<span class="mono">${p.id}</span>`],
     ['区分', tBadge(p.type)],
-    ['取引先', `${esc(co.name)}<div class="text-secondary" style="font-size:12px">${companyKind(co)}／${esc(co.contact || '')}</div>`],
-    ['申請経路', `${esc(p.via)}<div class="text-secondary" style="font-size:12px">${esc(p.applied_at)}</div>`],
+    ['取引先', esc(co.name)],
     ['拠点', esc(pl.name)],
     [p.type === 'drop' ? '搬入希望日' : '引取希望日', fmtJp(p.date)],
     [p.type === 'drop' ? '受入時間枠' : '希望時間', timeRange(p)]
   ];
-  if (p.type === 'drop') base.push(
+  if (p.type === 'drop') rows.push(
     ['車両ナンバー', esc(p.car_number)],
     ['ドライバー', `${esc(p.driver_name)}（${esc(p.driver_tel)}）`]);
-  if (p.note) base.push(['連絡事項', esc(p.note)]);
+  if (p.note) rows.push(['連絡事項', esc(p.note)]);
+  rows.push(['申請', `${esc(p.via)}　${esc(p.applied_at)}`]);
 
-  const lines = `<table class="table table-sm mb-0"><thead><tr><th>品目</th><th>区分</th><th class="num">申告数量</th></tr></thead><tbody>
-    ${linesOf(p.id).map(l => `<tr>
-      <td>${esc(item(l.item_id).name)}${item(l.item_id).is_value ? ' <span class="badge b-neutral b-sq">有価物</span>' : ''}</td>
-      <td style="font-size:12px">${itemTypeName(item(l.item_id).type)}</td>
-      <td class="num">${dec(l.qty)} ${esc(unit(l.unit_id).name)}</td></tr>`).join('')}
-  </tbody></table>`;
+  const alerts = [];
+  if (cl) alerts.push({d:1, t:`${fmtMd(p.date)} は休業日です（${cl.reason}）`});
+  if (p.type === 'drop' && !pl.is_delivery) alerts.push({d:1, t:`${pl.name} は持込の受入に対応していません`});
+  if (p.type === 'pickup' && !pl.is_pickup) alerts.push({d:1, t:`${pl.name} は引取に対応していません`});
 
   return `<div class="card mb-3">
     <div class="card-head">${p.id}　${tBadge(p.type)}　${stBadge(p.status)}</div>
     <div class="card-body">
-      ${dl(base)}
+      ${alerts.length ? `<div class="d-flex flex-column gap-2 mb-3">${alerts.map(a =>
+        `<div class="warnbox ${a.d ? 'danger' : ''}">${ic('alert',15)}<span>${esc(a.t)}</span></div>`).join('')}</div>` : ''}
+      ${dl(rows)}
       <h6 class="mt-3 mb-2" style="font-size:14px;font-weight:700">申告内容</h6>
-      <div class="table-wrap">${lines}</div>
-      <h6 class="mt-3 mb-2" style="font-size:14px;font-weight:700">事前チェック</h6>
-      <div class="d-flex flex-column gap-2">${checksOf(p).map(chkHtml).join('')}</div>
+      <div class="table-wrap"><table class="table table-sm mb-0">
+        <thead><tr><th>品目</th><th>区分</th><th class="num">申告数量</th></tr></thead>
+        <tbody>${linesOf(p.id).map(l => `<tr>
+          <td>${esc(item(l.item_id).name)}${item(l.item_id).is_value ? ' <span class="badge b-neutral b-sq">有価物</span>' : ''}</td>
+          <td style="font-size:12px">${itemTypeName(item(l.item_id).type)}</td>
+          <td class="num">${dec(l.qty)} ${esc(unit(l.unit_id).name)}</td></tr>`).join('')}
+      </tbody></table></div>
       <div class="divline"></div>
       <div class="d-flex gap-2 flex-wrap">
         <button class="btn btn-primary" data-act="openApprove" data-id="${p.id}">${ic('check')}承認する</button>
-        <button class="btn btn-outline-danger" data-act="openReject" data-id="${p.id}">変更依頼（差戻し）</button>
-        <button class="btn btn-outline-secondary ms-auto" data-act="openPickupDetail" data-id="${p.id}">全項目を表示</button>
+        <button class="btn btn-outline-danger" data-act="openReject" data-id="${p.id}">変更依頼</button>
       </div>
     </div>
   </div>`;
 }
 
-/* ---------- 承認モーダル ---------- */
+/* ---------- 承認 ---------- */
 var MODALS_APPROVE = m => {
   const p = pk(m.id), pl = plant(p.plant_id), isDrop = p.type === 'drop';
   const slotOpts = (pl.slots || []).map(s => ({v:s.id, t:`${s.name}　${s.from} 〜 ${s.to}`}));
   const body = isDrop
-    ? `<p class="hint">承認すると予約が確定し、取引先へ通知されます。必要に応じて受入時間枠を調整できます。</p>
-       <div class="row g-3 mb-3">
+    ? `<div class="row g-3">
          <div class="col-12 col-sm-5"><label class="form-label">搬入日</label>
            <input type="date" class="form-control" data-mod="date" value="${m.date || p.date}"></div>
          <div class="col-12 col-sm-7"><label class="form-label">受入時間枠<span class="req">必須</span></label>
-           <select class="form-select" data-mod="slotId">${opts(slotOpts, m.slotId, false)}</select>
-           <div class="form-text">枠は「受付時間・休業日」画面で拠点ごとに設定します。</div></div>
-       </div>
-       <div class="mb-0"><label class="form-label">取引先への連絡事項<span class="opt">任意</span></label>
-         <textarea class="form-control" rows="2" data-mod="comment" placeholder="例：場内は徐行でお願いします">${esc(m.comment || '')}</textarea></div>`
-    : `<p class="hint">引取依頼の承認では<b>訪問日時の確定入力が必須</b>です。第1期では車両・ドライバーへの割当編成はシステム外で行います。</p>
-       <div class="row g-2 mb-3">
+           <select class="form-select" data-mod="slotId">${opts(slotOpts, m.slotId, false)}</select></div>
+         <div class="col-12"><label class="form-label">取引先への連絡事項<span class="opt">任意</span></label>
+           <textarea class="form-control" rows="2" data-mod="comment">${esc(m.comment || '')}</textarea></div>
+       </div>`
+    : `<div class="row g-2">
          <div class="col-12 col-sm-5"><label class="form-label">訪問日<span class="req">必須</span></label>
            <input type="date" class="form-control" data-mod="date" value="${m.date || p.date}"></div>
          <div class="col-6 col-sm-3"><label class="form-label">開始<span class="req">必須</span></label>
            <input type="time" class="form-control" step="1800" data-mod="begin_time" value="${m.begin_time || p.begin_time}"></div>
          <div class="col-6 col-sm-3"><label class="form-label">終了<span class="req">必須</span></label>
            <input type="time" class="form-control" step="1800" data-mod="end_time" value="${m.end_time || p.end_time}"></div>
-         <div class="col-12"><div class="form-text">${esc(pl.name)} の引取対応時間：${pl.begin_time} 〜 ${pl.end_time}</div></div>
-       </div>
-       <div class="mb-3"><label class="form-label">集荷手配メモ<span class="opt">任意</span></label>
-         <input type="text" class="form-control" data-mod="dispatch_note" value="${esc(m.dispatch_note || '')}" placeholder="例：4t車・ドライバー中村で手配済（台帳）">
-         <div class="form-text">第1期は台帳・電話での手配内容を記録するだけの欄です。配車ボードは第2期。</div></div>
-       <div class="mb-0"><label class="form-label">取引先への連絡事項<span class="opt">任意</span></label>
-         <textarea class="form-control" rows="2" data-mod="comment">${esc(m.comment || '')}</textarea></div>`;
-  const warn = checksOf(p).filter(c => c.lv !== 'ok');
+         <div class="col-12 mt-3"><label class="form-label">集荷手配メモ<span class="opt">任意</span></label>
+           <input type="text" class="form-control" data-mod="dispatch_note" value="${esc(m.dispatch_note || '')}" placeholder="例：4t車・ドライバー中村で手配済（台帳）"></div>
+         <div class="col-12 mt-3"><label class="form-label">取引先への連絡事項<span class="opt">任意</span></label>
+           <textarea class="form-control" rows="2" data-mod="comment">${esc(m.comment || '')}</textarea></div>
+       </div>`;
   return {
     title:`${p.id} を承認`,
-    body:(warn.length ? `<div class="d-flex flex-column gap-2 mb-3">${warn.map(chkHtml).join('')}
-      <div class="text-secondary" style="font-size:13px">※ 事前チェックに注意がありますが、可否の判断は承認者が行います。</div></div>` : '') + body
-      + (m.err ? `<div class="text-danger mt-2" style="font-size:13px">${esc(m.err)}</div>` : ''),
+    body: body + (m.err ? `<div class="text-danger mt-2" style="font-size:13px">${esc(m.err)}</div>` : ''),
     foot:`<button class="btn btn-outline-secondary" data-act="closeModal">キャンセル</button>
-          <button class="btn btn-primary" data-act="doApprove" data-id="${p.id}">この内容で承認する</button>`
+          <button class="btn btn-primary" data-act="doApprove" data-id="${p.id}">承認する</button>`
   };
 };
 
-/* ---------- 変更依頼モーダル ---------- */
+/* ---------- 変更依頼 ---------- */
 var MODALS_REJECT = m => {
   const p = pk(m.id), alts = findAlternatives(p);
   return {
-    title:`${p.id} に変更依頼（差戻し）`,
-    body:`<p class="hint">変更依頼は取引先へ通知され、取引先が内容を修正して再申請します。</p>
-      <div class="mb-3"><label class="form-label">理由<span class="req">必須</span></label>
+    title:`${p.id} に変更依頼`,
+    body:`<div class="mb-3"><label class="form-label">理由<span class="req">必須</span></label>
         <textarea class="form-control" rows="3" data-mod="reason" placeholder="例：指定日は臨時休業のため、別日への変更をお願いします。">${esc(m.reason || '')}</textarea>
         ${m.err ? `<div class="text-danger mt-1" style="font-size:13px">${esc(m.err)}</div>` : ''}</div>
-      <label class="form-label">代替候補（クリックで理由欄に追記）</label>
-      ${alts.length ? `<div class="d-flex flex-wrap gap-2">${alts.map(a =>
+      ${alts.length ? `<label class="form-label">代替候補</label>
+      <div class="d-flex flex-wrap gap-2">${alts.map(a =>
         `<button type="button" class="btn btn-outline-primary btn-sm" data-act="pickAlt" data-label="${esc(a.label)}" data-sub="${esc(a.sub)}">
-          ${esc(a.label)}<span class="text-secondary ms-2" style="font-size:12px">${esc(a.sub)}</span></button>`).join('')}</div>`
-        : '<p class="hint">14日以内に稼働日がありません。</p>'}`,
+          ${esc(a.label)}<span class="text-secondary ms-2" style="font-size:12px">${esc(a.sub)}</span></button>`).join('')}</div>` : ''}`,
     foot:`<button class="btn btn-outline-secondary" data-act="closeModal">キャンセル</button>
           <button class="btn btn-outline-danger" data-act="doReject" data-id="${p.id}">変更依頼を送る</button>`
   };
 };
 
-/* ---------- 予約詳細モーダル ---------- */
+/* ---------- 予約詳細 ---------- */
 var MODALS_PICKUP = m => {
   const p = pk(m.id), co = company(p.company_id), pl = plant(p.plant_id);
   const rows = [
     ['受付番号', `<span class="mono">${p.id}</span>`],
     ['ステータス', stBadge(p.status)],
     ['区分', typeLabel(p.type)],
-    ['取引先', `${esc(co.name)}（${companyKind(co)}）`],
+    ['取引先', esc(co.name)],
     ['拠点', esc(pl.name)],
     ['日付', fmtJp(p.date)],
     ['時間', timeRange(p)],
-    ['申請経路', esc(p.via)],
-    ['申請日時', esc(p.applied_at)]
+    ['申請', `${esc(p.via)}　${esc(p.applied_at)}`]
   ];
   if (p.type === 'drop') rows.push(['車両ナンバー', esc(p.car_number)], ['ドライバー', `${esc(p.driver_name)}（${esc(p.driver_tel)}）`]);
   linesOf(p.id).forEach((l,i) => rows.push([`品目 ${i+1}`,
@@ -992,39 +887,54 @@ var MODALS_PICKUP = m => {
   if (p.note) rows.push(['連絡事項', esc(p.note)]);
   if (p.approved_at) rows.push(['承認', `${esc(p.approved_at)}／${esc(p.approved_by)}`]);
   if (p.dispatch_note) rows.push(['集荷手配メモ', esc(p.dispatch_note)]);
-  if (p.reject_reason) rows.push(['変更依頼の理由', `${esc(p.reject_reason)}<div class="text-secondary" style="font-size:12px">${esc(p.rejected_at || '')} ${esc(p.rejected_by || '')}</div>`]);
+  if (p.reject_reason) rows.push(['変更依頼の理由', `${esc(p.reject_reason)}<div class="text-secondary" style="font-size:12px">${esc(p.rejected_at || '')}</div>`]);
   if (p.cancel_reason) rows.push(['取消理由', esc(p.cancel_reason)]);
-  if (p.arrived_at) rows.push(['入場時刻', `${esc(p.arrived_at)}　伝票番号 ${p.receipt_number}`]);
+  if (p.arrived_at) rows.push(['入場時刻', `${esc(p.arrived_at)}　伝票番号 No.${p.receipt_number}`]);
   if (p.weight != null) rows.push(
     ['総重量', kg(p.total_weight)], ['空車重量', kg(p.car_weight)], ['正味重量', `<b>${kg(p.weight)}</b>`],
     ['申告との差異', `${p.diff > 0 ? '+' : ''}${num(p.diff)} kg${p.diff_reason ? '／' + esc(p.diff_reason) : ''}`]);
   return {
     title:`予約詳細 ${p.id}`,
-    body: dl(rows) + `<h6 class="mt-3 mb-2" style="font-size:14px;font-weight:700">事前チェック</h6>
-      <div class="d-flex flex-column gap-2">${checksOf(p).map(chkHtml).join('')}</div>`,
+    body: dl(rows),
     foot:`<button class="btn btn-outline-secondary" data-act="closeModal">閉じる</button>`
   };
 };
 
 /* =========================================================================
    予約一覧ボード（日別）
+   持込・引取で同じ列構成・同じ列幅にそろえる
    ========================================================================= */
-function viewBoard() {
-  const b = state.board, ds = b.date;
-  const plants = PLANTS.filter(pl => plantScope().includes(pl.id));
+const BOARD_COLS = `<colgroup>
+  <col style="width:9%"><col style="width:8%"><col style="width:14%"><col style="width:16%">
+  <col style="width:10%"><col style="width:7%"><col style="width:9%">
+  <col style="width:10%"><col style="width:17%"></colgroup>`;
+const BOARD_HEAD = `<thead><tr>
+  <th>受付番号</th><th>時間</th><th>取引先</th><th>品目・申告数量</th>
+  <th>車両ナンバー</th><th>ドライバー</th><th>メモ</th><th>ステータス</th><th></th></tr></thead>`;
 
-  const dropRow = p => `<tr>
+function boardRow(p) {
+  const isDrop = p.type === 'drop';
+  return `<tr>
     <td class="mono">${p.id}</td>
+    <td class="mono nowrap">${timeRange(p)}</td>
     <td>${esc(company(p.company_id).name)}</td>
     <td style="font-size:13px">${esc(linesText(p.id))}</td>
-    <td style="font-size:13px">${esc(p.car_number || '—')}</td>
-    <td style="font-size:13px">${esc(p.driver_name || '—')}<div class="text-secondary" style="font-size:11px">${esc(p.driver_tel || '')}</div></td>
+    <td class="mono" style="font-size:13px">${esc(p.car_number || '—')}</td>
+    <td style="font-size:13px">${esc(p.driver_name || '—')}</td>
+    <td style="font-size:12px">${esc((isDrop ? p.note : p.dispatch_note) || '—')}</td>
     <td>${stBadge(p.status)}${p.arrived_at ? `<div class="text-secondary" style="font-size:11px">入場 ${esc(p.arrived_at)}</div>` : ''}</td>
     <td class="text-end text-nowrap">
       <button class="btn btn-outline-secondary btn-sm" data-act="openPickupDetail" data-id="${p.id}">詳細</button>
-      ${p.status === 'approved' ? `<button class="btn btn-outline-primary btn-sm ms-1" data-act="openChangeSlot" data-id="${p.id}">枠変更</button>
+      ${p.status === 'approved' ? `<button class="btn btn-outline-primary btn-sm ms-1" data-act="${isDrop ? 'openChangeSlot' : 'openChangeVisit'}" data-id="${p.id}">${isDrop ? '枠変更' : '日時変更'}</button>
       <button class="btn btn-outline-danger btn-sm ms-1" data-act="openCancel" data-id="${p.id}">取消</button>` : ''}
     </td></tr>`;
+}
+const boardTable = rows => `<table class="table table-hover board-tbl mb-0">${BOARD_COLS}${BOARD_HEAD}
+  <tbody>${rows.map(boardRow).join('')}</tbody></table>`;
+
+function viewBoard() {
+  const b = state.board, ds = b.date;
+  const plants = PLANTS.filter(pl => plantScope().includes(pl.id));
 
   const blocks = plants.map(pl => {
     const cl = isClosed(pl.id, ds);
@@ -1034,55 +944,31 @@ function viewBoard() {
     const groups = (pl.slots || []).map(s => ({s, rows:drops.filter(p => p.begin_time === s.from && p.end_time === s.to)}));
     const other = drops.filter(p => !groups.some(g => g.rows.includes(p)));
 
-    const dropHtml = b.tab === 'pickup' ? '' : (!pl.is_delivery
-      ? `<div class="p-3 text-secondary" style="font-size:14px">この拠点は持込の受入に対応していません</div>`
-      : groups.map(g => `<div class="card mb-3">
-          <div class="card-head">${g.s.name}　${g.s.from} 〜 ${g.s.to}
-            <span class="sub">${g.rows.length} 件</span></div>
-          ${g.rows.length ? `<table class="table table-hover mb-0">
-            <thead><tr><th>受付番号</th><th>取引先</th><th>品目・申告数量</th><th>車両ナンバー</th><th>ドライバー</th><th>ステータス</th><th></th></tr></thead>
-            <tbody>${g.rows.map(dropRow).join('')}</tbody></table>`
-          : `<div class="p-3 text-secondary" style="font-size:14px">この枠の予約はありません</div>`}
-        </div>`).join('') +
-        (other.length ? `<div class="card mb-3"><div class="card-head">枠外の時間　<span class="sub">${other.length} 件</span></div>
-          <table class="table table-hover mb-0">
-            <thead><tr><th>受付番号</th><th>取引先</th><th>品目・申告数量</th><th>車両ナンバー</th><th>ドライバー</th><th>ステータス</th><th></th></tr></thead>
-            <tbody>${other.map(dropRow).join('')}</tbody></table></div>` : ''));
+    const dropHtml = b.tab === 'pickup' || !pl.is_delivery ? '' :
+      groups.map(g => `<div class="card mb-3">
+        <div class="card-head">持込　${g.s.name}　${g.s.from} 〜 ${g.s.to}<span class="sub">${g.rows.length} 件</span></div>
+        ${g.rows.length ? boardTable(g.rows) : `<div class="p-3 text-secondary" style="font-size:14px">予約はありません</div>`}
+      </div>`).join('') +
+      (other.length ? `<div class="card mb-3"><div class="card-head">持込　枠外の時間<span class="sub">${other.length} 件</span></div>
+        ${boardTable(other)}</div>` : '');
 
-    const pickHtml = b.tab === 'drop' ? '' : `<div class="card mb-3">
-      <div class="card-head">引取（集荷）　<span class="sub">${picks.length} 件／引取対応時間 ${pl.begin_time} 〜 ${pl.end_time}</span></div>
-      ${!pl.is_pickup ? `<div class="p-3 text-secondary" style="font-size:14px">この拠点は引取に対応していません</div>`
-      : picks.length ? `<table class="table table-hover mb-0">
-        <thead><tr><th>受付番号</th><th>訪問時間</th><th>取引先</th><th>品目・想定数量</th><th>集荷手配メモ</th><th>ステータス</th><th></th></tr></thead>
-        <tbody>${picks.map(p => `<tr>
-          <td class="mono">${p.id}</td>
-          <td class="mono">${timeRange(p)}</td>
-          <td>${esc(company(p.company_id).name)}<div class="text-secondary" style="font-size:11px">${esc(company(p.company_id).address)}</div></td>
-          <td style="font-size:13px">${esc(linesText(p.id))}</td>
-          <td style="font-size:12px">${esc(p.dispatch_note || '—')}</td>
-          <td>${stBadge(p.status)}</td>
-          <td class="text-end text-nowrap">
-            <button class="btn btn-outline-secondary btn-sm" data-act="openPickupDetail" data-id="${p.id}">詳細</button>
-            ${p.status === 'approved' ? `<button class="btn btn-outline-primary btn-sm ms-1" data-act="openChangeVisit" data-id="${p.id}">訪問日時変更</button>
-            <button class="btn btn-outline-danger btn-sm ms-1" data-act="openCancel" data-id="${p.id}">取消</button>` : ''}
-          </td></tr>`).join('')}</tbody></table>`
-      : `<div class="p-3 text-secondary" style="font-size:14px">この日の引取はありません</div>`}
+    const pickHtml = b.tab === 'drop' || !pl.is_pickup ? '' : `<div class="card mb-3">
+      <div class="card-head">引取（集荷）　${pl.begin_time} 〜 ${pl.end_time}<span class="sub">${picks.length} 件</span></div>
+      ${picks.length ? boardTable(picks) : `<div class="p-3 text-secondary" style="font-size:14px">予約はありません</div>`}
     </div>`;
 
     return `<div class="mb-2">
       <div class="d-flex align-items-center gap-2 mb-2">
         <h2 style="font-size:16px;font-weight:700;margin:0">${ic('factory',16)} ${esc(pl.name)}</h2>
-        ${cl ? `<span class="badge b-rejected">休業：${esc(cl.reason)}</span>` : `<span class="badge b-neutral">持込 ${drops.length} 件／引取 ${picks.length} 件</span>`}
+        ${cl ? `<span class="badge b-rejected">休業：${esc(cl.reason)}</span>`
+             : `<span class="badge b-neutral">持込 ${drops.length} 件／引取 ${picks.length} 件</span>`}
       </div>
-      ${cl && !all.length ? `<div class="empty mb-3">${fmtJp(ds)} は休業日です（${esc(cl.reason)}）</div>` : dropHtml + pickHtml}
+      ${cl && !all.length ? `<div class="empty mb-3">休業日です（${esc(cl.reason)}）</div>` : dropHtml + pickHtml}
     </div>`;
   }).join('');
 
   return pageHead('予約一覧ボード',
-    '承認済の持込・引取を日別に表示します。受入時間枠の調整、引取の訪問日時変更、取消をここで行います。',
-    null,
     `<button class="btn btn-outline-primary btn-sm" data-act="exportBoard">${ic('download')}CSV出力</button>`) +
-  specNote('board') +
   `<div class="filterbar">
     <div class="d-flex align-items-center gap-2">
       <button class="btn btn-outline-secondary btn-sm btn-icon" data-act="boardShift" data-n="-1" aria-label="前日">${ic('left')}</button>
@@ -1107,8 +993,7 @@ var MODALS_CHANGESLOT = m => {
   const slotOpts = (pl.slots || []).map(s => ({v:s.id, t:`${s.name}　${s.from} 〜 ${s.to}`}));
   return {
     title:`${p.id} の受入時間枠を変更`,
-    body:`<p class="hint">承認済予約の枠を調整します。変更内容は取引先へ通知されます。</p>
-      <div class="mb-3"><label class="form-label">搬入日</label>
+    body:`<div class="mb-3"><label class="form-label">搬入日</label>
         <input type="date" class="form-control" data-mod="date" value="${m.date || p.date}"></div>
       <div class="mb-3"><label class="form-label">受入時間枠</label>
         <select class="form-select" data-mod="slotId">${opts(slotOpts, m.slotId, false)}</select></div>
@@ -1122,18 +1007,16 @@ var MODALS_CHANGESLOT = m => {
 
 /* ---------- 訪問日時の変更 ---------- */
 var MODALS_CHANGEVISIT = m => {
-  const p = pk(m.id), pl = plant(p.plant_id);
+  const p = pk(m.id);
   return {
     title:`${p.id} の訪問日時を変更`,
-    body:`<p class="hint">変更した訪問日時は取引先へ通知されます。</p>
-      <div class="row g-2 mb-3">
+    body:`<div class="row g-2 mb-3">
         <div class="col-12 col-sm-5"><label class="form-label">訪問日</label>
           <input type="date" class="form-control" data-mod="date" value="${m.date || p.date}"></div>
         <div class="col-6 col-sm-3"><label class="form-label">開始</label>
           <input type="time" class="form-control" step="1800" data-mod="begin_time" value="${m.begin_time || p.begin_time}"></div>
         <div class="col-6 col-sm-3"><label class="form-label">終了</label>
           <input type="time" class="form-control" step="1800" data-mod="end_time" value="${m.end_time || p.end_time}"></div>
-        <div class="col-12"><div class="form-text">${esc(pl.name)} の引取対応時間：${pl.begin_time} 〜 ${pl.end_time}</div></div>
       </div>
       <div class="mb-3"><label class="form-label">集荷手配メモ<span class="opt">任意</span></label>
         <input type="text" class="form-control" data-mod="dispatch_note" value="${esc(m.dispatch_note != null ? m.dispatch_note : (p.dispatch_note || ''))}"></div>
@@ -1153,8 +1036,7 @@ var MODALS_CANCEL = m => {
     body:`<p>${fmtJp(p.date)}／${typeLabel(p.type)}／${esc(company(p.company_id).name)}<br>${esc(linesText(p.id))}</p>
       <div class="mb-0"><label class="form-label">取消理由<span class="req">必須</span></label>
         <input type="text" class="form-control" data-mod="reason" value="${esc(m.reason || '')}" placeholder="例：取引先からの電話連絡により取消">
-        ${m.err ? `<div class="text-danger mt-1" style="font-size:13px">${esc(m.err)}</div>` : ''}</div>
-      <div class="form-text mt-2">締切（既定：前日17時）後の取消は社内担当のみ操作可。</div>`,
+        ${m.err ? `<div class="text-danger mt-1" style="font-size:13px">${esc(m.err)}</div>` : ''}</div>`,
     foot:`<button class="btn btn-outline-secondary" data-act="closeModal">やめる</button>
           <button class="btn btn-outline-danger" data-act="doCancel" data-id="${p.id}">取消する</button>`
   };
@@ -1162,7 +1044,6 @@ var MODALS_CANCEL = m => {
 
 /* =========================================================================
    代行入力（電話で受けた予約・集荷依頼を社内が入力）
-   取引先ポータルと同一の登録内容。登録後は同様に承認待ちとなる
    ========================================================================= */
 const blankLine = () => ({item_id:'', qty:'', unit_id:''});
 const blankProxy = () => ({
@@ -1182,7 +1063,8 @@ function viewProxy() {
   const d = state.proxy;
   const pl = plant(d.plant_id);
   const slotOpts = (pl.slots || []).map(s => ({v:s.id, t:`${s.name}　${s.from} 〜 ${s.to}`}));
-  const err = d.errors.length ? `<div class="alert alert-danger" role="alert"><b>入力内容を確認してください</b>
+  const cl = d.date ? isClosed(d.plant_id, d.date) : null;
+  const err = d.errors.length ? `<div class="alert alert-danger"><b>入力内容を確認してください</b>
     <ul class="mb-0 mt-2">${d.errors.map(e => `<li>${esc(e)}</li>`).join('')}</ul></div>` : '';
 
   const lines = d.lines.map((l,i) => `<div class="border rounded p-3 mb-2">
@@ -1192,41 +1074,39 @@ function viewProxy() {
     </div>
     <div class="row g-2">
       <div class="col-12 col-md-6"><label class="form-label">品目<span class="req">必須</span></label>
-        <select class="form-select" data-px="lines.${i}.item_id">${opts(ITEMS.map(x => ({v:x.id, t:`${x.name}（${itemTypeName(x.type)}）`})), l.item_id)}</select></div>
+        <select class="form-select" data-px="lines.${i}.item_id">${opts(ITEMS.map(x => ({v:x.id, t:x.name})), l.item_id)}</select></div>
       <div class="col-6 col-md-3"><label class="form-label">申告数量<span class="req">必須</span></label>
-        <input type="text" inputmode="decimal" class="form-control" data-px="lines.${i}.qty" value="${esc(l.qty)}" placeholder="例：1.2"></div>
+        <input type="text" inputmode="decimal" class="form-control" data-px="lines.${i}.qty" value="${esc(l.qty)}"></div>
       <div class="col-6 col-md-3"><label class="form-label">単位<span class="req">必須</span></label>
         <select class="form-select" data-px="lines.${i}.unit_id">${opts(o1(UNITS), l.unit_id)}</select></div>
     </div>
   </div>`).join('');
 
   return pageHead('代行入力',
-    '電話で受けた予約・集荷依頼を社内で代行入力します。取引先ポータルからの申請と同じく、登録後は承認待ちになります。',
-    null,
     `<button class="btn btn-outline-secondary btn-sm" data-act="pxReset">入力内容をクリア</button>`) +
-  specNote('proxy') + err +
-  `<div class="row g-3"><div class="col-12 col-xl-8">
+  err +
+  `<div style="max-width:860px">
     <div class="card mb-3"><div class="card-head">申請元</div><div class="card-body">
       <div class="row g-3">
         <div class="col-12 col-md-6"><label class="form-label">取引先<span class="req">必須</span></label>
-          <select class="form-select" data-px="company_id">${opts(COMPANIES.map(c => ({v:c.id, t:`${c.name}（${companyKind(c)}）${c.status === 'invited' ? '［招待中］' : ''}`})), d.company_id)}</select></div>
+          <select class="form-select" data-px="company_id">${opts(COMPANIES.filter(c => c.status === 'active').map(c => ({v:c.id, t:c.name})), d.company_id)}</select></div>
         <div class="col-12 col-md-6"><label class="form-label">拠点<span class="req">必須</span></label>
           <select class="form-select" data-px="plant_id">${opts(o1(PLANTS), d.plant_id, false)}</select></div>
       </div>
       <div class="mt-3"><span class="form-label d-block">受入方法<span class="req">必須</span></span>
         <div class="btn-group" role="group">
-          ${[['pickup','引取（当社が集荷に行く）'],['drop','持込（取引先が搬入）']].map(([v,t]) =>
+          ${[['pickup','引取'],['drop','持込']].map(([v,t]) =>
             `<button type="button" class="btn ${d.type === v ? 'btn-primary' : 'btn-outline-secondary'}" data-act="pxType" data-v="${v}">${t}</button>`).join('')}
         </div>
-        ${d.type === 'drop' && !pl.is_delivery ? '<div class="text-danger mt-2" style="font-size:13px">この拠点は持込の受入に対応していません。</div>' : ''}
-        ${d.type === 'pickup' && !pl.is_pickup ? '<div class="text-danger mt-2" style="font-size:13px">この拠点は引取に対応していません。</div>' : ''}
+        ${d.type === 'drop' && !pl.is_delivery ? `<div class="warnbox danger mt-2">${ic('alert',15)}<span>この拠点は持込の受入に対応していません</span></div>` : ''}
+        ${d.type === 'pickup' && !pl.is_pickup ? `<div class="warnbox danger mt-2">${ic('alert',15)}<span>この拠点は引取に対応していません</span></div>` : ''}
       </div>
     </div></div>
 
     ${d.type ? `<div class="card mb-3"><div class="card-head">日時</div><div class="card-body">
       <div class="mb-3"><label class="form-label">${d.type === 'drop' ? '搬入日' : '引取希望日'}<span class="req">必須</span></label>
         <input type="date" class="form-control" style="max-width:220px" data-px="date" value="${d.date}">
-        ${d.date && isClosed(d.plant_id, d.date) ? `<div class="text-danger mt-1" style="font-size:13px">この日は休業（${esc(isClosed(d.plant_id, d.date).reason)}）</div>` : ''}</div>
+        ${cl ? `<div class="warnbox danger mt-2">${ic('alert',15)}<span>この日は休業です（${esc(cl.reason)}）</span></div>` : ''}</div>
       ${d.type === 'drop'
         ? `<div class="mb-0"><label class="form-label">受入時間枠<span class="req">必須</span></label>
             <select class="form-select" style="max-width:420px" data-px="slotId">${opts(slotOpts, d.slotId)}</select></div>`
@@ -1235,7 +1115,6 @@ function viewProxy() {
               <input type="time" step="1800" class="form-control" data-px="begin_time" value="${d.begin_time}"></div>
             <div class="col-6"><label class="form-label">希望終了<span class="req">必須</span></label>
               <input type="time" step="1800" class="form-control" data-px="end_time" value="${d.end_time}"></div>
-            <div class="col-12"><div class="form-text">引取の時間は希望として受け付け、確定時刻は承認時に返答します。対応時間 ${pl.begin_time} 〜 ${pl.end_time}</div></div>
           </div>`}
     </div></div>
     <div class="card mb-3"><div class="card-head">廃棄物の内容</div><div class="card-body">
@@ -1247,38 +1126,20 @@ function viewProxy() {
         <div class="col-12 col-md-4"><label class="form-label">車両ナンバー<span class="req">必須</span></label>
           <input type="text" class="form-control" data-px="car_number" value="${esc(d.car_number)}" placeholder="大宮 100 あ 12-34"></div>
         <div class="col-12 col-md-4"><label class="form-label">ドライバー名<span class="req">必須</span></label>
-          <input type="text" class="form-control" data-px="driver_name" value="${esc(d.driver_name)}" placeholder="例：佐藤 健"></div>
+          <input type="text" class="form-control" data-px="driver_name" value="${esc(d.driver_name)}"></div>
         <div class="col-12 col-md-4"><label class="form-label">連絡先<span class="req">必須</span></label>
-          <input type="tel" class="form-control" data-px="driver_tel" value="${esc(d.driver_tel)}" placeholder="090-0000-0000"></div>
+          <input type="tel" class="form-control" data-px="driver_tel" value="${esc(d.driver_tel)}"></div>
       </div></div></div>` : ''}
-    <div class="card mb-3"><div class="card-head">連絡事項・社内メモ</div><div class="card-body">
-      <textarea class="form-control" rows="2" data-px="note" placeholder="荷姿、搬出場所、当日の連絡事項、電話受付の経緯など">${esc(d.note)}</textarea>
+    <div class="card mb-3"><div class="card-head">連絡事項<span class="sub">任意</span></div><div class="card-body">
+      <textarea class="form-control" rows="2" data-px="note"></textarea>
     </div></div>
-    <button class="btn btn-primary" data-act="pxSubmit">この内容で登録する（承認待ちになります）</button>`
-    : `<div class="card"><div class="card-body text-secondary">受入方法を選ぶと、日時と内容の入力欄が表示されます。</div></div>`}
-  </div>
-
-  <div class="col-12 col-xl-4"><div class="sticky-col">
-    <div class="card"><div class="card-head">事前チェック</div><div class="card-body">${proxyPreview(d)}</div></div>
-  </div></div></div>`;
-}
-
-function proxyPreview(d) {
-  if (!d.company_id || !d.date || !d.type) return '<p class="hint mb-0">取引先・受入方法・日付を入力すると、取引先の登録状態や拠点の対応可否を表示します。</p>';
-  const pl = plant(d.plant_id);
-  const s = (pl.slots || []).find(x => x.id === d.slotId);
-  const tmp = {
-    id:'（新規）', type:d.type, status:'pending', company_id:d.company_id, plant_id:d.plant_id,
-    date:d.date,
-    begin_time: d.type === 'drop' ? (s ? s.from : '') : d.begin_time,
-    end_time:   d.type === 'drop' ? (s ? s.to   : '') : d.end_time
-  };
-  return `<div class="d-flex flex-column gap-2">${checksOf(tmp).map(chkHtml).join('')}</div>
-    <div class="form-text mt-2">注意があっても登録は可能です。可否の確定判断は承認者が行います。</div>`;
+    <button class="btn btn-primary" data-act="pxSubmit">この内容で登録する</button>`
+    : ''}
+  </div>`;
 }
 
 function pxValidate() {
-  const d = state.proxy, e = [], pl = plant(d.plant_id);
+  const d = state.proxy, e = [];
   if (!d.company_id) e.push('取引先を選択してください。');
   if (!d.type) e.push('受入方法を選択してください。');
   if (!d.date) e.push('日付を入力してください。');
@@ -1318,19 +1179,15 @@ function pxSubmit() {
   PICKUPS.unshift(p);
   d.lines.forEach(l => PICKUP_ITEMS.push({id:'pi' + (++_pi), pickup_id:p.id,
     item_id:l.item_id, unit_id:l.unit_id, qty:Number(l.qty)}));
-  audit('代行入力', p.id, `${typeLabel(p.type)}／${company(p.company_id).name}／${fmtMd(p.date)}`);
   state.proxy = blankProxy();
   state.route = 'approvals';
   state.approval.sel = p.id;
-  toast(`${p.id} を登録しました。承認キューに追加されています。`);
+  toast(`${p.id} を登録しました。`);
   render();
 }
 
 /* =========================================================================
    受付時間・休業日の設定（拠点ごと）
-   - 受入時間枠（持込）は複数設定可
-   - 引取対応時間（≒営業時間）は単一設定
-   - 枠ごとの受付上限・品目上限は設けない
    ========================================================================= */
 function monthDays(ym) {
   const [y,m] = ym.split('-').map(Number);
@@ -1347,6 +1204,11 @@ const shiftMonth = (ym, n) => {
   return `${d.getFullYear()}-${pad(d.getMonth()+1)}`;
 };
 const monthLabel = ym => `${ym.split('-')[0]}年${Number(ym.split('-')[1])}月`;
+/* 今後の予約件数（受入可否を切り替えるときの影響確認に使う） */
+function futureCount(plantId, type) {
+  return PICKUPS.filter(p => p.plant_id === plantId && p.type === type &&
+    p.date >= D(0) && ['pending','approved'].includes(p.status)).length;
+}
 
 function viewHours() {
   const h = state.hours, pl = plant(h.plantId);
@@ -1358,8 +1220,7 @@ function viewHours() {
     const cls = [cl ? 'off' : (c.drop + c.pickup > 0 ? 'busy' : ''), ds === D(0) ? 'today' : ''].join(' ');
     return `<button class="day ${cls}" data-act="openHoliday" data-date="${ds}">
       <div class="d">${d.getDate()}</div>
-      <div class="m">${cl ? (hol ? '臨時休業' : '定休日') : `持込 ${c.drop}／引取 ${c.pickup}`}</div>
-      ${hol ? `<div class="ov">${esc(hol.reason.slice(0,8))}</div>` : ''}</button>`;
+      <div class="m">${cl ? (hol ? '臨時休業' : '定休日') : `持込 ${c.drop}／引取 ${c.pickup}`}</div></button>`;
   }).join('');
 
   const slots = (pl.slots || []).map(s => `<div class="slotchip">
@@ -1368,43 +1229,38 @@ function viewHours() {
       <button class="del" data-act="delSlot" data-plant="${pl.id}" data-slot="${s.id}" aria-label="削除">${ic('trash',15)}</button>
     </div>`).join('');
 
-  const holidays = HOLIDAYS.filter(x => x.plant_id === pl.id).sort((a,b) => a.date < b.date ? -1 : 1);
+  const holidays = HOLIDAYS.filter(x => x.plant_id === pl.id && x.date >= D(-30)).sort((a,b) => a.date < b.date ? -1 : 1);
 
-  return pageHead('受付時間・休業日',
-    '拠点ごとに、持込の受入時間枠（複数設定可）と引取の対応時間（単一設定）、休業日を設定します。',
-    null) +
-  specNote('hours') +
+  const flagLine = (flag, label) => `<div class="d-flex align-items-center gap-2 mb-3 pb-3" style="border-bottom:1px solid var(--line)">
+    <span style="font-size:14px">${label}</span>
+    <span class="badge ${pl[flag] ? 'b-approved' : 'b-neutral'}">${pl[flag] ? '対応する' : '対応しない'}</span>
+    <button class="btn btn-outline-secondary btn-sm ms-auto" data-act="openPlantFlag" data-plant="${pl.id}" data-flag="${flag}">変更</button>
+  </div>`;
+
+  return pageHead('受付時間・休業日') +
   `<ul class="nav nav-tabs mb-3">${PLANTS.map(x =>
     `<li class="nav-item"><a class="nav-link ${h.plantId === x.id ? 'active' : ''}" href="#" data-act="hoursPlant" data-id="${x.id}">${esc(x.name)}</a></li>`).join('')}</ul>
 
   <div class="row g-3 mb-3">
     <div class="col-12 col-lg-6">
-      <div class="card h-100"><div class="card-head">${ic('truck',16)}持込の受入時間枠<span class="sub">複数設定できます</span></div>
+      <div class="card h-100"><div class="card-head">${ic('truck',16)}持込の受入時間枠</div>
         <div class="card-body">
-          <div class="form-check form-switch mb-3">
-            <input class="form-check-input" type="checkbox" data-plantflag="is_delivery" ${pl.is_delivery ? 'checked' : ''}>
-            <label class="form-check-label">この拠点で持込を受け入れる</label></div>
+          ${flagLine('is_delivery','持込の受入')}
           ${pl.is_delivery ? `<div class="d-flex flex-wrap gap-2 mb-3">${slots || '<span class="text-secondary" style="font-size:14px">受入時間枠が未設定です</span>'}</div>
-          <button class="btn btn-outline-primary btn-sm" data-act="openSlot" data-plant="${pl.id}">${ic('plus',15)}時間枠を追加</button>
-          <div class="form-text mt-2">取引先ポータルでは、ここで設定した枠が予約の選択肢として表示されます。枠ごとの受付上限は設けません。</div>`
-          : '<p class="hint mb-0">持込の受入をしない拠点として扱われます。</p>'}
+          <button class="btn btn-outline-primary btn-sm" data-act="openSlot" data-plant="${pl.id}">${ic('plus',15)}時間枠を追加</button>` : ''}
         </div></div>
     </div>
     <div class="col-12 col-lg-6">
-      <div class="card h-100"><div class="card-head">${ic('clock',16)}引取の対応時間<span class="sub">単一設定（≒営業時間）</span></div>
+      <div class="card h-100"><div class="card-head">${ic('clock',16)}引取の対応時間</div>
         <div class="card-body">
-          <div class="form-check form-switch mb-3">
-            <input class="form-check-input" type="checkbox" data-plantflag="is_pickup" ${pl.is_pickup ? 'checked' : ''}>
-            <label class="form-check-label">この拠点で引取（集荷）に対応する</label></div>
+          ${flagLine('is_pickup','引取（集荷）')}
           ${pl.is_pickup ? `<div class="row g-2" style="max-width:340px">
             <div class="col-6"><label class="form-label">開始</label>
               <input type="time" step="1800" class="form-control" data-hours="begin_time" value="${pl.begin_time}"></div>
             <div class="col-6"><label class="form-label">終了</label>
               <input type="time" step="1800" class="form-control" data-hours="end_time" value="${pl.end_time}"></div>
           </div>
-          <button class="btn btn-primary btn-sm mt-3" data-act="saveHours" data-id="${pl.id}">対応時間を保存</button>
-          <div class="form-text mt-2">取引先は、この時間内で引取の希望時間を指定します。確定時刻は承認時に返答します。</div>`
-          : '<p class="hint mb-0">引取に対応しない拠点として扱われます。</p>'}
+          <button class="btn btn-primary btn-sm mt-3" data-act="saveHours" data-id="${pl.id}">保存</button>` : ''}
         </div></div>
     </div>
   </div>
@@ -1415,21 +1271,20 @@ function viewHours() {
         <input class="form-check-input" type="checkbox" data-dow="${i}" ${(pl.closed_dows || []).includes(i) ? 'checked' : ''}>
         <label class="form-check-label">${d}曜日</label></div>`).join('')}
     </div>
-    <button class="btn btn-primary btn-sm mt-3" data-act="saveDows" data-id="${pl.id}">定休日を保存</button>
+    <button class="btn btn-primary btn-sm mt-3" data-act="saveDows" data-id="${pl.id}">保存</button>
   </div></div>
 
   <div class="card"><div class="card-head">
       <button class="btn btn-outline-secondary btn-sm btn-icon" data-act="hoursMonth" data-n="-1" aria-label="前月">${ic('left')}</button>
       <span>${monthLabel(h.month)}</span>
       <button class="btn btn-outline-secondary btn-sm btn-icon" data-act="hoursMonth" data-n="1" aria-label="翌月">${ic('right')}</button>
-      <span class="sub ms-2">セルをクリックすると臨時休業日を登録・解除できます</span>
-      <span class="ms-auto sub">数字は承認済・申請中を含む予約件数</span></div>
+      <span class="sub ms-2">日付をクリックして臨時休業日を登録・解除</span></div>
     <div class="card-body">
       <div class="cal mb-2">${DOW.map(d => `<div class="dow">${d}</div>`).join('')}</div>
       <div class="cal">${cal}</div>
-      ${holidays.length ? `<h6 class="mt-4 mb-2" style="font-size:14px;font-weight:700">登録済みの臨時休業日</h6>
+      ${holidays.length ? `<h6 class="mt-4 mb-2" style="font-size:14px;font-weight:700">臨時休業日</h6>
       <div class="table-wrap"><table class="table table-sm mb-0">
-        <thead><tr><th>日付</th><th>理由</th><th></th></tr></thead>
+        <thead><tr><th style="width:220px">日付</th><th>理由</th><th style="width:100px"></th></tr></thead>
         <tbody>${holidays.map(x => `<tr><td class="mono">${fmtJp(x.date)}</td><td>${esc(x.reason)}</td>
           <td class="text-end"><button class="btn btn-outline-danger btn-sm" data-act="delHoliday" data-id="${x.id}">解除</button></td></tr>`).join('')}</tbody></table></div>` : ''}
     </div></div>`;
@@ -1440,19 +1295,40 @@ var MODALS_SLOT = m => {
   const pl = plant(m.plantId);
   const s = (pl.slots || []).find(x => x.id === m.slotId) || {};
   return {
-    title:`受入時間枠の${m.slotId ? '編集' : '追加'}（${esc(pl.name)}）`,
+    title:`受入時間枠の${m.slotId ? '編集' : '追加'}`,
     body:`<div class="row g-3">
-      <div class="col-12 col-md-4"><label class="form-label">枠の名称<span class="req">必須</span></label>
+      <div class="col-12 col-md-4"><label class="form-label">名称<span class="req">必須</span></label>
         <input type="text" class="form-control" data-mod="name" value="${esc(m.name != null ? m.name : (s.name || ''))}" placeholder="例：午前"></div>
       <div class="col-6 col-md-4"><label class="form-label">開始<span class="req">必須</span></label>
         <input type="time" step="1800" class="form-control" data-mod="from" value="${esc(m.from != null ? m.from : (s.from || ''))}"></div>
       <div class="col-6 col-md-4"><label class="form-label">終了<span class="req">必須</span></label>
         <input type="time" step="1800" class="form-control" data-mod="to" value="${esc(m.to != null ? m.to : (s.to || ''))}"></div>
     </div>
-    ${m.err ? `<div class="text-danger mt-2" style="font-size:13px">${esc(m.err)}</div>` : ''}
-    <div class="form-text mt-2">枠ごとの受付上限（着車数・処理量・品目別）は設けません。</div>`,
+    ${m.err ? `<div class="text-danger mt-2" style="font-size:13px">${esc(m.err)}</div>` : ''}`,
     foot:`<button class="btn btn-outline-secondary" data-act="closeModal">キャンセル</button>
           <button class="btn btn-primary" data-act="saveSlot">保存</button>`
+  };
+};
+
+/* ---------- 持込受入・引取対応の切替（誤操作防止のため確認を挟む） ---------- */
+var MODALS_PLANTFLAG = m => {
+  const pl = plant(m.plantId), on = pl[m.flag];
+  const label = m.flag === 'is_delivery' ? '持込の受入' : '引取（集荷）';
+  const type = m.flag === 'is_delivery' ? 'drop' : 'pickup';
+  const fc = futureCount(pl.id, type);
+  return {
+    title:`${esc(pl.name)}：${label}を${on ? '停止' : '開始'}`,
+    body:`${on
+      ? `<div class="warnbox danger mb-3">${ic('alert',16)}<span>停止すると、取引先ポータルから${label}の予約ができなくなります。</span></div>
+         ${fc ? `<div class="warnbox mb-3">${ic('alert',16)}<span>本日以降に${label}の予約が <b>${fc} 件</b> 残っています。個別の連絡が必要です。</span></div>` : ''}`
+      : `<p>${label}の受付を開始します。取引先ポータルの予約画面に表示されるようになります。</p>`}
+      <div class="form-check mt-3">
+        <input class="form-check-input" type="checkbox" data-mod="ack" ${m.ack ? 'checked' : ''} data-rerender="1">
+        <label class="form-check-label">上記を確認しました</label></div>
+      ${m.err ? `<div class="text-danger mt-2" style="font-size:13px">${esc(m.err)}</div>` : ''}`,
+    foot:`<button class="btn btn-outline-secondary" data-act="closeModal">キャンセル</button>
+          <button class="btn ${on ? 'btn-outline-danger' : 'btn-primary'}" data-act="doPlantFlag" ${m.ack ? '' : 'disabled'}>
+            ${on ? '停止する' : '開始する'}</button>`
   };
 };
 
@@ -1463,18 +1339,18 @@ var MODALS_HOLIDAY = m => {
   const isDow = (pl.closed_dows || []).includes(dow);
   const c = countOf(pl.id, m.date);
   return {
-    title:`${fmtJp(m.date)}（${esc(pl.name)}）`,
+    title:fmtJp(m.date),
     body:`${dl([
       ['稼働', isDow ? '定休日' : (hol ? `臨時休業：${esc(hol.reason)}` : '稼働日')],
       ['予約', `持込 ${c.drop} 件／引取 ${c.pickup} 件`]
     ])}
-    ${isDow ? '<div class="form-text mt-2">定休日は「定休日」設定で変更できます。</div>' : `
+    ${isDow ? '' : `
       <div class="mt-3"><label class="form-label">臨時休業の理由<span class="req">必須</span></label>
-        <input type="text" class="form-control" data-mod="reason" value="${esc(m.reason != null ? m.reason : (hol ? hol.reason : ''))}" placeholder="例：設備定期点検のため臨時休業">
+        <input type="text" class="form-control" data-mod="reason" value="${esc(m.reason != null ? m.reason : (hol ? hol.reason : ''))}" placeholder="例：設備定期点検">
         ${m.err ? `<div class="text-danger mt-1" style="font-size:13px">${esc(m.err)}</div>` : ''}
-        ${c.drop + c.pickup > 0 ? '<div class="text-danger mt-2" style="font-size:13px">この日には予約があります。休業にする場合は取引先への連絡が必要です。</div>' : ''}
+        ${c.drop + c.pickup > 0 ? `<div class="warnbox danger mt-3">${ic('alert',15)}<span>この日には予約があります。取引先への連絡が必要です。</span></div>` : ''}
       </div>`}`,
-    foot:`${hol ? `<button class="btn btn-outline-danger me-auto" data-act="delHoliday" data-id="${hol.id}">臨時休業を解除</button>` : ''}
+    foot:`${hol ? `<button class="btn btn-outline-danger me-auto" data-act="delHoliday" data-id="${hol.id}">解除</button>` : ''}
       <button class="btn btn-outline-secondary" data-act="closeModal">閉じる</button>
       ${isDow ? '' : `<button class="btn btn-primary" data-act="saveHoliday" data-date="${m.date}">臨時休業にする</button>`}`
   };
@@ -1532,10 +1408,7 @@ function viewReception() {
   const netToday = list.filter(p => p.weight).reduce((s,p) => s + p.weight, 0);
 
   return pageHead('入場受付・計量',
-    '受付番号または車両ナンバーで予約を呼び出し、入場時刻と計量実績を記録します。実数の記録が本システムの主軸です。',
-    null,
     `<button class="btn btn-outline-primary btn-sm" data-act="openSpot">${ic('plus',15)}飛び込み搬入を登録</button>`) +
-  specNote('reception') +
   `<div class="row g-3 mb-3">
     <div class="col-6 col-lg-3">${kpi('本日の予定', list.length + ' <small>件</small>')}</div>
     <div class="col-6 col-lg-3">${kpi('入場済（計量待ち）', arrived + ' <small>件</small>', '', arrived ? 'alert-kpi' : '')}</div>
@@ -1543,9 +1416,9 @@ function viewReception() {
     <div class="col-6 col-lg-3">${kpi('本日の正味重量', num(netToday) + ' <small>kg</small>')}</div>
   </div>
   <div class="filterbar">
-    <div class="f" style="flex:1"><label>受付番号・車両ナンバー・取引先で検索</label>
-      <input type="text" class="form-control" data-act="recQ" value="${esc(state.reception.q)}" placeholder="例：R-2026-0165 / 大宮 100 き 11-22" autocomplete="off"></div>
-    <div class="align-self-center text-secondary" style="font-size:13px">本日：${fmtJp(D(0))}</div>
+    <div class="f" style="flex:1"><label>検索</label>
+      <input type="text" class="form-control" data-act="recQ" value="${esc(state.reception.q)}" placeholder="受付番号・車両ナンバー・取引先" autocomplete="off"></div>
+    <div class="align-self-center fw-bold">${fmtJp(D(0))}</div>
   </div>
   <div class="table-wrap">
     <table class="table table-hover mb-0">
@@ -1593,7 +1466,7 @@ var MODALS_WEIGH = m => {
         <div class="col-12 col-md-6">${kpi('正味重量（自動算出）', netOk ? num(net) + ' <small>kg</small>' : '<small class="text-secondary">総重量・空車重量を入力</small>',
           netOk && dec_kg ? `申告 ${num(dec_kg)} kg ／ 差異 ${diff > 0 ? '+' : ''}${num(diff)} kg` : '')}</div>
       </div>
-      <h6 style="font-size:14px;font-weight:700">実搬入内容（申告との差異を記録します）</h6>
+      <h6 style="font-size:14px;font-weight:700">実搬入内容</h6>
       <div class="table-wrap mb-2"><table class="table table-sm mb-0">
         <thead><tr><th style="width:34%">品目</th><th class="num">申告</th><th class="num">実数量</th><th>単位</th><th class="num">差異</th><th></th></tr></thead>
         <tbody>${lineRows}</tbody></table></div>
@@ -1602,8 +1475,7 @@ var MODALS_WEIGH = m => {
         <select class="form-select" data-mod="diff_reason">${opts([
           {v:'実測差（申告は目安）',t:'実測差（申告は目安）'},{v:'品目の相違',t:'品目の相違'},
           {v:'積込時に追加発生分あり',t:'積込時に追加発生分あり'},{v:'異物混入',t:'異物混入'},{v:'その他',t:'その他'}], m.diff_reason)}</select></div>` : ''}
-      ${m.err ? `<div class="text-danger" style="font-size:13px">${esc(m.err)}</div>` : ''}
-      <div class="form-text">確定すると実績として記録され、実績一覧・CSV出力の対象になります。</div>`,
+      ${m.err ? `<div class="text-danger" style="font-size:13px">${esc(m.err)}</div>` : ''}`,
     foot:`<button class="btn btn-outline-secondary" data-act="closeModal">キャンセル</button>
           <button class="btn btn-primary" data-act="doWeigh" data-id="${p.id}">実績を確定する</button>`
   };
@@ -1614,8 +1486,7 @@ var MODALS_SPOT = m => {
   const net = Number(m.total_weight) - Number(m.car_weight);
   return {
     title:'飛び込み搬入の登録',
-    body:`<p class="hint">予約を伴わない搬入を、実績として直接登録します。</p>
-      <div class="row g-3">
+    body:`<div class="row g-3">
         <div class="col-12 col-md-6"><label class="form-label">取引先<span class="req">必須</span></label>
           <select class="form-select" data-mod="company_id">${opts(o1(COMPANIES), m.company_id)}</select></div>
         <div class="col-12 col-md-6"><label class="form-label">拠点<span class="req">必須</span></label>
@@ -1645,8 +1516,7 @@ var MODALS_REFUSE = m => {
   const p = pk(m.id);
   return {
     title:`${p.id} の${p.type === 'drop' ? '受入拒否' : '集荷不可'}を記録`,
-    body:`<p class="hint">当日の受入拒否・集荷不可を記録します。取引先へ通知されます。</p>
-      <div class="mb-0"><label class="form-label">理由<span class="req">必須</span></label>
+    body:`<div class="mb-0"><label class="form-label">理由<span class="req">必須</span></label>
         <select class="form-select" data-mod="reason">${opts(
           (p.type === 'drop'
             ? ['異物混入のため受入不可','契約外品目のため受入不可','車両・書類不備','その他']
@@ -1696,10 +1566,7 @@ function viewActuals() {
     </tr>`).join('');
 
   return pageHead('実績一覧',
-    '計量実績を検索・確認します。申告との差異の確認、期間や取引先での抽出、CSV出力を行えます。',
-    null,
     `<button class="btn btn-outline-primary btn-sm" data-act="exportActuals">${ic('download')}CSV出力</button>`) +
-  specNote('actuals') +
   `<div class="row g-3 mb-3">
     <div class="col-6 col-lg-3">${kpi('実績件数', list.length + ' <small>件</small>')}</div>
     <div class="col-6 col-lg-3">${kpi('正味重量 合計', num(net) + ' <small>kg</small>', net >= 1000 ? `${dec(net/1000)} t` : '')}</div>
@@ -1722,103 +1589,58 @@ function viewActuals() {
       <tbody>${rows || `<tr><td colspan="13" class="text-center text-secondary py-4">該当する実績がありません</td></tr>`}</tbody>
     </table>
   </div>
-  ${list.length > 200 ? `<p class="hint mt-2">先頭200件を表示しています（全 ${list.length} 件）。CSV出力には全件が含まれます。</p>` : ''}`;
+  ${list.length > 200 ? `<p class="hint mt-2">先頭200件を表示（全 ${list.length} 件）。CSVは全件出力されます。</p>` : ''}`;
 }
 
 /* =========================================================================
-   取引先マスタ（新規登録は「招待URL方式」）
-     ① 社内で新規取引先を作成（社名・契約書などを入力）
-     ② 登録用URLが発行される
-     ③ URLを取引先担当者へ送付
-     ④ 取引先担当者がURLからメールアドレス・パスワード等を登録
-     ⑤ 以降そのアドレスでログインすると当該処理業者を選択できる
+   取引先マスタ
+   社内では情報を登録せず、登録用URLを発行して取引先に渡すだけ。
+   取引先が URL から社名・連絡先・ログイン情報を本登録する。
    ========================================================================= */
 const INVITE_BASE = 'https://sanpai.example.jp/invite/';
 const randToken = () => Math.random().toString(36).slice(2,10) + Math.random().toString(36).slice(2,4);
 
 function viewCompanies() {
-  const rows = COMPANIES.map((c,i) => `<tr>
-    <td><b>${esc(c.name)}</b><div class="text-secondary" style="font-size:11px">${esc(c.kana || '')}</div></td>
-    <td style="font-size:13px">${companyKind(c)}</td>
-    <td style="font-size:13px">${esc(c.contact || '—')}</td>
-    <td style="font-size:13px">${esc(c.email || '—')}<div class="text-secondary" style="font-size:11px">${esc(c.phone || '')}</div></td>
-    <td style="font-size:13px">${esc(c.invoice || '—')}</td>
-    <td style="font-size:13px">${c.contract_file ? `${ic('file',14)} ${esc(c.contract_file)}` : '<span class="text-secondary">未登録</span>'}</td>
-    <td>${c.status === 'active'
-      ? `<span class="badge b-approved">本登録済</span><div class="text-secondary" style="font-size:11px">${esc(c.registered_at || '')}</div>`
-      : `<span class="badge b-pending">招待中</span><div class="text-secondary" style="font-size:11px">${esc(c.invited_at || '')}</div>`}</td>
-    <td class="text-end text-nowrap">
-      ${c.status === 'invited' ? `<button class="btn btn-outline-primary btn-sm" data-act="showInvite" data-id="${c.id}">${ic('link',14)}登録用URL</button>` : ''}
-      <button class="btn btn-outline-secondary btn-sm ms-1" data-act="editCompany" data-i="${i}">編集</button>
-      <button class="btn btn-outline-danger btn-sm ms-1" data-act="delCompany" data-i="${i}">削除</button>
-    </td></tr>`).join('');
+  const rows = COMPANIES.map((c,i) => c.status === 'invited'
+    ? `<tr class="dim">
+        <td colspan="5" style="font-size:13px">未登録（登録用URL発行済　${esc(c.invited_at)}）</td>
+        <td><span class="badge b-pending">招待中</span></td>
+        <td class="text-end text-nowrap">
+          <button class="btn btn-outline-primary btn-sm" data-act="showInvite" data-id="${c.id}">${ic('link',14)}登録用URL</button>
+          <button class="btn btn-outline-danger btn-sm ms-1" data-act="delCompany" data-i="${i}">削除</button></td></tr>`
+    : `<tr>
+        <td><b>${esc(c.name)}</b><div class="text-secondary" style="font-size:11px">${esc(c.kana || '')}</div></td>
+        <td style="font-size:13px">${companyKind(c)}</td>
+        <td style="font-size:13px">${esc(c.contact || '—')}</td>
+        <td style="font-size:13px">${esc(c.email || '—')}<div class="text-secondary" style="font-size:11px">${esc(c.phone || '')}</div></td>
+        <td style="font-size:13px">${esc(c.invoice || '—')}</td>
+        <td><span class="badge b-approved">本登録済</span><div class="text-secondary" style="font-size:11px">${esc(c.registered_at || '')}</div></td>
+        <td class="text-end text-nowrap">
+          <button class="btn btn-outline-secondary btn-sm" data-act="editCompany" data-i="${i}">編集</button>
+          <button class="btn btn-outline-danger btn-sm ms-1" data-act="delCompany" data-i="${i}">削除</button></td></tr>`).join('');
 
-  return pageHead('取引先マスタ',
-    '取引先の新規登録は、社内で取引先を作成して登録用URLを発行し、取引先担当者に本登録してもらう流れです。',
-    null,
-    `<button class="btn btn-primary btn-sm" data-act="newCompany">${ic('plus',15)}新規取引先を作成</button>
+  return pageHead('取引先',
+    `<button class="btn btn-primary btn-sm" data-act="newInvite">${ic('link',15)}登録用URLを発行</button>
      <button class="btn btn-outline-primary btn-sm" data-act="csvCompanies">${ic('download')}CSV出力</button>`) +
-  specNote('m_companies') +
-  `<ol class="flowsteps">
-    <li class="on"><b>① 社内で作成</b>社名・区分・契約書などを登録</li>
-    <li class="on"><b>② 登録用URLを発行</b>取引先ごとに固有のURL</li>
-    <li class="on"><b>③ 担当者へ送付</b>メール等でURLを共有</li>
-    <li><b>④ 取引先が本登録</b>メールアドレス・パスワードを設定</li>
-    <li><b>⑤ ログイン可能に</b>当該処理業者を選択して予約</li>
-  </ol>
-  <div class="table-wrap">
+  `<div class="table-wrap">
     <table class="table table-hover mb-0">
-      <thead><tr><th>取引先名</th><th>区分</th><th>担当者</th><th>連絡先</th><th>インボイス登録番号</th><th>契約書</th><th>状態</th><th></th></tr></thead>
+      <thead><tr><th style="width:24%">取引先名</th><th style="width:12%">区分</th><th style="width:12%">担当者</th>
+        <th style="width:20%">連絡先</th><th style="width:14%">インボイス登録番号</th><th style="width:10%">状態</th><th></th></tr></thead>
       <tbody>${rows}</tbody>
     </table>
   </div>`;
 }
 
-/* ---------- 新規取引先の作成（①） ---------- */
-var MODALS_NEWCOMPANY = m => ({
-  title:'新規取引先を作成',
-  body:`<p class="hint">ここでは社内で把握している情報だけを登録します。メールアドレスやパスワードは、次に発行する登録用URLから取引先自身に入力してもらいます。</p>
-    <div class="row g-3">
-      <div class="col-12 col-md-7"><label class="form-label">取引先名<span class="req">必須</span></label>
-        <input type="text" class="form-control" data-mod="name" value="${esc(m.name || '')}" placeholder="例：株式会社サンプル建設"></div>
-      <div class="col-12 col-md-5"><label class="form-label">フリガナ<span class="opt">任意</span></label>
-        <input type="text" class="form-control" data-mod="kana" value="${esc(m.kana || '')}"></div>
-      <div class="col-12"><span class="form-label d-block">区分<span class="req">必須</span></span>
-        <div class="d-flex gap-4">
-          <div class="form-check"><input class="form-check-input" type="checkbox" data-mod="is_generator" ${m.is_generator ? 'checked' : ''}>
-            <label class="form-check-label">排出事業者</label></div>
-          <div class="form-check"><input class="form-check-input" type="checkbox" data-mod="is_transporter" ${m.is_transporter ? 'checked' : ''}>
-            <label class="form-check-label">運搬業者</label></div>
-        </div></div>
-      <div class="col-12 col-md-6"><label class="form-label">担当者名<span class="opt">任意</span></label>
-        <input type="text" class="form-control" data-mod="contact" value="${esc(m.contact || '')}" placeholder="登録用URLの送付先担当者"></div>
-      <div class="col-12 col-md-6"><label class="form-label">電話番号<span class="opt">任意</span></label>
-        <input type="tel" class="form-control" data-mod="phone" value="${esc(m.phone || '')}"></div>
-      <div class="col-12"><label class="form-label">関連契約書<span class="opt">任意</span></label>
-        <input type="text" class="form-control" data-mod="contract_file" value="${esc(m.contract_file || '')}" placeholder="例：委託契約書_サンプル建設_2026.pdf">
-        <div class="form-text">モックではファイル名のみを保持します。実装時はファイルアップロードを想定。</div></div>
-    </div>
-    ${m.err ? `<div class="text-danger mt-2" style="font-size:13px">${esc(m.err)}</div>` : ''}`,
-  foot:`<button class="btn btn-outline-secondary" data-act="closeModal">キャンセル</button>
-        <button class="btn btn-primary" data-act="doNewCompany">作成して登録用URLを発行</button>`
-});
-
-/* ---------- 登録用URLの発行（②③） ---------- */
+/* ---------- 登録用URL ---------- */
 var MODALS_INVITE = m => {
   const c = company(m.id);
   return {
-    title:'登録用URLを発行しました',
-    body:`<p class="hint">このURLを ${esc(c.contact || '取引先のご担当者')} 様へ送付してください。取引先がURLから本登録すると、以降このシステムで予約を作成できるようになります。</p>
-      ${dl([['取引先', esc(c.name)], ['区分', companyKind(c)], ['状態', '<span class="badge b-pending">招待中</span>']])}
-      <label class="form-label mt-3">登録用URL</label>
-      <div class="urlbox"><code id="elInviteUrl">${INVITE_BASE}${esc(c.token)}</code>
+    title:'登録用URL',
+    body:`<div class="urlbox"><code>${INVITE_BASE}${esc(c.token)}</code>
         <button class="btn btn-outline-secondary btn-sm ms-auto text-nowrap" data-act="copyInvite" data-token="${esc(c.token)}">${ic('copy',14)}コピー</button></div>
       <div class="d-flex gap-2 mt-3 flex-wrap">
-        <button class="btn btn-outline-primary btn-sm" data-act="sendInvite" data-id="${c.id}">${ic('mail',15)}メールで送付（モック）</button>
-        <button class="btn btn-outline-primary btn-sm mockbtn" data-act="openInvitePage" data-token="${esc(c.token)}">${ic('login',15)}取引先の登録画面を開く</button>
-      </div>
-      <div class="form-text mt-3">URLは取引先ごとに固有です。取引先が処理業者を検索・選択する画面は用意せず、
-        招待された処理業者だけが取引先の画面に表示されます。</div>`,
+        <button class="btn btn-outline-primary btn-sm mockbtn" data-act="openInvitePage" data-token="${esc(c.token)}">${ic('login',15)}登録画面を開く</button>
+      </div>`,
     foot:`<button class="btn btn-primary" data-act="closeModal">閉じる</button>`
   };
 };
@@ -1826,10 +1648,10 @@ var MODALS_INVITE = m => {
 /* ---------- 取引先の編集 ---------- */
 var MODALS_COMPANY = m => {
   const d = m.row;
-  const f = (k, label, type, ph) => `<label class="form-label">${label}</label>
-    <input type="${type || 'text'}" class="form-control" data-mod="row.${k}" value="${esc(d[k] || '')}" placeholder="${ph || ''}">`;
+  const f = (k, label, type) => `<label class="form-label">${label}</label>
+    <input type="${type || 'text'}" class="form-control" data-mod="row.${k}" value="${esc(d[k] || '')}">`;
   return {
-    title:`取引先の編集　${esc(d.name)}`,
+    title:`取引先の編集`,
     body:`<div class="row g-3">
       <div class="col-12 col-md-7">${f('name','取引先名')}</div>
       <div class="col-12 col-md-5">${f('kana','フリガナ')}</div>
@@ -1842,8 +1664,7 @@ var MODALS_COMPANY = m => {
         </div></div>
       <div class="col-12 col-md-6">${f('contact','担当者名')}</div>
       <div class="col-12 col-md-6">${f('phone','電話番号','tel')}</div>
-      <div class="col-12 col-md-6">${f('email','メールアドレス（ログインID）','email')}
-        <div class="form-text">通常は取引先が本登録時に設定します。</div></div>
+      <div class="col-12 col-md-6">${f('email','メールアドレス（ログインID）','email')}</div>
       <div class="col-12 col-md-6">${f('invoice','インボイス登録番号')}</div>
       <div class="col-12 col-md-3">${f('postalcode','郵便番号')}</div>
       <div class="col-12 col-md-3">${f('pref','都道府県')}</div>
@@ -1851,7 +1672,6 @@ var MODALS_COMPANY = m => {
       <div class="col-12 col-md-8">${f('bank','振込先口座')}</div>
       <div class="col-12 col-md-4"><label class="form-label">与信区分</label>
         <select class="form-select" data-mod="row.credit">${opts(['A','B','C'].map(x => ({v:x,t:x})), d.credit)}</select></div>
-      <div class="col-12">${f('contract_file','関連契約書')}</div>
     </div>
     ${m.err ? `<div class="text-danger mt-2" style="font-size:13px">${esc(m.err)}</div>` : ''}`,
     foot:`<button class="btn btn-outline-secondary" data-act="closeModal">キャンセル</button>
@@ -1860,26 +1680,25 @@ var MODALS_COMPANY = m => {
 };
 
 /* =========================================================================
-   取引先の本登録画面（④）　※本番では取引先側アプリの画面。モック用に同梱
+   取引先の本登録画面　※本番では取引先側アプリの画面。モック用に同梱
    ========================================================================= */
 function viewInvite() {
   const c = COMPANIES.find(x => x.token === state.invite.token);
   if (!c) return `<div class="invitewrap"><div class="empty">この登録用URLは無効です。</div></div>`;
   if (!state.invite.form) state.invite.form = {
-    contact:c.contact || '', email:'', password:'', password2:'',
-    phone:c.phone || '', postalcode:'', pref:'', address:'', invoice:'', bank:'', errors:[]
+    name:'', kana:'', is_generator:true, is_transporter:false,
+    contact:'', email:'', password:'', password2:'',
+    phone:'', postalcode:'', pref:'', address:'', invoice:'', bank:'', errors:[]
   };
   const f = state.invite.form;
-  if (c.status === 'active' && state.invite.done) {
+  if (state.invite.done) {
     return `<div class="invitewrap">
       <div class="card"><div class="card-body text-center p-4">
         <div style="color:var(--success)">${ic('check',44)}</div>
         <h1 style="font-size:22px;font-weight:700;margin:8px 0">登録が完了しました</h1>
-        <p class="mb-3">${esc(c.name)} 様のアカウントを作成しました。<br>
-          以降、<b>${esc(f.email)}</b> でログインすると
-          <b>株式会社エコクリーン埼玉</b> への予約・集荷依頼を作成できます。</p>
+        <p class="mb-3">${esc(f.email)} でログインできます。</p>
         <a class="btn btn-primary" href="emitter-portal.html">排出者ポータルを開く</a>
-        <div class="mt-3"><button class="btn btn-outline-secondary btn-sm" data-act="go" data-route="m_companies">処理業者側の管理画面に戻る（モック）</button></div>
+        <div class="mt-3"><button class="btn btn-outline-secondary btn-sm mockbtn" data-act="go" data-route="m_companies">処理業者側の管理画面に戻る</button></div>
       </div></div></div>`;
   }
   const err = f.errors.length ? `<div class="alert alert-danger"><b>入力内容を確認してください</b>
@@ -1890,25 +1709,31 @@ function viewInvite() {
     <div class="text-center mb-3">
       <div class="text-secondary" style="font-size:13px">株式会社エコクリーン埼玉 からの招待</div>
       <h1 style="font-size:22px;font-weight:700;margin:4px 0">取引先アカウントの登録</h1>
-      <p class="page-lead mb-0">${esc(c.name)} 様の情報をご登録ください。</p>
     </div>
     ${err}
     <div class="card"><div class="card-body">
-      <div class="mb-3">${dl([['取引先名', esc(c.name)], ['区分', companyKind(c)]])}</div>
       <div class="row g-3">
-        <div class="col-12 col-md-6">${fi('contact','ご担当者名','text','例：山田 太郎',1)}</div>
-        <div class="col-12 col-md-6">${fi('phone','電話番号','tel','048-000-0000',1)}</div>
-        <div class="col-12">${fi('email','メールアドレス（ログインID）','email','info@example.co.jp',1)}</div>
+        <div class="col-12 col-md-7">${fi('name','会社名','text','例：株式会社サンプル建設',1)}</div>
+        <div class="col-12 col-md-5">${fi('kana','フリガナ','text','')}</div>
+        <div class="col-12"><span class="form-label d-block">区分<span class="req">必須</span></span>
+          <div class="d-flex gap-4">
+            <div class="form-check"><input class="form-check-input" type="checkbox" data-inv="is_generator" ${f.is_generator ? 'checked' : ''}>
+              <label class="form-check-label">排出事業者</label></div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" data-inv="is_transporter" ${f.is_transporter ? 'checked' : ''}>
+              <label class="form-check-label">運搬業者</label></div>
+          </div></div>
+        <div class="col-12 col-md-6">${fi('contact','ご担当者名','text','',1)}</div>
+        <div class="col-12 col-md-6">${fi('phone','電話番号','tel','',1)}</div>
+        <div class="col-12">${fi('email','メールアドレス（ログインID）','email','',1)}</div>
         <div class="col-12 col-md-6">${fi('password','パスワード','password','8文字以上',1)}</div>
         <div class="col-12 col-md-6">${fi('password2','パスワード（確認）','password','',1)}</div>
-        <div class="col-12 col-md-4">${fi('postalcode','郵便番号','text','330-0854')}</div>
-        <div class="col-12 col-md-8">${fi('pref','都道府県','text','埼玉県')}</div>
-        <div class="col-12">${fi('address','住所','text','さいたま市大宮区桜木町0-0-0')}</div>
-        <div class="col-12 col-md-6">${fi('invoice','インボイス登録番号','text','T1234567890123')}</div>
-        <div class="col-12 col-md-6">${fi('bank','振込先口座','text','◯◯銀行 ◯◯支店 普通 1234567')}</div>
+        <div class="col-12 col-md-4">${fi('postalcode','郵便番号','text','')}</div>
+        <div class="col-12 col-md-8">${fi('pref','都道府県','text','')}</div>
+        <div class="col-12">${fi('address','住所','text','')}</div>
+        <div class="col-12 col-md-6">${fi('invoice','インボイス登録番号','text','')}</div>
+        <div class="col-12 col-md-6">${fi('bank','振込先口座','text','')}</div>
       </div>
       <button class="btn btn-primary w-100 mt-4" data-act="doInvite" data-token="${esc(c.token)}">この内容で登録する</button>
-      <div class="form-text mt-3 text-center">登録すると、株式会社エコクリーン埼玉 への予約が可能になります。</div>
     </div></div>
     <div class="text-center mt-3">
       <button class="btn btn-outline-secondary btn-sm mockbtn" data-act="go" data-route="m_companies">処理業者側の管理画面に戻る</button>
@@ -1917,7 +1742,7 @@ function viewInvite() {
 }
 
 /* =========================================================================
-   拠点・品目・単位マスタ（共通の一覧＋編集モーダル）
+   拠点・品目・単位マスタ
    ========================================================================= */
 function getPath(o, p) { return p.split('.').reduce((t,k) => (t == null ? t : t[k]), o); }
 function setPath(o, p, v) {
@@ -1927,8 +1752,7 @@ function setPath(o, p, v) {
 }
 const MASTERS = {
   m_plants: {
-    title:'拠点マスタ', data:() => PLANTS,
-    lead:'処理施設（拠点）の基本情報です。受入時間枠・引取対応時間・休業日は「受付時間・休業日」画面で設定します。',
+    title:'拠点', data:() => PLANTS,
     cols:[
       {k:'name', label:'拠点名', type:'text', list:true, req:true},
       {k:'is_delivery', label:'持込受入', type:'bool', list:true},
@@ -1942,8 +1766,7 @@ const MASTERS = {
     ]
   },
   m_items: {
-    title:'品目マスタ', data:() => ITEMS,
-    lead:'予約・実績で選択する品目です。有価物にチェックを入れると、実績一覧で有価物として区別されます。',
+    title:'品目', data:() => ITEMS,
     cols:[
       {k:'name', label:'品目名', type:'text', list:true, req:true},
       {k:'type', label:'廃棄物区分', type:'select', list:true, opts:() => ITEM_TYPES, fmt:v => itemTypeName(v), req:true},
@@ -1951,8 +1774,7 @@ const MASTERS = {
     ]
   },
   m_units: {
-    title:'単位マスタ', data:() => UNITS,
-    lead:'申告数量・実数量で使う単位です。計量（kg）と換算できる単位は kg・t です。',
+    title:'単位', data:() => UNITS,
     cols:[{k:'name', label:'単位', type:'text', list:true, req:true}]
   }
 };
@@ -1969,10 +1791,9 @@ function cellText(col, row) {
 }
 function viewMaster(route) {
   const m = MASTERS[route], rows = m.data(), cols = m.cols.filter(c => c.list);
-  return pageHead(m.title, m.lead, null,
+  return pageHead(m.title,
     `<button class="btn btn-primary btn-sm" data-act="mAdd" data-m="${route}">${ic('plus',15)}新規登録</button>
      <button class="btn btn-outline-primary btn-sm" data-act="mCsv" data-m="${route}">${ic('download')}CSV出力</button>`) +
-  specNote(route) +
   `<div class="table-wrap"><table class="table table-hover mb-0">
     <thead><tr>${cols.map(c => `<th>${esc(c.label)}</th>`).join('')}<th></th></tr></thead>
     <tbody>${rows.length ? rows.map((r,i) => `<tr>
@@ -2005,133 +1826,21 @@ var MODALS_MASTER = m => {
 };
 
 /* =========================================================================
-   監査ログ
-   ========================================================================= */
-function viewAudit() {
-  return pageHead('監査ログ',
-    '承認・変更依頼・時間設定の変更・取引先の招待など、記録が必要な操作の履歴です。',
-    null,
-    `<button class="btn btn-outline-primary btn-sm" data-act="exportAudit">${ic('download')}CSV出力</button>`) +
-  specNote('audit') +
-  `<div class="table-wrap"><table class="table mb-0">
-    <thead><tr><th>日時</th><th>操作者</th><th>操作</th><th>対象</th><th>内容</th></tr></thead>
-    <tbody>${AUDIT.map(a => `<tr>
-      <td class="mono">${esc(a.at)}</td><td>${esc(a.user)}</td>
-      <td><span class="badge b-neutral b-sq">${esc(a.act)}</span></td>
-      <td class="mono">${esc(a.target)}</td><td style="font-size:13px">${esc(a.detail)}</td></tr>`).join('')}
-    </tbody></table></div>`;
-}
-
-/* =========================================================================
-   画面ごとの仕様メモ（要件を詰めるための論点つき）
-   ========================================================================= */
-const SPEC_NOTES = {
-  approvals:{
-    rules:[
-      '第1期は<b>自動確定なし</b>。持込・引取とも全件が「申請中」から始まり、担当者が承認または変更依頼を返す。',
-      '事前チェック（取引先の登録状態・契約書・拠点の対応可否・稼働日・時間）は<b>判断材料の提示のみ</b>。注意があっても承認は可能。',
-      '<b>受付上限は設けない</b>ため、枠の残数ではなく「同日の予約件数」を参考情報として表示する。',
-      '変更依頼は理由必須。14日以内の稼働日・受入時間枠を代替候補として提示する。'
-    ],
-    out:['承認の自動化・ルールベース判定','受付上限（着車数・処理量・品目別）の設定と超過判定'],
-    q:['新着通知のチャネル（LINE／LINE WORKS／メール）は運用可否を左右するため優先確定が必要。',
-       '受付番号の採番タイミング：排出元ポータルに合わせ「申請時」に採番している。ER図の receipt_number は当日の計量伝票番号として入場受付時に採番する運用にしている。',
-       '持込と引取で承認者を分けるか（受入担当／配車担当）。本モックでは画面を分けていない。']
-  },
-  board:{
-    rules:[
-      '承認済の持込・引取を拠点別・日別に表示する。持込は受入時間枠ごと、引取は訪問時刻順。',
-      '持込は受入時間枠の変更、引取は訪問日時の変更ができる。いずれも取引先へ通知。',
-      '取消は理由必須。締切（既定：前日17時）後は社内担当のみ操作可。'
-    ],
-    out:['配車ボード（車両・ドライバーの割当編成）は第2期','運行指示書の出力、地図表示、ルート最適化'],
-    q:['当日の場内の受入順まで管理するか、時間枠単位で十分か。',
-       '「枠外の時間」に予約が入るケース（枠を後から変更した場合など）の扱い。']
-  },
-  proxy:{
-    rules:[
-      '電話で受けた内容を、取引先ポータルと同一項目で社内が入力する。',
-      '登録後は取引先からの申請と同じく承認待ちとなる。申請経路は「電話（代行入力）」として記録。',
-      '招待中（本登録前）の取引先でも代行入力はできる。事前チェックに注意として表示される。'
-    ],
-    q:['代行入力した予約を、入力者がそのまま承認してよいか（自己承認の可否）。',
-       '電話受付時に取引先へ返す受付番号の伝え方（口頭／SMS／メール）。']
-  },
-  hours:{
-    rules:[
-      '<b>受入時間枠（持込）は複数設定可</b>。取引先ポータルではここで設定した枠が予約の選択肢になる。',
-      '<b>引取対応時間（≒営業時間）は単一設定</b>。取引先はこの時間内で引取の希望時間を指定する。',
-      '枠ごとの受付上限・品目別上限・引取の受付上限は設けない。',
-      '定休曜日と臨時休業日を拠点ごとに設定する。休業日は受付不可。'
-    ],
-    out:['出勤者数連動の動的な処理能力算出','時間枠ごとの上限設定'],
-    q:['受入時間枠の粒度（現行：午前・午後）で足りるか。1時間刻みの要望があるか。',
-       '拠点ごとに時間枠を持つ想定でよいか（全拠点共通の設定が必要か）。',
-       '引取の希望時間は「午前／午後」の選択にする案もある。自由入力と選択のどちらが運用しやすいか。']
-  },
-  reception:{
-    rules:[
-      '受付番号または車両ナンバーで予約を検索し、入場時刻を記録する。入場受付時に当日の伝票番号を採番する。',
-      '総重量 − 空車重量 = 正味重量（kg）を自動算出する。',
-      '申告と実数の差異は理由とともに記録する。',
-      '予約のない搬入は飛び込みとして実績を直接登録できる。'
-    ],
-    out:['トラックスケール・計量システムとのCSV／API連携','構内工程管理・在庫管理','売上・会計連携'],
-    q:['1台に複数品目が積まれている場合の実数按分ルール（本モックは品目ごとに実数を手入力）。',
-       '計量票の出力・印刷は必要か。',
-       '入場時刻は自動（ナンバー認識等）か手動か。']
-  },
-  actuals:{
-    rules:['期間・取引先・品目・区分での検索とCSV出力。','申告と実数の差異が記録されている実績を抽出できる。'],
-    out:['売上明細・請求・会計連携（今回のスコープ外）'],
-    q:['CSVの列構成は、社内分析用と会計担当への受け渡し用のどちらに寄せるか。',
-       '実績の訂正権限と訂正履歴の残し方。']
-  },
-  m_companies:{
-    rules:[
-      '新規登録は招待URL方式：社内で取引先を作成 → 登録用URLを発行 → 担当者へ送付 → 取引先が本登録。',
-      '取引先が処理業者を検索・選択する画面は設けない。招待された処理業者だけが取引先側に表示される。',
-      'メールアドレス・パスワードは取引先自身が本登録時に設定する。'
-    ],
-    q:['登録用URLの有効期限と再発行の運用。',
-       '1つの取引先が複数の処理業者から招待された場合の画面（ログイン後に処理業者を選択）。',
-       '契約書ファイルの保管場所と、有効期限アラートの要否。']
-  },
-  m_plants:{
-    rules:['拠点ごとに持込受入・引取対応の可否を設定する。','受入時間枠・引取対応時間・休業日は「受付時間・休業日」画面で設定する。'],
-    q:['第1期は単一拠点想定だが、拠点を跨ぐ予約の振り分けが必要になるか。']
-  },
-  m_items:{
-    rules:['品目は廃棄物区分（産業廃棄物／特別管理産業廃棄物／一般廃棄物）を持つ。','有価物フラグは実績の区別に使う。'],
-    q:['法定20種類の区分をそのままマスタに持つか、自社の実務区分だけにするか。']
-  },
-  m_units:{
-    rules:['申告数量・実数量で使う単位。kg と t は計量値（kg）と換算できる。'],
-    q:['m3・台などの単位は重量換算しない。実績集計で重量に寄せる必要があるか。']
-  },
-  audit:{
-    rules:['承認・変更依頼・取消・時間設定の変更・取引先の招待・マスタ変更を記録する。'],
-    q:['保持期間と、取引先側の操作ログを含めるかどうか。']
-  }
-};
-
-/* =========================================================================
    ルーティング・描画
    ========================================================================= */
 const VIEWS = {
   approvals: viewApprovals, board: viewBoard, proxy: viewProxy,
   hours: viewHours, reception: viewReception, actuals: viewActuals,
-  m_companies: viewCompanies, audit: viewAudit, invite: viewInvite
+  m_companies: viewCompanies, invite: viewInvite
 };
 Object.keys(MASTERS).forEach(k => VIEWS[k] = () => viewMaster(k));
 
 const MODALS = {
   approve: MODALS_APPROVE, reject: MODALS_REJECT, pickup: MODALS_PICKUP,
   changeSlot: MODALS_CHANGESLOT, changeVisit: MODALS_CHANGEVISIT, cancel: MODALS_CANCEL,
-  slot: MODALS_SLOT, holiday: MODALS_HOLIDAY,
+  slot: MODALS_SLOT, holiday: MODALS_HOLIDAY, plantFlag: MODALS_PLANTFLAG,
   weigh: MODALS_WEIGH, spot: MODALS_SPOT, refuse: MODALS_REFUSE,
-  newCompany: MODALS_NEWCOMPANY, invite: MODALS_INVITE, company: MODALS_COMPANY,
-  master: MODALS_MASTER
+  invite: MODALS_INVITE, company: MODALS_COMPANY, master: MODALS_MASTER
 };
 
 const nowHm = () => { const d = new Date(); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
@@ -2174,7 +1883,6 @@ function renderChrome() {
       PLANTS.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
     document.getElementById('elMenuBtn').innerHTML = ic('menu');
     document.getElementById('elEmitterBtn').innerHTML = ic('login',15) + '排出者側の画面';
-    document.getElementById('elWho').textContent = `${ME.role}　${ME.name}`;
   }
   ps.value = state.plantId;
   const n = pendingCount();
@@ -2190,7 +1898,7 @@ function render() {
   const isInvite = state.route === 'invite';
   document.body.classList.toggle('invite-mode', isInvite);
   document.querySelector('.topbar .brand').innerHTML = isInvite ? BRAND_INVITE : BRAND_HTML;
-  ['elPlantSel','elNotifBtn','elWho','elEmitterBtn','elMenuBtn'].forEach(id => {
+  ['elPlantSel','elNotifBtn','elEmitterBtn','elMenuBtn'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = isInvite ? 'none' : '';
   });
@@ -2239,12 +1947,6 @@ document.addEventListener('change', e => {
   }
   if (d.mod) { modBind(d.mod, val); if (structural) renderModal(); return; }
   if (d.inv) { state.invite.form[d.inv] = val; return; }
-  if (d.plantflag) {
-    const pl = plant(state.hours.plantId);
-    pl[d.plantflag] = val;
-    audit('時間設定変更', pl.name, `${d.plantflag === 'is_delivery' ? '持込受入' : '引取対応'}を${val ? '有効' : '無効'}に変更`);
-    render(); return;
-  }
   if (d.act === 'boardDate')   { state.board.date = val; render(); return; }
   if (d.act === 'acFilter')    { state.actuals[d.key] = val; if (structural) render(); return; }
   if (d.act === 'apFilter')    { state.approval[d.key] = val; if (structural) render(); return; }
@@ -2268,7 +1970,6 @@ document.addEventListener('click', e => {
     /* ---- 共通 ---- */
     case 'go': go(d.route); break;
     case 'toggleNav': document.getElementById('elSidebar').classList.toggle('open'); break;
-    case 'toggleNote': state.noteOpen = state.noteOpen === d.route ? null : d.route; render(); break;
     case 'closeModal': closeModal(); render(); break;
     case 'openNotif':
       toast(`承認待ち ${pendingCount()} 件（通知チャネルはLINE／LINE WORKS等を想定・要確定）`);
@@ -2301,7 +2002,6 @@ document.addEventListener('click', e => {
       }
       p.status = 'approved'; p.approved_at = `${D(0)} ${nowHm()}`; p.approved_by = `${ME.role} ${ME.name.split(' ')[0]}`;
       if (m.comment) p.approve_comment = m.comment;
-      audit('承認', p.id, `${typeLabel(p.type)}／${fmtMd(p.date)} ${timeRange(p)}`);
       closeModal(); state.approval.sel = null;
       toast(`${p.id} を承認しました。取引先へ通知を送信しました。`);
       render(); break;
@@ -2311,7 +2011,6 @@ document.addEventListener('click', e => {
       const p = pk(m.id);
       p.status = 'rejected'; p.reject_reason = m.reason.trim();
       p.rejected_at = `${D(0)} ${nowHm()}`; p.rejected_by = `${ME.role} ${ME.name.split(' ')[0]}`;
-      audit('変更依頼', p.id, m.reason.trim().split('\n')[0]);
       closeModal(); state.approval.sel = null;
       toast(`${p.id} に変更依頼を送りました。取引先が修正して再申請します。`, 'warn');
       render(); break;
@@ -2332,7 +2031,6 @@ document.addEventListener('click', e => {
       if (!s) { m.err = '受入時間枠を選択してください。'; renderModal(); return; }
       const before = `${fmtMd(p.date)} ${timeRange(p)}`;
       p.date = m.date; p.begin_time = s.from; p.end_time = s.to;
-      audit('受入時間枠の変更', p.id, `${before} → ${fmtMd(p.date)} ${timeRange(p)}（${m.reason}）`);
       closeModal(); toast(`${p.id} の受入時間枠を変更し、取引先へ通知しました。`); render(); break;
     }
     case 'openChangeVisit': {
@@ -2345,7 +2043,6 @@ document.addEventListener('click', e => {
       if (m.end_time <= m.begin_time) { m.err = '終了時刻は開始時刻より後にしてください。'; renderModal(); return; }
       const p = pk(m.id);
       Object.assign(p, {date:m.date, begin_time:m.begin_time, end_time:m.end_time, dispatch_note:m.dispatch_note});
-      audit('訪問日時の変更', p.id, `${fmtMd(p.date)} ${timeRange(p)}（${m.reason}）`);
       closeModal(); toast(`${p.id} の訪問日時を変更し、取引先へ通知しました。`); render(); break;
     }
     case 'openCancel': openModal('cancel', {id:d.id, reason:''}, 'modal-md'); break;
@@ -2353,7 +2050,6 @@ document.addEventListener('click', e => {
       if (!m.reason || !m.reason.trim()) { m.err = '取消理由を入力してください。'; renderModal(); return; }
       const p = pk(m.id);
       p.status = 'canceled'; p.cancel_reason = m.reason.trim(); p.canceled_at = `${D(0)} ${nowHm()}`;
-      audit('取消', p.id, m.reason.trim());
       closeModal(); toast(`${p.id} を取消しました。`, 'warn'); render(); break;
     }
     case 'exportBoard': {
@@ -2395,7 +2091,6 @@ document.addEventListener('click', e => {
         pl.slots.push({id:'s' + Date.now().toString(36), name:name.trim(), from, to});
         pl.slots.sort((x,y) => x.from < y.from ? -1 : 1);
       }
-      audit('時間設定変更', pl.name, `受入時間枠を${s ? '変更' : '追加'}（${name} ${from}〜${to}）`);
       closeModal(); toast('受入時間枠を保存しました。'); render(); break;
     }
     case 'delSlot': {
@@ -2403,7 +2098,6 @@ document.addEventListener('click', e => {
       const s = pl.slots.find(x => x.id === d.slot);
       if (!confirm(`受入時間枠「${s.name} ${s.from}〜${s.to}」を削除します。よろしいですか？`)) return;
       pl.slots = pl.slots.filter(x => x.id !== d.slot);
-      audit('時間設定変更', pl.name, `受入時間枠を削除（${s.name} ${s.from}〜${s.to}）`);
       toast('受入時間枠を削除しました。', 'warn'); render(); break;
     }
     case 'saveHours': {
@@ -2412,14 +2106,21 @@ document.addEventListener('click', e => {
       const t = document.querySelector('[data-hours="end_time"]').value;
       if (!b || !t || t <= b) { toast('引取対応時間を確認してください。', 'err'); return; }
       pl.begin_time = b; pl.end_time = t;
-      audit('時間設定変更', pl.name, `引取対応時間を ${b}〜${t} に変更`);
       toast('引取対応時間を保存しました。'); render(); break;
     }
     case 'saveDows': {
       const pl = plant(d.id);
       pl.closed_dows = [...document.querySelectorAll('[data-dow]')].filter(x => x.checked).map(x => Number(x.dataset.dow));
-      audit('時間設定変更', pl.name, `定休日を ${pl.closed_dows.map(i => DOW[i]).join('・') || 'なし'} に変更`);
       toast('定休日を保存しました。'); render(); break;
+    }
+    case 'openPlantFlag': openModal('plantFlag', {plantId:d.plant, flag:d.flag, ack:false}, 'modal-md'); break;
+    case 'doPlantFlag': {
+      if (!m.ack) { m.err = '内容を確認してチェックを入れてください。'; renderModal(); return; }
+      const pl = plant(m.plantId);
+      pl[m.flag] = !pl[m.flag];
+      closeModal();
+      toast(`${pl.name} の${m.flag === 'is_delivery' ? '持込受入' : '引取対応'}を${pl[m.flag] ? '開始' : '停止'}しました。`, pl[m.flag] ? '' : 'warn');
+      render(); break;
     }
     case 'openHoliday': openModal('holiday', {plantId:state.hours.plantId, date:d.date}, 'modal-md'); break;
     case 'saveHoliday': {
@@ -2427,13 +2128,11 @@ document.addEventListener('click', e => {
       const pl = plant(m.plantId), ex = holidayOf(pl.id, d.date);
       if (ex) ex.reason = String(m.reason).trim();
       else HOLIDAYS.push({id:'h' + Date.now().toString(36), plant_id:pl.id, date:d.date, reason:String(m.reason).trim()});
-      audit('時間設定変更', pl.name, `${d.date} を臨時休業に設定（${String(m.reason).trim()}）`);
       closeModal(); toast(`${fmtMd(d.date)} を臨時休業にしました。`); render(); break;
     }
     case 'delHoliday': {
       const h = HOLIDAYS.find(x => x.id === d.id);
       HOLIDAYS = HOLIDAYS.filter(x => x.id !== d.id);
-      audit('時間設定変更', plant(h.plant_id).name, `${h.date} の臨時休業を解除`);
       closeModal(); toast('臨時休業を解除しました。'); render(); break;
     }
 
@@ -2442,7 +2141,6 @@ document.addEventListener('click', e => {
       const p = pk(d.id);
       p.status = 'arrived'; p.arrived_at = nowHm();
       p.receipt_number = nextReceiptNumber(p.plant_id, p.date);
-      audit('入場受付', p.id, `入場 ${p.arrived_at}／伝票番号 No.${p.receipt_number}`);
       toast(`${p.id} を入場受付しました（伝票 No.${p.receipt_number}）。`); render(); break;
     }
     case 'openWeigh': openModal('weigh', weighInit(d.id), 'modal-xl'); break;
@@ -2464,7 +2162,6 @@ document.addEventListener('click', e => {
         item_id:l.item_id, unit_id:l.unit_id, qty:Number(l.qty) || 0, actual_qty:Number(l.actual_qty)}));
       Object.assign(p, {status:'done', total_weight:g, car_weight:c, weight:net,
         diff: dk ? net - dk : 0, diff_reason: m.diff_reason || ''});
-      audit('計量実績の登録', p.id, `正味 ${num(net)} kg（総重量 ${num(g)} − 空車 ${num(c)}）`);
       closeModal(); toast(`${p.id} の実績を確定しました（正味 ${num(net)} kg）。`); render(); break;
     }
     case 'openSpot': openModal('spot', {company_id:'', plant_id:PLANTS.filter(p => p.is_delivery)[0].id,
@@ -2483,7 +2180,6 @@ document.addEventListener('click', e => {
         total_weight:g, car_weight:c, weight:net, diff:0, diff_reason:'飛び込み搬入（予約なし）'});
       PICKUP_ITEMS.push({id:'pi' + (++_pi), pickup_id:id, item_id:m.item_id, unit_id:m.unit_id,
         qty:Number(m.qty), actual_qty:Number(m.qty)});
-      audit('飛び込み搬入の登録', id, `${company(m.company_id).name}／${item(m.item_id).name}／正味 ${num(net)} kg`);
       closeModal(); toast(`飛び込み搬入 ${id} を実績登録しました。`); render(); break;
     }
     case 'openRefuse': openModal('refuse', {id:d.id, reason:''}, 'modal-md'); break;
@@ -2491,7 +2187,6 @@ document.addEventListener('click', e => {
       if (!m.reason) { m.err = '理由を選択してください。'; renderModal(); return; }
       const p = pk(m.id);
       p.status = 'canceled'; p.cancel_reason = m.reason; p.canceled_at = `${D(0)} ${nowHm()}`;
-      audit(p.type === 'drop' ? '受入拒否の記録' : '集荷不可の記録', p.id, m.reason);
       closeModal(); toast(`${p.id} を「${m.reason}」として記録しました。`, 'warn'); render(); break;
     }
 
@@ -2507,34 +2202,22 @@ document.addEventListener('click', e => {
     }
 
     /* ---- 取引先マスタ ---- */
-    case 'newCompany': openModal('newCompany', {is_generator:true, is_transporter:false}); break;
-    case 'doNewCompany': {
-      if (!m.name || !m.name.trim()) { m.err = '取引先名を入力してください。'; renderModal(); return; }
-      if (!m.is_generator && !m.is_transporter) { m.err = '区分を1つ以上選択してください。'; renderModal(); return; }
+    case 'newInvite': {
       let n = COMPANIES.length + 1;
       while (COMPANIES.find(x => x.id === 'c' + n)) n++;
-      const c = {id:'c' + n, name:m.name.trim(), kana:m.kana || '',
-        is_generator:!!m.is_generator, is_transporter:!!m.is_transporter,
-        postalcode:'', pref:'', address:'', phone:m.phone || '', email:'', contact:m.contact || '',
-        invoice:'', bank:'', credit:'', contract_file:m.contract_file || '',
+      const c = {id:'c' + n, name:'', kana:'', is_generator:false, is_transporter:false,
+        postalcode:'', pref:'', address:'', phone:'', email:'', contact:'',
+        invoice:'', bank:'', credit:'',
         status:'invited', token:randToken(), invited_at:`${D(0)} ${nowHm()}`, registered_at:null};
       COMPANIES.push(c);
-      audit('取引先の招待', c.name, '登録用URLを発行');
-      state.modal = null;
-      openModal('invite', {id:c.id});
-      toast(`${c.name} を作成し、登録用URLを発行しました。`);
-      render(); break;
+      openModal('invite', {id:c.id}, 'modal-md');
+      break;
     }
-    case 'showInvite': openModal('invite', {id:d.id}); break;
+    case 'showInvite': openModal('invite', {id:d.id}, 'modal-md'); break;
     case 'copyInvite': {
       const url = INVITE_BASE + d.token;
       if (navigator.clipboard) navigator.clipboard.writeText(url).catch(() => {});
       toast('登録用URLをコピーしました。'); break;
-    }
-    case 'sendInvite': {
-      const c = company(d.id);
-      audit('取引先の招待', c.name, '登録用URLをメール送付（モック）');
-      toast(`${c.contact || 'ご担当者'} 様へ登録用URLを送付しました（モック）。`); break;
     }
     case 'openInvitePage':
       closeModal();
@@ -2542,6 +2225,8 @@ document.addEventListener('click', e => {
       go('invite'); break;
     case 'doInvite': {
       const c = COMPANIES.find(x => x.token === d.token), f = state.invite.form, e2 = [];
+      if (!f.name.trim()) e2.push('会社名を入力してください。');
+      if (!f.is_generator && !f.is_transporter) e2.push('区分を1つ以上選択してください。');
       if (!f.contact.trim()) e2.push('ご担当者名を入力してください。');
       if (!f.phone.trim()) e2.push('電話番号を入力してください。');
       if (!f.email.trim()) e2.push('メールアドレスを入力してください。');
@@ -2550,33 +2235,32 @@ document.addEventListener('click', e => {
       if (f.password !== f.password2) e2.push('パスワード（確認）が一致しません。');
       f.errors = e2;
       if (e2.length) { render(); return; }
-      Object.assign(c, {status:'active', contact:f.contact, email:f.email, phone:f.phone,
+      Object.assign(c, {status:'active', name:f.name.trim(), kana:f.kana,
+        is_generator:!!f.is_generator, is_transporter:!!f.is_transporter,
+        contact:f.contact, email:f.email, phone:f.phone,
         postalcode:f.postalcode, pref:f.pref, address:f.address, invoice:f.invoice, bank:f.bank,
         registered_at:`${D(0)} ${nowHm()}`});
-      audit('取引先の本登録', c.name, `${f.email} で登録完了`);
       state.invite.done = true;
-      toast(`${c.name} の本登録が完了しました。`);
+      toast('本登録が完了しました。');
       render(); break;
     }
     case 'editCompany': openModal('company', {i:Number(d.i), row:JSON.parse(JSON.stringify(COMPANIES[Number(d.i)]))}); break;
     case 'saveCompany': {
       if (!m.row.name || !m.row.name.trim()) { m.err = '取引先名を入力してください。'; renderModal(); return; }
       Object.assign(COMPANIES[m.i], m.row);
-      audit('マスタ更新', '取引先マスタ', `${m.row.name} を更新`);
       closeModal(); toast('保存しました。'); render(); break;
     }
     case 'delCompany': {
       const c = COMPANIES[Number(d.i)];
-      if (!confirm(`取引先「${c.name}」を削除します。よろしいですか？`)) return;
+      if (!confirm(`取引先「${c.name || '未登録'}」を削除します。よろしいですか？`)) return;
       COMPANIES.splice(Number(d.i), 1);
-      audit('マスタ削除', '取引先マスタ', `${c.name} を削除`);
       toast('削除しました。', 'warn'); render(); break;
     }
     case 'csvCompanies': {
-      const rows = [['取引先名','フリガナ','排出事業者','運搬業者','担当者','メールアドレス','電話番号','郵便番号','都道府県','住所','インボイス登録番号','振込先口座','与信区分','契約書','状態','招待日時','登録日時']];
+      const rows = [['取引先名','フリガナ','排出事業者','運搬業者','担当者','メールアドレス','電話番号','郵便番号','都道府県','住所','インボイス登録番号','振込先口座','与信区分','状態','招待日時','登録日時']];
       COMPANIES.forEach(c => rows.push([c.name, c.kana, c.is_generator ? '○' : '', c.is_transporter ? '○' : '',
         c.contact, c.email, c.phone, c.postalcode, c.pref, c.address, c.invoice, c.bank, c.credit,
-        c.contract_file, c.status === 'active' ? '本登録済' : '招待中', c.invited_at || '', c.registered_at || '']));
+        c.status === 'active' ? '本登録済' : '招待中', c.invited_at || '', c.registered_at || '']));
       downloadCsv('取引先マスタ.csv', rows);
       toast('CSVを出力しました。'); break;
     }
@@ -2593,7 +2277,6 @@ document.addEventListener('click', e => {
       const arr = MASTERS[d.m].data(), i = Number(d.i);
       if (!confirm(`${MASTERS[d.m].title}の「${arr[i].name}」を削除します。よろしいですか？`)) return;
       const removed = arr.splice(i, 1)[0];
-      audit('マスタ削除', MASTERS[d.m].title, `${removed.name} を削除`);
       toast('削除しました。', 'warn'); render(); break;
     }
     case 'mSave': {
@@ -2606,10 +2289,8 @@ document.addEventListener('click', e => {
         while (arr.find(x => x.id === pref + n)) n++;
         m.row.id = pref + n;
         arr.push(m.row);
-        audit('マスタ登録', mm.title, `${m.row.name} を登録`);
       } else {
         Object.assign(arr[m.idx], m.row);
-        audit('マスタ更新', mm.title, `${arr[m.idx].name} を更新`);
       }
       closeModal(); toast('保存しました。'); render(); break;
     }
@@ -2621,12 +2302,6 @@ document.addEventListener('click', e => {
         return typeof v === 'boolean' ? (v ? '○' : '') : (v == null ? '' : v);
       })));
       downloadCsv(`${mm.title}.csv`, rows);
-      toast('CSVを出力しました。'); break;
-    }
-    case 'exportAudit': {
-      const rows = [['日時','操作者','操作','対象','内容']];
-      AUDIT.forEach(x => rows.push([x.at, x.user, x.act, x.target, x.detail]));
-      downloadCsv('監査ログ.csv', rows);
       toast('CSVを出力しました。'); break;
     }
   }
