@@ -1,0 +1,3168 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>産廃DX｜処理業者 管理画面 モック（第1期）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+/* =========================================================================
+   デザイントークン（排出元ポータル ワイヤーフレームと共通）
+   ========================================================================= */
+:root{
+  --blue-900:#000B5F; --blue-800:#0017C1; --blue-100:#E8F1FE;
+  --ink:#1A1A1C; --ink-sub:#626264;
+  --line:#D8D8DB; --line-strong:#767676;
+  --bg:#F2F2F2; --white:#FFFFFF;
+  --error:#CE0000; --error-bg:#FDEEEE;
+  --success:#197A4B; --success-bg:#E6F5EC;
+  --warn:#B75200; --warn-bg:#FDF3E6;
+  --radius:8px;
+  --sidebar-w:248px; --topbar-h:64px;
+
+  /* Bootstrap 5 のトークンを上書きして既存モックの配色に合わせる */
+  --bs-primary:#0017C1; --bs-primary-rgb:0,23,193;
+  --bs-body-font-family:"Noto Sans JP","Hiragino Sans","Yu Gothic",sans-serif;
+  --bs-body-font-size:16px; --bs-body-line-height:1.7;
+  --bs-body-color:#1A1A1C; --bs-body-color-rgb:26,26,28;
+  --bs-body-bg:#F2F2F2;
+  --bs-border-color:#D8D8DB;
+  --bs-border-radius:8px; --bs-border-radius-sm:6px; --bs-border-radius-lg:8px;
+  --bs-link-color:#0017C1; --bs-link-hover-color:#000B5F;
+  --bs-link-color-rgb:0,23,193;
+  --bs-emphasis-color:#1A1A1C;
+  --bs-secondary-color:#626264;
+}
+body{-webkit-font-smoothing:antialiased;}
+:focus-visible{outline:3px solid #FFD43D;outline-offset:0;box-shadow:0 0 0 5px var(--ink);border-radius:2px;}
+
+/* ボタン */
+.btn{font-weight:700;}
+.btn-primary{--bs-btn-bg:var(--blue-800);--bs-btn-border-color:var(--blue-800);--bs-btn-hover-bg:var(--blue-900);--bs-btn-hover-border-color:var(--blue-900);--bs-btn-active-bg:var(--blue-900);--bs-btn-active-border-color:var(--blue-900);--bs-btn-disabled-bg:#9A9A9C;--bs-btn-disabled-border-color:#9A9A9C;}
+.btn-outline-primary{--bs-btn-color:var(--blue-800);--bs-btn-border-color:var(--blue-800);--bs-btn-bg:var(--white);--bs-btn-hover-bg:var(--blue-100);--bs-btn-hover-color:var(--blue-900);--bs-btn-hover-border-color:var(--blue-800);--bs-btn-active-bg:var(--blue-100);--bs-btn-active-color:var(--blue-900);--bs-btn-active-border-color:var(--blue-800);}
+.btn-outline-danger{--bs-btn-color:var(--error);--bs-btn-border-color:var(--error);--bs-btn-bg:var(--white);--bs-btn-hover-bg:var(--error-bg);--bs-btn-hover-color:var(--error);--bs-btn-hover-border-color:var(--error);--bs-btn-active-bg:var(--error-bg);--bs-btn-active-color:var(--error);--bs-btn-active-border-color:var(--error);}
+.btn-outline-secondary{--bs-btn-color:var(--ink);--bs-btn-border-color:var(--line-strong);--bs-btn-bg:var(--white);--bs-btn-hover-bg:var(--bg);--bs-btn-hover-color:var(--ink);--bs-btn-hover-border-color:var(--line-strong);--bs-btn-active-bg:var(--bg);--bs-btn-active-color:var(--ink);--bs-btn-active-border-color:var(--line-strong);}
+.btn-success{--bs-btn-bg:var(--success);--bs-btn-border-color:var(--success);--bs-btn-hover-bg:#14603B;--bs-btn-hover-border-color:#14603B;--bs-btn-active-bg:#14603B;--bs-btn-active-border-color:#14603B;}
+
+/* フォーム */
+.form-control,.form-select{border-color:var(--line-strong);}
+.form-control:focus,.form-select:focus{border-color:var(--blue-800);box-shadow:0 0 0 .2rem rgba(0,23,193,.15);}
+.form-label{font-weight:700;font-size:15px;margin-bottom:6px;}
+.form-text{color:var(--ink-sub);}
+.req{font-size:12px;font-weight:700;color:var(--error);border:1px solid var(--error);border-radius:4px;padding:0 5px;margin-left:8px;vertical-align:2px;}
+.opt{font-size:12px;font-weight:500;color:var(--ink-sub);border:1px solid var(--line-strong);border-radius:4px;padding:0 5px;margin-left:8px;vertical-align:2px;}
+
+/* レイアウト */
+.topbar{position:fixed;top:0;left:0;right:0;height:var(--topbar-h);background:var(--white);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:16px;padding:0 20px;z-index:1030;}
+.topbar .brand{font-weight:700;font-size:17px;white-space:nowrap;line-height:1.25;}
+.topbar .brand span{display:block;font-size:11px;font-weight:400;color:var(--ink-sub);}
+.sidebar{position:fixed;top:var(--topbar-h);left:0;bottom:0;width:var(--sidebar-w);background:var(--white);border-right:1px solid var(--line);overflow-y:auto;padding:12px 0 40px;z-index:1020;}
+.sidebar .navsec{font-size:11px;font-weight:700;color:var(--ink-sub);letter-spacing:.06em;padding:16px 20px 6px;}
+.sidebar a.navitem{display:flex;align-items:center;gap:10px;padding:9px 20px 9px 17px;color:var(--ink);text-decoration:none;font-size:14px;border-left:3px solid transparent;}
+.sidebar a.navitem:hover{background:var(--blue-100);}
+.sidebar a.navitem.active{background:var(--blue-100);border-left-color:var(--blue-800);color:var(--blue-800);font-weight:700;}
+.sidebar a.navitem.locked{opacity:.42;pointer-events:none;}
+.sidebar .navitem .ico{width:20px;text-align:center;flex:none;font-size:15px;}
+.sidebar .navitem .cnt{margin-left:auto;font-size:11px;font-weight:700;background:var(--error);color:#fff;border-radius:99px;padding:1px 8px;}
+.sidebar .navitem .tag{margin-left:auto;font-size:10px;font-weight:700;color:var(--ink-sub);border:1px solid var(--line);border-radius:4px;padding:0 5px;}
+.content{margin-left:var(--sidebar-w);padding:24px 28px 80px;padding-top:calc(var(--topbar-h) + 24px);}
+.page-h{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:6px;}
+.page-h h1{font-size:24px;font-weight:700;margin:0;}
+.page-lead{color:var(--ink-sub);font-size:14px;margin:0 0 20px;}
+.fnids{display:flex;gap:6px;flex-wrap:wrap;}
+.fnid{font-size:11px;font-weight:700;color:var(--blue-900);background:var(--blue-100);border:1px solid var(--blue-800);border-radius:4px;padding:1px 7px;}
+
+/* カード・パネル */
+.card{border-color:var(--line);border-radius:var(--radius);overflow-x:auto;}
+.card-head{background:#FAFAFA;border-bottom:1px solid var(--line);padding:10px 16px;font-weight:700;font-size:15px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.card-head .sub{font-weight:400;font-size:13px;color:var(--ink-sub);}
+.kpi{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;height:100%;}
+.kpi .t{font-size:12px;color:var(--ink-sub);font-weight:500;margin-bottom:2px;}
+.kpi .v{font-size:26px;font-weight:700;line-height:1.2;font-variant-numeric:tabular-nums;}
+.kpi .v small{font-size:13px;font-weight:500;color:var(--ink-sub);}
+.kpi.alert-kpi{border-color:var(--error);background:var(--error-bg);}
+.kpi.alert-kpi .v{color:var(--error);}
+
+/* テーブル */
+.table{--bs-table-bg:var(--white);font-size:14px;border-color:var(--line);margin-bottom:0;}
+.table thead th{background:#FAFAFA;font-weight:700;white-space:nowrap;border-bottom:1px solid var(--line);vertical-align:middle;}
+.table td,.table th{padding:10px 12px;vertical-align:middle;}
+.table td.num,.table th.num{font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap;}
+.table-wrap{border:1px solid var(--line);border-radius:var(--radius);overflow-x:auto;background:var(--white);}
+.table tbody tr.clickable{cursor:pointer;}
+.table tbody tr.clickable:hover{background:var(--blue-100);}
+.table tbody tr.sel{background:var(--blue-100);box-shadow:inset 3px 0 0 var(--blue-800);}
+.table tbody tr.dim td{color:var(--ink-sub);background:#FBFBFB;}
+
+/* バッジ */
+.badge{font-size:12px;font-weight:700;border-radius:99px;padding:4px 11px;border:1px solid transparent;}
+.b-pending{background:var(--warn-bg);color:var(--warn);border-color:var(--warn);}
+.b-approved{background:var(--success-bg);color:var(--success);border-color:var(--success);}
+.b-rejected{background:var(--error-bg);color:var(--error);border-color:var(--error);}
+.b-method{background:var(--blue-100);color:var(--blue-900);border-color:var(--blue-800);}
+.b-neutral{background:var(--white);color:var(--ink-sub);border-color:var(--line-strong);}
+.b-dark{background:var(--blue-900);color:#fff;border-color:var(--blue-900);}
+.b-sq{border-radius:4px;}
+
+/* 事前チェック */
+.chk{display:flex;align-items:flex-start;gap:8px;font-size:13px;padding:8px 12px;border:1px solid var(--line);border-radius:var(--radius);background:var(--white);}
+.chk.ok{border-color:var(--success);background:var(--success-bg);}
+.chk.ng{border-color:var(--error);background:var(--error-bg);}
+.chk.wa{border-color:var(--warn);background:var(--warn-bg);}
+.chk .m{font-weight:700;flex:none;}
+
+/* 枠メーター */
+.meter{margin-bottom:10px;}
+.meter .lbl{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;}
+.meter .lbl b{font-variant-numeric:tabular-nums;}
+.meter .bar{height:8px;background:#EDEDEF;border-radius:99px;overflow:hidden;display:flex;}
+.meter .bar span{display:block;height:100%;background:var(--blue-800);}
+.meter.over .bar span{background:var(--error);}
+.meter.near .bar span{background:var(--warn);}
+.meter .bar span.pend{background:repeating-linear-gradient(45deg,#B0B0B4,#B0B0B4 3px,#D8D8DB 3px,#D8D8DB 6px);}
+
+/* 枠カレンダー */
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
+.cal .dow{text-align:center;font-size:12px;font-weight:700;color:var(--ink-sub);padding:4px 0;}
+.cal .day{background:var(--white);border:1px solid var(--line);border-radius:6px;padding:6px 7px;min-height:86px;text-align:left;font:inherit;cursor:pointer;}
+.cal .day:hover{background:var(--blue-100);}
+.cal .day .d{font-size:13px;font-weight:700;}
+.cal .day .m{font-size:11px;color:var(--ink-sub);line-height:1.45;font-variant-numeric:tabular-nums;}
+.cal .day.off{background:#F4F4F5;color:#9A9A9C;}
+.cal .day.off .m{color:#9A9A9C;}
+.cal .day.today{border:2px solid var(--blue-800);padding:5px 6px;}
+.cal .day.tight{background:var(--warn-bg);border-color:var(--warn);}
+.cal .day.full{background:var(--error-bg);border-color:var(--error);}
+.cal .day.blank{background:transparent;border:0;cursor:default;}
+.cal .day .ov{font-size:10px;font-weight:700;color:var(--warn);}
+
+/* 仕様メモ */
+.specnote{border:1px dashed var(--line-strong);border-radius:var(--radius);background:#FBFBFC;padding:0;margin-bottom:20px;}
+.specnote > button{width:100%;text-align:left;background:none;border:0;font:inherit;font-size:13px;font-weight:700;color:var(--ink-sub);padding:9px 14px;cursor:pointer;}
+.specnote .in{padding:0 16px 14px;font-size:13px;}
+.specnote h6{font-size:12px;font-weight:700;color:var(--ink-sub);margin:10px 0 4px;}
+.specnote ul{margin:0;padding-left:18px;}
+.specnote li{margin-bottom:2px;}
+.specnote .q{color:var(--warn);font-weight:700;}
+
+/* その他 */
+.empty{background:var(--white);border:1px dashed var(--line-strong);border-radius:var(--radius);padding:48px 24px;text-align:center;color:var(--ink-sub);}
+.hint{font-size:13px;color:var(--ink-sub);margin:0 0 6px;}
+.sticky-col{position:sticky;top:calc(var(--topbar-h) + 16px);}
+.divline{border-top:1px solid var(--line);margin:16px 0;}
+.mono{font-variant-numeric:tabular-nums;}
+.filterbar{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:12px 16px;margin-bottom:16px;display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;}
+.filterbar .f{min-width:150px;}
+.filterbar .f label{font-size:12px;font-weight:700;color:var(--ink-sub);display:block;margin-bottom:2px;}
+.toast-host{position:fixed;right:20px;bottom:20px;z-index:1090;display:flex;flex-direction:column;gap:8px;}
+.toast-item{background:var(--blue-900);color:#fff;border-radius:var(--radius);padding:12px 18px;font-size:14px;font-weight:500;box-shadow:0 6px 20px rgba(0,0,0,.24);max-width:420px;}
+.toast-item.warn{background:var(--warn);}
+.toast-item.err{background:var(--error);}
+.modal-header{border-bottom-color:var(--line);}
+.modal-footer{border-top-color:var(--line);}
+.modal-title{font-size:18px;font-weight:700;}
+.dl{display:grid;grid-template-columns:120px 1fr;gap:0;font-size:14px;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;}
+.dl dt{background:#FAFAFA;padding:8px 12px;font-weight:500;color:var(--ink-sub);border-bottom:1px solid var(--line);margin:0;}
+.dl dd{padding:8px 12px;border-bottom:1px solid var(--line);margin:0;font-weight:500;}
+.dl dt:nth-last-of-type(1),.dl dd:nth-last-of-type(1){border-bottom:0;}
+.timeline{list-style:none;margin:0;padding:0;font-size:13px;}
+.timeline li{padding:6px 0 6px 18px;border-left:2px solid var(--line);margin-left:6px;position:relative;}
+.timeline li::before{content:"";position:absolute;left:-5px;top:13px;width:8px;height:8px;border-radius:50%;background:var(--line-strong);}
+.timeline li.on::before{background:var(--blue-800);}
+@media (max-width:767px){
+  .topbar{gap:8px;padding:0 12px;}
+  .topbar .brand{font-size:14px;}
+  .topbar #elSiteSel{display:none;}
+}
+@media (max-width:991px){
+  :root{--sidebar-w:0px;}
+  .sidebar{transform:translateX(-100%);transition:transform .2s;width:248px;}
+  .sidebar.open{transform:none;box-shadow:0 0 0 100vw rgba(0,0,0,.4);}
+  .content{padding:calc(var(--topbar-h) + 16px) 14px 64px;}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <button class="btn btn-outline-secondary btn-sm d-lg-none" data-act="toggleNav" aria-label="メニュー">☰</button>
+  <div class="brand">産廃予約管理システム<span>株式会社エコクリーン埼玉（処理業者）</span></div>
+  <div class="ms-auto d-flex align-items-center gap-2">
+    <select class="form-select form-select-sm" style="width:auto;" data-act="switchSite" id="elSiteSel" aria-label="拠点"></select>
+    <select class="form-select form-select-sm" style="width:auto;" data-act="switchRole" id="elRoleSel" aria-label="ロール"></select>
+    <div class="position-relative">
+      <button class="btn btn-outline-secondary btn-sm" data-act="openNotif" aria-label="通知">🔔<span id="elNotifCnt"></span></button>
+    </div>
+  </div>
+</header>
+
+<nav class="sidebar" id="elSidebar" aria-label="メインメニュー"></nav>
+<main class="content" id="elView"></main>
+
+<div class="modal fade" id="appModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable" id="elModalDialog">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title" id="elModalTitle"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
+      <div class="modal-body" id="elModalBody"></div>
+      <div class="modal-footer" id="elModalFoot"></div>
+    </div>
+  </div>
+</div>
+<div class="toast-host" id="elToast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+/* =========================================================================
+   産廃DX 処理業者 管理画面モック（第1期スコープ）
+   - 仕様書「20260727_産廃システム仕様書_v2」7.2 社内向け画面に対応
+   - データはすべてブラウザ内のダミー。リロードで初期状態に戻る
+   ========================================================================= */
+
+/* ---------- 日付ユーティリティ ---------- */
+const DOW = ['日','月','火','水','木','金','土'];
+const TODAY = (() => { const d = new Date(); d.setHours(0,0,0,0); return d; })();
+const pad = n => String(n).padStart(2,'0');
+const dstr = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const addDays = (d,n) => { const x = new Date(d); x.setDate(x.getDate()+n); return x; };
+const D = n => dstr(addDays(TODAY,n));
+const parseD = s => { const [y,m,dd] = s.split('-').map(Number); return new Date(y,m-1,dd); };
+const fmtMd = s => { const d = parseD(s); return `${d.getMonth()+1}/${d.getDate()}（${DOW[d.getDay()]}）`; };
+const fmtJp = s => { const d = parseD(s); return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${DOW[d.getDay()]}）`; };
+const ymOf = s => s.slice(0,7);
+/* 稼働日（日曜以外）で n 日後／n 日前を返す。ダミーデータが休業日に乗らないようにするため */
+function bizDay(n) {
+  let d = new Date(TODAY), c = 0, step = n < 0 ? -1 : 1;
+  while (c < Math.abs(n)) { d = addDays(d, step); if (d.getDay() !== 0) c++; }
+  return dstr(d);
+}
+function B(n) { return bizDay(n); }
+
+/* ---------- 拠点・ロール ---------- */
+const BASES = [
+  {id:'b1', name:'本社工場（さいたま中間処理場）'},
+  {id:'b2', name:'川口ヤード（複数拠点展開は将来）', disabled:true}
+];
+const ROLES = [
+  {id:'admin',  name:'システム管理者'},
+  {id:'uke',    name:'受入責任者'},
+  {id:'haisha', name:'配車責任者'},
+  {id:'eigyo',  name:'営業'},
+  {id:'keiryo', name:'計量・構内担当'},
+  {id:'keiri',  name:'経理'}
+];
+
+/* ---------- E-01 取引先マスタ ---------- */
+const PARTNERS = [
+  {id:'c1', name:'株式会社サンプル建設', kana:'サンプルケンセツ', type:'emitter',
+   invoice:'T1234567890123', pay:'月末締／翌月末払', credit:'A', tel:'048-000-0001',
+   addr:'埼玉県さいたま市大宮区桜木町0-0-0'},
+  {id:'c2', name:'大宮運輸株式会社', kana:'オオミヤウンユ', type:'carrier',
+   invoice:'T2345678901234', pay:'月末締／翌月20日払', credit:'B', tel:'048-000-0002',
+   addr:'埼玉県さいたま市北区宮原町0-0-0',
+   permit:{no:'第01100000001号', pref:'埼玉県', expire:'2027-03-31',
+           items:['廃プラスチック類','木くず','金属くず','混合廃棄物']}},
+  {id:'c3', name:'埼玉建設工業株式会社', kana:'サイタマケンセツコウギョウ', type:'both',
+   invoice:'T3456789012345', pay:'20日締／翌月10日払', credit:'A', tel:'048-000-0003',
+   addr:'埼玉県さいたま市浦和区高砂0-0-0',
+   permit:{no:'第01100000002号', pref:'埼玉県', expire:D(34),
+           items:['ガラス・コンクリート・陶磁器くず','汚泥']}},
+  {id:'c4', name:'株式会社グリーンハウス', kana:'グリーンハウス', type:'emitter',
+   invoice:'T4567890123456', pay:'月末締／翌月末払', credit:'C', tel:'04-000-0004',
+   addr:'埼玉県所沢市くすのき台0-0-0'},
+  {id:'c5', name:'武蔵野解体株式会社', kana:'ムサシノカイタイ', type:'emitter',
+   invoice:'T5678901234567', pay:'月末締／翌月末払', credit:'B', tel:'048-000-0005',
+   addr:'埼玉県さいたま市中央区下落合0-0-0'}
+];
+
+/* ---------- E-02 事業所・排出現場マスタ ---------- */
+const SITES = [
+  {id:'st1', partnerId:'c1', name:'大宮第一現場', addr:'埼玉県さいたま市大宮区桜木町0-0-0',
+   road:'4m以上', machine:'あり', attend:'不要', note:'搬出口は南側ゲート'},
+  {id:'st2', partnerId:'c1', name:'川越倉庫', addr:'埼玉県川越市脇田本町0-0-0',
+   road:'3m未満', machine:'なし', attend:'要', note:'2t車まで進入可'},
+  {id:'st3', partnerId:'c3', name:'浦和第二工区', addr:'埼玉県さいたま市浦和区仲町0-0-0',
+   road:'4m以上', machine:'あり', attend:'不要', note:''},
+  {id:'st4', partnerId:'c4', name:'所沢資材置場', addr:'埼玉県所沢市くすのき台0-0-0',
+   road:'4m以上', machine:'なし', attend:'要', note:'スポット案件'},
+  {id:'st5', partnerId:'c5', name:'与野解体現場', addr:'埼玉県さいたま市中央区本町東0-0-0',
+   road:'3m未満', machine:'あり', attend:'要', note:'近隣配慮のため9時以降'}
+];
+
+/* ---------- E-03 取引関係マスタ（運搬業者が代理予約できる排出事業者） ---------- */
+const RELATIONS = [
+  {id:'r1', carrierId:'c2', emitterId:'c1', proxy:true,  note:'常用委託'},
+  {id:'r2', carrierId:'c2', emitterId:'c5', proxy:true,  note:'スポット委託'},
+  {id:'r3', carrierId:'c3', emitterId:'c3', proxy:true,  note:'自社運搬'},
+  {id:'r4', carrierId:'c2', emitterId:'c4', proxy:false, note:'予約代行は不可（搬入のみ）'}
+];
+
+/* ---------- E-04 品目マスタ ---------- */
+const ITEMS = [
+  {id:'i1', name:'廃プラスチック類', legal:'廃プラスチック類', practical:'軟質プラ', unit:'t',  valuable:false},
+  {id:'i2', name:'木くず',           legal:'木くず',           practical:'建築廃材A', unit:'t',  valuable:false},
+  {id:'i3', name:'金属くず',         legal:'金属くず',         practical:'鉄スクラップ', unit:'t', valuable:true},
+  {id:'i4', name:'ガラス・コンクリート・陶磁器くず', legal:'ガラス陶磁器くず', practical:'コンがら', unit:'t', valuable:false},
+  {id:'i5', name:'汚泥',             legal:'汚泥',             practical:'建設汚泥', unit:'t',  valuable:false},
+  {id:'i6', name:'紙くず',           legal:'紙くず',           practical:'古紙',     unit:'t',  valuable:false},
+  {id:'i7', name:'混合廃棄物',       legal:'混合物（安定型）', practical:'混廃A',    unit:'m3', valuable:false}
+];
+const UNITS = ['kg','t','m3','個','台'];
+
+/* ---------- E-05 車格マスタ ---------- */
+const VEHICLES = [
+  {id:'v1', name:'軽トラック',             loadT:0.35, loadM3:2,  note:''},
+  {id:'v2', name:'2tトラック（平ボディ）', loadT:2.0,  loadM3:6,  note:''},
+  {id:'v3', name:'2tトラック（ダンプ）',   loadT:2.0,  loadM3:4,  note:''},
+  {id:'v4', name:'4tトラック',             loadT:4.0,  loadM3:12, note:''},
+  {id:'v5', name:'10tトラック',            loadT:10.0, loadM3:30, note:'場内動線の都合で午前のみ'},
+  {id:'v6', name:'ユニック車（4t）',       loadT:3.5,  loadM3:10, note:''}
+];
+
+/* ---------- E-06 荷姿・容器マスタ ---------- */
+const CONTAINERS = [
+  {id:'g1', name:'フレコンバッグ', volM3:1.0,  note:''},
+  {id:'g2', name:'ドラム缶',       volM3:0.2,  note:''},
+  {id:'g3', name:'2m3コンテナ',    volM3:2.0,  note:'第1期は記録のみ（在庫・配置管理は将来）'},
+  {id:'g4', name:'4m3コンテナ',    volM3:4.0,  note:'同上'},
+  {id:'g5', name:'8m3コンテナ',    volM3:8.0,  note:'同上'},
+  {id:'g6', name:'パレット積み',   volM3:0.8,  note:''},
+  {id:'g7', name:'バラ積み',       volM3:null, note:''}
+];
+
+/* ---------- E-07 契約マスタ ---------- */
+const CONTRACTS = [
+  {id:'k1', partnerId:'c1', kind:'自動更新', from:'2026-04-01', to:'2027-03-31',
+   items:['i1','i2','i3','i7'], pay:'月末締／翌月末払', file:'委託契約書_サンプル建設_2026.pdf'},
+  {id:'k2', partnerId:'c3', kind:'自動更新', from:'2026-04-01', to:'2027-03-31',
+   items:['i4','i5'], pay:'20日締／翌月10日払', file:'委託契約書_埼玉建設工業_2026.pdf'},
+  {id:'k3', partnerId:'c5', kind:'スポット', from:'2026-08-01', to:'2026-12-31',
+   items:['i2','i7'], pay:'月末締／翌月末払', file:'委託契約書_武蔵野解体_2026.pdf'}
+  /* c4 グリーンハウスは契約なし＝承認画面で「未締結」警告が出る */
+];
+
+/* ---------- E-08 処分単価マスタ（適用開始日で世代管理） ---------- */
+const DISPOSAL_PRICES = [
+  {id:'d1', contractId:'k1', itemId:'i1', type:'t',  price:22000, min:5000, from:'2026-04-01'},
+  {id:'d2', contractId:'k1', itemId:'i1', type:'t',  price:24000, min:5000, from:'2026-10-01'},
+  {id:'d3', contractId:'k1', itemId:'i2', type:'t',  price:12000, min:5000, from:'2026-04-01'},
+  {id:'d4', contractId:'k1', itemId:'i3', type:'t',  price:-18000, min:0,   from:'2026-04-01'},
+  {id:'d5', contractId:'k1', itemId:'i7', type:'m3', price:9800,  min:9800, from:'2026-04-01'},
+  {id:'d6', contractId:'k2', itemId:'i4', type:'t',  price:6500,  min:5000, from:'2026-04-01'},
+  {id:'d7', contractId:'k2', itemId:'i5', type:'t',  price:18000, min:9000, from:'2026-04-01'},
+  {id:'d8', contractId:'k3', itemId:'i2', type:'t',  price:13500, min:5000, from:'2026-08-01'},
+  {id:'d9', contractId:'k3', itemId:'i7', type:'m3', price:11000, min:11000,from:'2026-08-01'}
+];
+
+/* ---------- E-09 運搬単価マスタ（引取：契約×現場×車格の固定運賃） ---------- */
+const TRANSPORT_PRICES = [
+  {id:'t1', contractId:'k1', siteId:'st1', vehicleId:'v4', price:18000, from:'2026-04-01'},
+  {id:'t2', contractId:'k1', siteId:'st2', vehicleId:'v2', price:12000, from:'2026-04-01'},
+  {id:'t3', contractId:'k2', siteId:'st3', vehicleId:'v5', price:32000, from:'2026-04-01'},
+  {id:'t4', contractId:'k3', siteId:'st5', vehicleId:'v4', price:20000, from:'2026-08-01'}
+];
+
+/* ---------- F-03 追加料金マスタ ---------- */
+const EXTRA_CHARGES = [
+  {id:'x1', name:'手選別費',     type:'台', price:8000},
+  {id:'x2', name:'異物混入加算', type:'t',  price:15000},
+  {id:'x3', name:'時間外受入料', type:'台', price:5000}
+];
+
+/* ---------- B-01 時間帯マスタ ---------- */
+const SLOTS = [
+  {id:'am', label:'9:00 〜 12:00', from:'09:00', to:'12:00', active:true},
+  {id:'pm', label:'13:00 〜 16:00', from:'13:00', to:'16:00', active:true},
+  {id:'ev', label:'16:00 〜 17:30', from:'16:00', to:'17:30', active:false}
+];
+
+/* ---------- B-02〜B-07 受入枠・稼働カレンダー ---------- */
+const capacity = {
+  /* 曜日パターン（0=日）。null は休業日 */
+  weekly: {
+    0: null,
+    1: {am:{trucks:8, weight:30}, pm:{trucks:6, weight:25}},
+    2: {am:{trucks:8, weight:30}, pm:{trucks:6, weight:25}},
+    3: {am:{trucks:8, weight:30}, pm:{trucks:6, weight:25}},
+    4: {am:{trucks:8, weight:30}, pm:{trucks:6, weight:25}},
+    5: {am:{trucks:8, weight:30}, pm:{trucks:6, weight:25}},
+    6: {am:{trucks:4, weight:15}}
+  },
+  /* B-04 品目別上限（日次／品目の標準単位） */
+  itemCaps: {i1:10, i5:8, i7:30},
+  /* B-07/B-08 個別日の上書き（休業・臨時開放） */
+  days: {
+    [B(2)]:  {slots:{am:{trucks:2, weight:12}}, reason:'出勤者が少ないため午前枠を縮小'},
+    [B(6)]:  {closed:true, reason:'設備定期点検のため臨時休業'},
+    [B(8)]:  {slots:{am:{trucks:10, weight:35}}, reason:'繁忙期のため午前枠を臨時開放'}
+  }
+};
+
+/* 本日が日曜のときは、モックとして当日を稼働日扱いにする（画面が空になるのを避けるため） */
+if (TODAY.getDay() === 0) capacity.weekly[0] = {am:{trucks:8, weight:30}, pm:{trucks:6, weight:25}};
+
+/* ---------- B-05 引取枠 ---------- */
+const pickupCapacity = {
+  vehicles: 6,      /* 自社稼働車両台数 */
+  perVehicle: 3,    /* 1台あたり想定訪問件数 */
+  weekly: {0:0, 1:18, 2:18, 3:18, 4:18, 5:18, 6:8},
+  days: { [B(1)]: {limit:12, reason:'ドライバー2名が研修のため'} }
+};
+if (TODAY.getDay() === 0) pickupCapacity.weekly[0] = 18;
+
+/* ---------- 予約・依頼 ----------
+   status: pending（申請中）/ approved（承認済・予約確定）/ rejected（差戻し）
+           / arrived（入場受付済）/ done（実績記録済）/ canceled（取消）
+   ※受付番号は排出元ポータルの仕様に合わせ「申請時」に採番する（仕様書A-08と差異／README参照）
+--------------------------------------------------------------------- */
+let RESV = [
+  /* --- 承認待ち（承認キューに並ぶ） --- */
+  {no:'R-2026-0152', method:'pickup', status:'pending', emitterId:'c1', applicantId:'c1',
+   date:B(1), startAt:'10:00', endAt:'11:30', siteId:'st1',
+   lines:[{itemId:'i2', qty:1.2, unit:'t', memo:'搬出口は建物裏手'},
+          {itemId:'i3', qty:80,  unit:'kg', memo:''},
+          {itemId:'i7', qty:2,   unit:'m3', memo:''}],
+   containerId:'g1', appliedAt:D(-1)+' 16:42', via:'取引先ポータル',
+   note:'排出元ポータルで「申請中」の予約'},
+
+  {no:'R-2026-0158', method:'drop', status:'pending', emitterId:'c1', applicantId:'c1',
+   date:B(2), slotId:'am',
+   lines:[{itemId:'i1', qty:1.2, unit:'t', memo:'フレコン8袋'}],
+   vehicleId:'v4', vCount:1, driver:'佐藤 健', driverTel:'090-0000-0000', plate:'大宮 100 あ 12-34',
+   appliedAt:D(0)+' 08:12', via:'取引先ポータル'},
+
+  {no:'R-2026-0159', method:'drop', status:'pending', emitterId:'c1', applicantId:'c2',
+   date:B(2), slotId:'am',
+   lines:[{itemId:'i7', qty:8, unit:'m3', memo:'解体系の混廃'}],
+   vehicleId:'v5', vCount:2, driver:'鈴木 一郎', driverTel:'090-1111-1111', plate:'大宮 100 か 55-66',
+   appliedAt:D(0)+' 08:40', via:'取引先ポータル（運搬業者の代理申請）'},
+
+  {no:'R-2026-0160', method:'pickup', status:'pending', emitterId:'c3', applicantId:'c3',
+   date:B(3), startAt:'09:00', endAt:'12:00', siteId:'st3',
+   lines:[{itemId:'i5', qty:3.5, unit:'t', memo:'脱水済み'}],
+   containerId:'g1', appliedAt:D(0)+' 09:05', via:'取引先ポータル'},
+
+  {no:'R-2026-0161', method:'drop', status:'pending', emitterId:'c4', applicantId:'c4',
+   date:B(4), slotId:'pm',
+   lines:[{itemId:'i1', qty:0.6, unit:'t', memo:''}],
+   vehicleId:'v2', vCount:1, driver:'高橋 誠', driverTel:'090-2222-2222', plate:'所沢 400 さ 78-90',
+   appliedAt:D(0)+' 09:31', via:'取引先ポータル'},
+
+  {no:'R-2026-0162', method:'pickup', status:'pending', emitterId:'c5', applicantId:'c5',
+   date:B(1), startAt:'13:00', endAt:'16:00', siteId:'st5',
+   lines:[{itemId:'i2', qty:2.0, unit:'t', memo:''},
+          {itemId:'i7', qty:4, unit:'m3', memo:'解体ガラ混じり'}],
+   containerId:'g7', appliedAt:D(0)+' 10:02', via:'電話（営業 代行入力）'},
+
+  {no:'R-2026-0163', method:'drop', status:'pending', emitterId:'c1', applicantId:'c1',
+   date:B(5), slotId:'am',
+   lines:[{itemId:'i3', qty:1.8, unit:'t', memo:'鉄スクラップ（有価）'}],
+   vehicleId:'v4', vCount:1, driver:'佐藤 健', driverTel:'090-0000-0000', plate:'大宮 100 あ 12-34',
+   appliedAt:D(0)+' 10:20', via:'取引先ポータル'},
+
+  /* --- 差戻し --- */
+  {no:'R-2026-0155', method:'pickup', status:'rejected', emitterId:'c1', applicantId:'c1',
+   date:B(-2), startAt:'14:00', endAt:'15:00', siteId:'st2',
+   lines:[{itemId:'i7', qty:3, unit:'m3', memo:''}], containerId:'g7',
+   appliedAt:D(-4)+' 11:00', via:'取引先ポータル',
+   rejectReason:'指定日の収集ルートが満車のため。別日での再申請をお願いします。',
+   rejectedAt:D(-3)+' 09:12', rejectedBy:'配車責任者 山本'},
+
+  /* --- 本日ぶん（承認済） --- */
+  {no:'R-2026-0164', method:'drop', status:'done', emitterId:'c1', applicantId:'c1',
+   date:D(0), slotId:'am',
+   lines:[{itemId:'i1', qty:1.4, unit:'t', memo:''}],
+   vehicleId:'v4', vCount:1, driver:'佐藤 健', driverTel:'090-0000-0000', plate:'大宮 100 あ 12-34',
+   appliedAt:D(-2)+' 14:00', via:'取引先ポータル',
+   approvedAt:D(-2)+' 15:10', approvedBy:'受入責任者 田中', arrivedAt:'09:12', actualId:'A-2026-0301'},
+
+  {no:'R-2026-0165', method:'drop', status:'arrived', emitterId:'c3', applicantId:'c3',
+   date:D(0), slotId:'am',
+   lines:[{itemId:'i4', qty:5.0, unit:'t', memo:'コンがら'}],
+   vehicleId:'v5', vCount:1, driver:'伊藤 大輔', driverTel:'090-3333-3333', plate:'大宮 100 き 11-22',
+   appliedAt:D(-2)+' 16:20', via:'取引先ポータル',
+   approvedAt:D(-2)+' 17:00', approvedBy:'受入責任者 田中', arrivedAt:'10:48'},
+
+  {no:'R-2026-0166', method:'drop', status:'approved', emitterId:'c5', applicantId:'c2',
+   date:D(0), slotId:'pm',
+   lines:[{itemId:'i2', qty:2.2, unit:'t', memo:''}],
+   vehicleId:'v4', vCount:1, driver:'鈴木 一郎', driverTel:'090-1111-1111', plate:'大宮 100 か 55-66',
+   appliedAt:D(-1)+' 09:00', via:'取引先ポータル（運搬業者の代理申請）',
+   approvedAt:D(-1)+' 09:40', approvedBy:'受入責任者 田中'},
+
+  {no:'R-2026-0167', method:'pickup', status:'approved', emitterId:'c1', applicantId:'c1',
+   date:D(0), startAt:'13:00', endAt:'16:00', siteId:'st2',
+   lines:[{itemId:'i7', qty:6, unit:'m3', memo:''}], containerId:'g4',
+   appliedAt:D(-2)+' 10:00', via:'取引先ポータル',
+   approvedAt:D(-2)+' 11:30', approvedBy:'配車責任者 山本',
+   visitDate:D(0), visitFrom:'13:30', visitTo:'15:00', dispatchNote:'4t車・ドライバー中村で手配済（台帳）'},
+
+  {no:'R-2026-0168', method:'drop', status:'approved', emitterId:'c1', applicantId:'c1',
+   date:D(0), slotId:'pm',
+   lines:[{itemId:'i7', qty:8, unit:'m3', memo:''}],
+   vehicleId:'v4', vCount:1, driver:'渡辺 翔', driverTel:'090-4444-4444', plate:'大宮 100 あ 33-44',
+   appliedAt:D(-1)+' 13:00', via:'電話（営業 代行入力）',
+   approvedAt:D(-1)+' 13:20', approvedBy:'受入責任者 田中'},
+
+  /* --- 翌日以降（承認済） --- */
+  {no:'R-2026-0169', method:'drop', status:'approved', emitterId:'c3', applicantId:'c3',
+   date:B(1), slotId:'am',
+   lines:[{itemId:'i5', qty:4.0, unit:'t', memo:''}],
+   vehicleId:'v5', vCount:1, driver:'伊藤 大輔', driverTel:'090-3333-3333', plate:'大宮 100 き 11-22',
+   appliedAt:D(-1)+' 15:00', via:'取引先ポータル',
+   approvedAt:D(-1)+' 15:30', approvedBy:'受入責任者 田中'},
+
+  {no:'R-2026-0170', method:'pickup', status:'approved', emitterId:'c5', applicantId:'c5',
+   date:B(1), startAt:'09:00', endAt:'12:00', siteId:'st5',
+   lines:[{itemId:'i2', qty:1.5, unit:'t', memo:''}], containerId:'g7',
+   appliedAt:D(-1)+' 16:10', via:'取引先ポータル',
+   approvedAt:D(-1)+' 16:40', approvedBy:'配車責任者 山本',
+   visitDate:D(1), visitFrom:'10:00', visitTo:'11:00', dispatchNote:'2t車で手配（台帳）'},
+
+  {no:'R-2026-0171', method:'drop', status:'approved', emitterId:'c1', applicantId:'c2',
+   date:B(2), slotId:'pm',
+   lines:[{itemId:'i1', qty:0.9, unit:'t', memo:''}],
+   vehicleId:'v2', vCount:1, driver:'鈴木 一郎', driverTel:'090-1111-1111', plate:'大宮 100 か 55-66',
+   appliedAt:D(0)+' 07:50', via:'取引先ポータル（運搬業者の代理申請）',
+   approvedAt:D(0)+' 08:05', approvedBy:'受入責任者 田中'},
+
+  /* --- 過去（完了・排出元ポータルの履歴と対応） --- */
+  {no:'R-2026-0148', method:'drop', status:'done', emitterId:'c1', applicantId:'c1',
+   date:B(-6), slotId:'am',
+   lines:[{itemId:'i1', qty:0.32, unit:'t', memo:'フレコンバッグ4袋'}],
+   vehicleId:'v2', vCount:1, driver:'佐藤 健', driverTel:'090-0000-0000', plate:'大宮 100 あ 12-34',
+   appliedAt:D(-8)+' 10:00', via:'取引先ポータル',
+   approvedAt:D(-8)+' 11:00', approvedBy:'受入責任者 田中', arrivedAt:'09:30', actualId:'A-2026-0290'}
+];
+
+/* ---------- 実績（D-02）・売上明細（F-01） ---------- */
+let ACTUALS = [];
+let SALES = [];
+let AUDIT = [];
+let CLOSINGS = [];   /* 月次締め {ym, closedAt, by} */
+
+/* 疑似乱数（毎回同じダミーを生成するための固定シード） */
+let _seed = 20260727;
+const rnd = () => { _seed = (_seed * 1103515245 + 12345) % 2147483648; return _seed / 2147483648; };
+const pick = a => a[Math.floor(rnd()*a.length)];
+const round1 = n => Math.round(n*10)/10;
+
+/* 過去45日ぶんの実績・売上をダミー生成（実績一覧・締め処理の検証用） */
+(function seedHistory(){
+  let an = 240, sn = 520, rn = 100;
+  for (let k = 45; k >= 1; k--) {
+    const ds = D(-k), dow = parseD(ds).getDay();
+    if (dow === 0) continue;
+    const cnt = dow === 6 ? 2 : 3 + Math.floor(rnd()*3);
+    for (let j = 0; j < cnt; j++) {
+      const ct = pick(CONTRACTS);
+      const itemId = pick(ct.items);
+      const it = ITEMS.find(x => x.id === itemId);
+      const method = rnd() < 0.3 ? 'pickup' : 'drop';
+      const site = SITES.find(s => s.partnerId === ct.partnerId) || SITES[0];
+      const veh = pick(VEHICLES.slice(1));
+      const declared = round1(0.4 + rnd()*4);
+      const gross = Math.round((declared + 2.5) * 1000);
+      const tare  = Math.round(2500 + rnd()*400);
+      const net   = it.unit === 'm3' ? round1(declared * (0.9 + rnd()*0.3))
+                                     : round1((gross - tare) / 1000);
+      const resvNo = 'R-2026-' + String(rn++).padStart(4,'0');
+      const a = {
+        id:'A-2026-0' + (an++), date:ds, resvNo, method,
+        partnerId:ct.partnerId, siteId:site.id, itemId, unit:it.unit,
+        declared, gross, tare, net,
+        vehicleId:veh.id, plate:'大宮 100 あ ' + (10+Math.floor(rnd()*80)) + '-' + (10+Math.floor(rnd()*80)),
+        diffReason: Math.abs(net - declared) / Math.max(declared, 0.1) > 0.25 ? '実測差（申告は目安）' : '',
+        spot:false, status:'fixed', allocations:null
+      };
+      ACTUALS.push(a);
+      SALES.push(...buildSalesFor(a, 'S-2026-' + String(sn++).padStart(4,'0')));
+    }
+  }
+  /* 前月は締め済み */
+  const lastYm = ymOf(D(-32));
+  CLOSINGS.push({ym:lastYm, closedAt:D(-4)+' 18:20', by:'経理 小林'});
+  SALES.forEach(s => { if (ymOf(s.date) === lastYm) s.closed = true; });
+  ACTUALS.forEach(a => { if (ymOf(a.date) === lastYm) a.status = 'closed'; });
+
+  /* 本日ぶんの計量済み実績（R-2026-0164） */
+  const todayA = {
+    id:'A-2026-0301', date:D(0), resvNo:'R-2026-0164', method:'drop',
+    partnerId:'c1', siteId:'st1', itemId:'i1', unit:'t',
+    declared:1.4, gross:6120, tare:2480, net:3.64,
+    vehicleId:'v4', plate:'大宮 100 あ 12-34',
+    diffReason:'積込時に追加発生分あり', spot:false, status:'fixed', allocations:null
+  };
+  ACTUALS.push(todayA);
+  SALES.push(...buildSalesFor(todayA, 'S-2026-0999'));
+
+  AUDIT = [
+    {at:D(-4)+' 18:20', user:'経理 小林',        role:'経理',       target:'月次締め '+lastYm, act:'締め処理', detail:'対象期間の実績を確定'},
+    {at:D(-2)+' 15:10', user:'受入責任者 田中',  role:'受入責任者', target:'R-2026-0164',      act:'承認',     detail:'持込予約を承認（時間枠 9:00〜12:00）'},
+    {at:D(-3)+' 09:12', user:'配車責任者 山本',  role:'配車責任者', target:'R-2026-0155',      act:'変更依頼', detail:'指定日の収集ルートが満車のため'},
+    {at:D(-5)+' 11:02', user:'受入責任者 田中',  role:'受入責任者', target:'受入枠 '+D(3),     act:'枠設定変更', detail:'設備定期点検のため臨時休業に変更'},
+    {at:D(-9)+' 10:30', user:'営業 中村',        role:'営業',       target:'処分単価 d2',      act:'単価変更', detail:'廃プラスチック類 22,000→24,000円/t（適用 2026-10-01）'}
+  ];
+})();
+
+/* =========================================================================
+   共通ユーティリティ
+   ========================================================================= */
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const num = n => Number(n ?? 0).toLocaleString('ja-JP');
+const yen = n => (n < 0 ? '△' : '') + '¥' + Math.abs(Math.round(n)).toLocaleString('ja-JP');
+const dec = (n, d=2) => Number(n ?? 0).toFixed(d).replace(/\.?0+$/,'');
+const opts = (list, cur, ph) =>
+  (ph === false ? '' : `<option value="">${ph || '選択してください'}</option>`) +
+  list.map(o => `<option value="${esc(o.v)}"${String(o.v) === String(cur) ? ' selected':''}>${esc(o.t)}</option>`).join('');
+const o1 = (arr, key='id', label='name') => arr.map(x => ({v:x[key], t:x[label]}));
+
+const partner   = id => PARTNERS.find(x => x.id === id) || {};
+const site      = id => SITES.find(x => x.id === id) || {};
+const item      = id => ITEMS.find(x => x.id === id) || {};
+const vehicle   = id => VEHICLES.find(x => x.id === id) || {};
+const container = id => CONTAINERS.find(x => x.id === id) || {};
+const contract  = id => CONTRACTS.find(x => x.id === id) || {};
+const slotDef   = id => SLOTS.find(x => x.id === id) || {};
+const resv      = no => RESV.find(x => x.no === no);
+
+/* 数量を品目の標準単位に換算する（kg→t など） */
+function toStd(qty, unit, itemId) {
+  const it = item(itemId), q = Number(qty) || 0;
+  if (it.unit === unit) return q;
+  if (it.unit === 't'  && unit === 'kg') return q / 1000;
+  if (it.unit === 'kg' && unit === 't')  return q * 1000;
+  return q; /* m3/個/台は換算しない */
+}
+/* 予約の申告数量（重量換算 t。枠消費量の目安に使う） */
+function declaredWeight(r) {
+  return (r.lines || []).reduce((s, ln) => {
+    const it = item(ln.itemId);
+    if (it.unit === 'm3') return s + toStd(ln.qty, ln.unit, ln.itemId) * 0.3; /* 暫定換算係数 */
+    return s + toStd(ln.qty, ln.unit, ln.itemId);
+  }, 0);
+}
+const lineText = ln => `${item(ln.itemId).name} ${dec(ln.qty)}${ln.unit}${ln.memo ? '（' + ln.memo + '）' : ''}`;
+const linesText = r => (r.lines || []).map(lineText).join(' ／ ');
+const methodLabel = m => m === 'drop' ? '持込' : '引取';
+const resvTime = r => r.method === 'drop'
+  ? (slotDef(r.slotId).label || '—')
+  : (r.visitFrom ? `${r.visitFrom} 〜 ${r.visitTo}（確定）` : `${r.startAt} 〜 ${r.endAt}（希望）`);
+
+/* ---------- ステータス ---------- */
+const STATUS = {
+  pending:  {t:'申請中',            c:'b-pending'},
+  approved: {t:'承認済（予約確定）', c:'b-approved'},
+  rejected: {t:'差戻し',            c:'b-rejected'},
+  arrived:  {t:'入場受付済',        c:'b-dark'},
+  done:     {t:'実績記録済',        c:'b-neutral'},
+  canceled: {t:'取消',              c:'b-neutral'}
+};
+const stBadge = s => `<span class="badge ${STATUS[s].c}">${STATUS[s].t}</span>`;
+const mBadge  = m => `<span class="badge b-method b-sq">${methodLabel(m)}</span>`;
+
+/* =========================================================================
+   マスタ参照ロジック（契約・単価）
+   ========================================================================= */
+function activeContract(partnerId, date) {
+  return CONTRACTS.find(k => k.partnerId === partnerId && k.from <= date && date <= k.to);
+}
+function disposalPrice(contractId, itemId, date) {
+  return DISPOSAL_PRICES
+    .filter(p => p.contractId === contractId && p.itemId === itemId && p.from <= date)
+    .sort((a,b) => a.from < b.from ? 1 : -1)[0];
+}
+function transportPrice(contractId, siteId, vehicleId, date) {
+  return TRANSPORT_PRICES
+    .filter(p => p.contractId === contractId && p.siteId === siteId && p.from <= date)
+    .sort((a,b) => a.from < b.from ? 1 : -1)
+    .find(p => !vehicleId || p.vehicleId === vehicleId);
+}
+/* 単価の適用状態（マスタ画面の表示用） */
+function priceState(p, sameKeyList) {
+  const today = D(0);
+  if (p.from > today) return {t:'適用前', c:'b-neutral'};
+  const newer = sameKeyList.filter(x => x.from <= today && x.from > p.from);
+  return newer.length ? {t:'失効', c:'b-neutral'} : {t:'適用中', c:'b-approved'};
+}
+
+/* =========================================================================
+   F-01〜F-04 売上明細の生成
+   実績（正味重量）× 契約単価。単価はスナップショットとして明細に保存する
+   ========================================================================= */
+function buildSalesFor(a, no) {
+  const out = [];
+  const ct = activeContract(a.partnerId, a.date);
+  const it = ITEMS.find(x => x.id === a.itemId) || {};
+  const dp = ct ? disposalPrice(ct.id, a.itemId, a.date) : null;
+  const qty = a.net;
+  if (dp) {
+    let amount = dp.price * qty;
+    let minApplied = false;
+    if (dp.price > 0 && dp.min && amount < dp.min) { amount = dp.min; minApplied = true; }
+    out.push({
+      no, date:a.date, actualId:a.id, partnerId:a.partnerId, siteId:a.siteId,
+      kind: dp.price < 0 ? 'purchase' : 'sales',      /* F-04 有価物は仕入 */
+      category:'処分費', itemId:a.itemId, qty, unit:it.unit,
+      unitPrice:dp.price, priceType:dp.type, minApplied, amount,
+      contractId:ct.id, closed:false, red:false
+    });
+  } else {
+    out.push({
+      no, date:a.date, actualId:a.id, partnerId:a.partnerId, siteId:a.siteId,
+      kind:'sales', category:'処分費', itemId:a.itemId, qty, unit:it.unit,
+      unitPrice:null, priceType:null, minApplied:false, amount:0,
+      contractId:null, closed:false, red:false, warn:'契約・単価が未登録のため金額未確定'
+    });
+  }
+  /* F-02 引取は運搬費を別明細で計上 */
+  if (a.method === 'pickup' && ct) {
+    const tp = transportPrice(ct.id, a.siteId, a.vehicleId, a.date)
+            || transportPrice(ct.id, a.siteId, null, a.date);
+    if (tp) out.push({
+      no: no + '-T', date:a.date, actualId:a.id, partnerId:a.partnerId, siteId:a.siteId,
+      kind:'sales', category:'運搬費', itemId:null, qty:1, unit:'運行',
+      unitPrice:tp.price, priceType:'固定', minApplied:false, amount:tp.price,
+      contractId:ct.id, closed:false, red:false
+    });
+  }
+  /* F-03 追加料金（異物混入などの記録がある場合） */
+  if (a.extras && a.extras.length) {
+    a.extras.forEach((x, i) => {
+      const ex = EXTRA_CHARGES.find(e => e.id === x.id);
+      if (!ex) return;
+      out.push({
+        no: no + '-X' + (i+1), date:a.date, actualId:a.id, partnerId:a.partnerId, siteId:a.siteId,
+        kind:'sales', category:ex.name, itemId:null, qty:Number(x.qty) || 1, unit:ex.type,
+        unitPrice:ex.price, priceType:ex.type, minApplied:false,
+        amount:ex.price * (Number(x.qty) || 1), contractId:ct ? ct.id : null, closed:false, red:false
+      });
+    });
+  }
+  return out;
+}
+
+/* =========================================================================
+   B-02〜B-09 枠のロジック
+   ========================================================================= */
+/* その日の受入枠 */
+function capacityOf(ds) {
+  const ov = capacity.days[ds] || {};
+  const base = capacity.weekly[parseD(ds).getDay()];
+  if (ov.closed || (!base && !ov.slots)) {
+    return {closed:true, reason: ov.reason || '定休日', slots:[], override: !!ov.closed};
+  }
+  const slots = SLOTS.filter(s => s.active).map(s => {
+    const b = (base && base[s.id]) || null;
+    const o = (ov.slots && ov.slots[s.id]) || null;
+    if (!b && !o) return null;
+    return {
+      id:s.id, label:s.label,
+      trucks: o && o.trucks != null ? o.trucks : b.trucks,
+      weight: o && o.weight != null ? o.weight : b.weight,
+      override: !!o
+    };
+  }).filter(Boolean);
+  return {closed:false, reason: ov.reason || '', slots, override: !!ov.slots};
+}
+/* その日の引取枠上限 */
+function pickupLimitOf(ds) {
+  const ov = pickupCapacity.days[ds];
+  if (ov && ov.limit != null) return {limit:ov.limit, override:true, reason:ov.reason || ''};
+  const w = pickupCapacity.weekly[parseD(ds).getDay()];
+  return {limit: w == null ? 0 : w, override:false, reason:''};
+}
+/* その日の枠消化（承認済＝確定消費、申請中＝仮消費） */
+function usageOf(ds) {
+  const u = {slots:{}, items:{}, pickup:{fixed:0, pending:0}};
+  SLOTS.forEach(s => u.slots[s.id] = {trucks:0, weight:0, pTrucks:0, pWeight:0});
+  ITEMS.forEach(i => u.items[i.id] = {fixed:0, pending:0});
+  RESV.forEach(r => {
+    if (r.date !== ds) return;
+    if (['canceled','rejected'].includes(r.status)) return;
+    const isPending = r.status === 'pending';
+    if (r.method === 'drop') {
+      const s = u.slots[r.slotId]; if (!s) return;
+      const t = Number(r.vCount) || 1, w = declaredWeight(r);
+      if (isPending) { s.pTrucks += t; s.pWeight += w; } else { s.trucks += t; s.weight += w; }
+    } else {
+      if (isPending) u.pickup.pending++; else u.pickup.fixed++;
+    }
+    (r.lines || []).forEach(ln => {
+      const b = u.items[ln.itemId]; if (!b) return;
+      const q = toStd(ln.qty, ln.unit, ln.itemId);
+      if (isPending) b.pending += q; else b.fixed += q;
+    });
+  });
+  return u;
+}
+/* 枠メーター */
+function meter(label, used, pending, cap, unit) {
+  const total = used + pending;
+  const p1 = cap ? Math.min(100, used / cap * 100) : 0;
+  const p2 = cap ? Math.min(100 - p1, pending / cap * 100) : 0;
+  const cls = cap && total > cap ? 'over' : (cap && total / cap >= 0.8 ? 'near' : '');
+  return `<div class="meter ${cls}">
+    <div class="lbl"><span>${esc(label)}</span>
+      <b>${dec(used)}${pending ? ` <span style="color:var(--ink-sub)">(+申請中 ${dec(pending)})</span>` : ''} / ${dec(cap)} ${unit}</b></div>
+    <div class="bar"><span style="width:${p1}%"></span><span class="pend" style="width:${p2}%"></span></div>
+  </div>`;
+}
+
+/* =========================================================================
+   A-06 / C-08 / C-09 事前チェック（契約・許可・枠）
+   可否の確定判断は承認者が行う。ここでは判断材料の提示のみ
+   ========================================================================= */
+function checksOf(r) {
+  const out = [];
+  const em = partner(r.emitterId), ap = partner(r.applicantId);
+  const ct = activeContract(r.emitterId, r.date);
+  /* C-08 契約有無 */
+  if (ct) out.push({lv:'ok', m:'契約', t:`${ct.kind}／${ct.from}〜${ct.to}`});
+  else out.push({lv:'ng', m:'契約', t:`${em.name} との有効な委託契約が見つかりません（未締結または期間外）`});
+  /* 契約対象品目 */
+  if (ct) {
+    const ng = (r.lines || []).filter(ln => !ct.items.includes(ln.itemId));
+    if (ng.length) out.push({lv:'wa', m:'対象品目', t:`契約対象外の品目があります：${ng.map(l => item(l.itemId).name).join('、')}`});
+  }
+  /* C-09 許可有効性（申請者が運搬業者の場合） */
+  if (ap.id !== em.id || ap.type === 'carrier' || ap.type === 'both') {
+    const pm = ap.permit;
+    if (!pm) out.push({lv:'wa', m:'許可', t:`${ap.name} の収集運搬業許可が未登録です`});
+    else if (pm.expire < r.date) out.push({lv:'ng', m:'許可', t:`許可の有効期限が切れています（${pm.expire}）`});
+    else {
+      const soon = pm.expire <= D(60);
+      const ngItems = (r.lines || []).filter(ln => !pm.items.includes(item(ln.itemId).name));
+      if (ngItems.length) out.push({lv:'ng', m:'許可', t:`許可品目に含まれない品目があります：${ngItems.map(l => item(l.itemId).name).join('、')}`});
+      else out.push({lv: soon ? 'wa' : 'ok', m:'許可',
+        t:`${pm.pref}／${pm.no}／有効期限 ${pm.expire}${soon ? '（60日以内に期限切れ）' : ''}`});
+    }
+  }
+  /* 代理申請の可否（E-03） */
+  if (ap.id !== em.id) {
+    const rel = RELATIONS.find(x => x.carrierId === ap.id && x.emitterId === em.id);
+    if (!rel || !rel.proxy) out.push({lv:'ng', m:'代理', t:`${ap.name} は ${em.name} の代理予約が許可されていません`});
+    else out.push({lv:'ok', m:'代理', t:`取引関係マスタに登録あり（${rel.note}）`});
+  }
+  /* A-06 枠残 */
+  const cap = capacityOf(r.date);
+  if (cap.closed) out.push({lv:'ng', m:'稼働', t:`${fmtMd(r.date)} は受付停止（${cap.reason}）`});
+  else if (r.method === 'drop') {
+    const u = usageOf(r.date), s = cap.slots.find(x => x.id === r.slotId);
+    if (!s) out.push({lv:'ng', m:'枠', t:'指定の時間帯は設定されていません'});
+    else {
+      const t = u.slots[r.slotId].trucks + u.slots[r.slotId].pTrucks;
+      const w = u.slots[r.slotId].weight + u.slots[r.slotId].pWeight;
+      const over = t > s.trucks || w > s.weight;
+      out.push({lv: over ? 'wa' : 'ok', m:'枠',
+        t:`${s.label}：着車 ${dec(t)}/${s.trucks} 台、処理量 ${dec(w)}/${s.weight} t${over ? '　← 申請中を含めると上限超過' : ''}`});
+    }
+  } else {
+    const lim = pickupLimitOf(r.date), u = usageOf(r.date);
+    const c = u.pickup.fixed + u.pickup.pending;
+    out.push({lv: c > lim.limit ? 'wa' : 'ok', m:'引取枠',
+      t:`${fmtMd(r.date)}：${c}/${lim.limit} 件${c > lim.limit ? '　← 上限超過' : ''}`});
+  }
+  return out;
+}
+const chkHtml = c => `<div class="chk ${c.lv}"><span class="m">${c.lv === 'ok' ? '✓' : c.lv === 'wa' ? '⚠' : '✕'} ${esc(c.m)}</span><span>${esc(c.t)}</span></div>`;
+
+/* =========================================================================
+   画面定義・権限
+   ========================================================================= */
+const NAV = [
+  {sec:'受付・承認', items:[
+    {route:'approvals',  label:'承認キュー',   ico:'✅', badge:true},
+    {route:'board',      label:'予約一覧ボード', ico:'📋'},
+    {route:'proxy',      label:'代行入力',     ico:'📞'}
+  ]},
+  {sec:'枠・稼働', items:[
+    {route:'capacity',   label:'受入枠設定',   ico:'🗓'},
+    {route:'pickupcap',  label:'引取枠設定',   ico:'🚚'}
+  ]},
+  {sec:'実績', items:[
+    {route:'reception',  label:'入場受付・計量', ico:'⚖'},
+    {route:'actuals',    label:'実績一覧',     ico:'📈'}
+  ]},
+  {sec:'売上・会計', items:[
+    {route:'closing',    label:'締め処理・売上一覧', ico:'💴'}
+  ]},
+  {sec:'マスタ', items:[
+    {route:'m_partners',  label:'取引先',        ico:'🏢'},
+    {route:'m_sites',     label:'事業所・排出現場', ico:'📍'},
+    {route:'m_relations', label:'取引関係',      ico:'🔗'},
+    {route:'m_contracts', label:'契約',          ico:'📄'},
+    {route:'m_dprice',    label:'処分単価',      ico:'💰'},
+    {route:'m_tprice',    label:'運搬単価',      ico:'🛻'},
+    {route:'m_items',     label:'品目',          ico:'♻'},
+    {route:'m_vehicles',  label:'車格',          ico:'🚛'},
+    {route:'m_containers',label:'荷姿・容器',    ico:'📦'}
+  ]},
+  {sec:'システム', items:[
+    {route:'audit',       label:'監査ログ',      ico:'🧾'}
+  ]}
+];
+const ROLE_ALLOW = {
+  admin:  '*',
+  uke:    ['approvals','board','capacity','reception','actuals','m_items','m_vehicles','m_containers','audit'],
+  haisha: ['approvals','board','pickupcap','actuals','m_sites','audit'],
+  eigyo:  ['approvals','board','proxy','actuals','m_partners','m_sites','m_relations','m_contracts','m_dprice','m_tprice','m_items'],
+  keiryo: ['board','reception','actuals','m_items','m_vehicles','m_containers'],
+  keiri:  ['actuals','closing','m_partners','m_contracts','m_dprice','m_tprice','audit']
+};
+const allowed = route => ROLE_ALLOW[state.role] === '*' || ROLE_ALLOW[state.role].includes(route);
+
+/* =========================================================================
+   画面状態
+   ========================================================================= */
+const state = {
+  route:'approvals', base:'b1', role:'admin', modal:null,
+  approval:{sel:null, method:'all', keyword:''},
+  board:{date:D(0), tab:'all'},
+  proxy:null,
+  capacity:{month:ymOf(D(0)), tab:'cal'},
+  pickupcap:{month:ymOf(D(0))},
+  reception:{q:'', sel:null},
+  actuals:{from:D(-30), to:D(0), partnerId:'', itemId:'', method:'', diffOnly:false},
+  closing:{ym:ymOf(D(0)), expand:null},
+  master:{},
+  toasts:0
+};
+const me = () => {
+  const r = ROLES.find(x => x.id === state.role);
+  return {role:r.name, user:{admin:'管理者 佐々木', uke:'受入責任者 田中', haisha:'配車責任者 山本',
+    eigyo:'営業 中村', keiryo:'計量 小川', keiri:'経理 小林'}[state.role]};
+};
+
+/* =========================================================================
+   G-06 監査ログ
+   ========================================================================= */
+function audit(act, target, detail) {
+  const m = me(), now = new Date();
+  AUDIT.unshift({at:`${D(0)} ${pad(now.getHours())}:${pad(now.getMinutes())}`,
+    user:m.user, role:m.role, target, act, detail});
+}
+
+/* ---------- トースト ---------- */
+function toast(msg, kind) {
+  const host = document.getElementById('elToast');
+  const el = document.createElement('div');
+  el.className = 'toast-item' + (kind ? ' ' + kind : '');
+  el.textContent = msg;
+  host.appendChild(el);
+  setTimeout(() => el.remove(), 4200);
+}
+
+/* ---------- モーダル ---------- */
+let bsModal = null;
+function openModal(kind, payload, size) {
+  state.modal = Object.assign({kind}, payload || {});
+  const dlg = document.getElementById('elModalDialog');
+  dlg.className = 'modal-dialog modal-dialog-scrollable ' + (size || 'modal-lg');
+  renderModal();
+  if (!bsModal) {
+    bsModal = new bootstrap.Modal(document.getElementById('appModal'));
+    document.getElementById('appModal').addEventListener('hidden.bs.modal', () => { state.modal = null; });
+  }
+  bsModal.show();
+}
+function closeModal() { if (bsModal) bsModal.hide(); state.modal = null; }
+function renderModal() {
+  if (!state.modal) return;
+  const m = MODALS[state.modal.kind](state.modal);
+  document.getElementById('elModalTitle').innerHTML = m.title;
+  document.getElementById('elModalBody').innerHTML = m.body;
+  document.getElementById('elModalFoot').innerHTML = m.foot || '';
+}
+
+/* ---------- CSV 出力 ---------- */
+function downloadCsv(filename, rows) {
+  const csv = rows.map(r => r.map(v => {
+    const s = String(v ?? '');
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
+  }).join(',')).join('\r\n');
+  const blob = new Blob(['﻿' + csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+/* ---------- 共通パーツ ---------- */
+function pageHead(title, lead, ids, actions) {
+  return `<div class="page-h">
+    <div><h1>${title}</h1></div>
+    ${ids ? `<div class="fnids align-self-center">${ids.map(i => `<span class="fnid">${i}</span>`).join('')}</div>` : ''}
+    <div class="ms-auto d-flex gap-2 flex-wrap">${actions || ''}</div>
+  </div>
+  <p class="page-lead">${lead}</p>`;
+}
+function specNote(route) {
+  const n = SPEC_NOTES[route]; if (!n) return '';
+  const open = state.noteOpen === route;
+  return `<div class="specnote">
+    <button type="button" data-act="toggleNote" data-route="${route}">${open ? '▾' : '▸'} この画面の仕様メモ（第1期スコープ・確認事項）</button>
+    ${open ? `<div class="in">
+      ${n.rules ? `<h6>仕様</h6><ul>${n.rules.map(x => `<li>${x}</li>`).join('')}</ul>` : ''}
+      ${n.out   ? `<h6>第1期スコープ外</h6><ul>${n.out.map(x => `<li>${x}</li>`).join('')}</ul>` : ''}
+      ${n.q     ? `<h6>要確認</h6><ul>${n.q.map(x => `<li class="q">${x}</li>`).join('')}</ul>` : ''}
+    </div>` : ''}
+  </div>`;
+}
+function dl(pairs) {
+  return `<dl class="dl">${pairs.map(([k,v]) => `<dt>${k}</dt><dd>${v ?? '<span class="text-secondary">—</span>'}</dd>`).join('')}</dl>`;
+}
+function kpi(t, v, sub, cls) {
+  return `<div class="kpi ${cls || ''}"><div class="t">${t}</div><div class="v">${v}${sub ? ` <small>${sub}</small>` : ''}</div></div>`;
+}
+const pendingCount = () => RESV.filter(r => r.status === 'pending').length;
+
+/* =========================================================================
+   C-01 / C-02 承認キュー（本システムの中核画面）
+   ========================================================================= */
+/* C-02 代替可能な空き枠・空き日の候補提示 */
+function findAlternatives(r) {
+  const out = [];
+  for (let k = 1; k <= 14 && out.length < 4; k++) {
+    const ds = D(k);
+    if (ds === r.date) continue;
+    const cap = capacityOf(ds); if (cap.closed) continue;
+    const u = usageOf(ds);
+    if (r.method === 'drop') {
+      const need = Number(r.vCount) || 1, w = declaredWeight(r);
+      cap.slots.forEach(s => {
+        if (out.length >= 4) return;
+        const uu = u.slots[s.id];
+        if (uu.trucks + uu.pTrucks + need <= s.trucks && uu.weight + uu.pWeight + w <= s.weight)
+          out.push({date:ds, slotId:s.id, label:`${fmtMd(ds)} ${s.label}`,
+            rest:`残 着車${s.trucks - uu.trucks - uu.pTrucks}台／${dec(s.weight - uu.weight - uu.pWeight)}t`});
+      });
+    } else {
+      const lim = pickupLimitOf(ds);
+      const rest = lim.limit - u.pickup.fixed - u.pickup.pending;
+      if (rest > 0) out.push({date:ds, label:fmtMd(ds), rest:`残 ${rest} 件`});
+    }
+  }
+  return out;
+}
+
+function viewApprovals() {
+  const f = state.approval;
+  let list = RESV.filter(r => r.status === 'pending');
+  if (f.method !== 'all') list = list.filter(r => r.method === f.method);
+  if (f.keyword) {
+    const k = f.keyword;
+    list = list.filter(r => (r.no + partner(r.emitterId).name + partner(r.applicantId).name + linesText(r)).includes(k));
+  }
+  list.sort((a,b) => a.date === b.date ? (a.appliedAt < b.appliedAt ? -1 : 1) : (a.date < b.date ? -1 : 1));
+  if (!list.find(r => r.no === f.sel)) f.sel = list.length ? list[0].no : null;
+
+  const today = D(0), cap = capacityOf(today), u = usageOf(today), plim = pickupLimitOf(today);
+  const tTrucks = cap.slots.reduce((s,x) => s + x.trucks, 0);
+  const uTrucks = SLOTS.reduce((s,x) => s + (u.slots[x.id] ? u.slots[x.id].trucks : 0), 0);
+  const tW = cap.slots.reduce((s,x) => s + x.weight, 0);
+  const uW = SLOTS.reduce((s,x) => s + (u.slots[x.id] ? u.slots[x.id].weight : 0), 0);
+  const urgent = list.filter(r => r.date <= D(1)).length;
+
+  const rows = list.map(r => {
+    const ck = checksOf(r);
+    const ng = ck.filter(c => c.lv === 'ng').length, wa = ck.filter(c => c.lv === 'wa').length;
+    return `<tr class="clickable ${r.no === f.sel ? 'sel' : ''}" data-act="selApproval" data-no="${r.no}">
+      <td class="mono">${r.no}<div class="text-secondary" style="font-size:11px">${esc(r.appliedAt)}</div></td>
+      <td>${mBadge(r.method)}</td>
+      <td>${esc(partner(r.emitterId).name)}
+        ${r.applicantId !== r.emitterId ? `<div class="text-secondary" style="font-size:11px">代理：${esc(partner(r.applicantId).name)}</div>` : ''}</td>
+      <td class="mono">${fmtMd(r.date)}<div class="text-secondary" style="font-size:11px">${esc(resvTime(r))}</div></td>
+      <td style="font-size:13px">${esc(linesText(r))}</td>
+      <td>${ng ? `<span class="badge b-rejected">要確認 ${ng}</span>` : wa ? `<span class="badge b-pending">注意 ${wa}</span>` : `<span class="badge b-approved">OK</span>`}</td>
+    </tr>`;
+  }).join('');
+
+  return pageHead('承認キュー',
+    '取引先ポータル・代行入力から登録された予約／依頼は、すべてこの画面で承認または変更依頼を行います。自動確定は行いません。',
+    ['C-01','C-02','A-06','C-08','C-09','G-01']) +
+  specNote('approvals') +
+  `<div class="row g-3 mb-3">
+    <div class="col-6 col-lg-3">${kpi('承認待ち', pendingCount() + ' <small>件</small>', urgent ? `うち明日まで ${urgent} 件` : '', urgent ? 'alert-kpi' : '')}</div>
+    <div class="col-6 col-lg-3">${kpi('本日の着車（承認済）', `${uTrucks} <small>/ ${tTrucks} 台</small>`)}</div>
+    <div class="col-6 col-lg-3">${kpi('本日の処理量（申告ベース）', `${dec(uW)} <small>/ ${tW} t</small>`)}</div>
+    <div class="col-6 col-lg-3">${kpi('本日の引取', `${u.pickup.fixed} <small>/ ${plim.limit} 件</small>`)}</div>
+  </div>
+
+  <div class="filterbar">
+    <div class="f"><label>区分</label>
+      <select class="form-select form-select-sm" data-act="apFilter" data-key="method">
+        ${opts([{v:'all',t:'すべて'},{v:'drop',t:'持込'},{v:'pickup',t:'引取'}], f.method, false)}
+      </select></div>
+    <div class="f" style="flex:1"><label>キーワード（受付番号・取引先・品目）</label>
+      <input type="text" class="form-control form-control-sm" data-act="apFilter" data-key="keyword" value="${esc(f.keyword)}" placeholder="例：R-2026 / サンプル建設 / 汚泥"></div>
+    <div class="ms-auto align-self-center text-secondary" style="font-size:13px">
+      新着は責任者へ即時通知（G-01・通知チャネルは要確定）</div>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-12 col-xl-7">
+      <div class="table-wrap">
+        <table class="table table-hover mb-0">
+          <thead><tr><th>受付番号／申請日時</th><th>区分</th><th>排出事業者</th><th>希望日時</th><th>品目・申告数量</th><th>事前チェック</th></tr></thead>
+          <tbody>${rows || `<tr><td colspan="6" class="text-center text-secondary py-4">承認待ちはありません</td></tr>`}</tbody>
+        </table>
+      </div>
+    </div>
+    <div class="col-12 col-xl-5">
+      <div class="sticky-col">${f.sel ? approvalDetail(resv(f.sel)) : `<div class="empty">左の一覧から案件を選択してください</div>`}</div>
+    </div>
+  </div>`;
+}
+
+function approvalDetail(r) {
+  if (!r) return '';
+  const ck = checksOf(r), cap = capacityOf(r.date), u = usageOf(r.date);
+  const em = partner(r.emitterId), ap = partner(r.applicantId);
+  const meters = r.method === 'drop'
+    ? (cap.slots.filter(s => s.id === r.slotId).map(s =>
+        meter(`着車数（${s.label}）`, u.slots[s.id].trucks, u.slots[s.id].pTrucks, s.trucks, '台') +
+        meter(`処理量（${s.label}）`, u.slots[s.id].weight, u.slots[s.id].pWeight, s.weight, 't')).join('') || '<p class="hint">この日の時間帯枠が未設定です</p>')
+    : meter('引取件数（日次）', u.pickup.fixed, u.pickup.pending, pickupLimitOf(r.date).limit, '件');
+  const itemMeters = (r.lines || []).filter(ln => capacity.itemCaps[ln.itemId] != null).map(ln =>
+    meter(`品目別上限：${item(ln.itemId).name}`, u.items[ln.itemId].fixed, u.items[ln.itemId].pending,
+          capacity.itemCaps[ln.itemId], item(ln.itemId).unit)).join('');
+
+  const base = [
+    ['受付番号', `<span class="mono">${r.no}</span>`],
+    ['区分', mBadge(r.method)],
+    ['排出事業者', esc(em.name)],
+    ['申請者', `${esc(ap.name)}${ap.id !== em.id ? '（運搬業者による代理申請）' : ''}<div class="text-secondary" style="font-size:12px">${esc(r.via)} ／ ${esc(r.appliedAt)}</div>`]
+  ];
+  const detail = r.method === 'drop'
+    ? [['搬入日', fmtJp(r.date)], ['時間帯', esc(slotDef(r.slotId).label)],
+       ['車格・台数', `${esc(vehicle(r.vehicleId).name)} × ${r.vCount} 台`],
+       ['車両ナンバー', esc(r.plate)],
+       ['ドライバー', `${esc(r.driver)}（${esc(r.driverTel)}）`]]
+    : [['引取希望日', fmtJp(r.date)], ['希望時間', `${esc(r.startAt)} 〜 ${esc(r.endAt)}`],
+       ['引取場所', `${esc(site(r.siteId).name)}<div class="text-secondary" style="font-size:12px">${esc(site(r.siteId).addr)}</div>`],
+       ['現場条件', `道幅 ${esc(site(r.siteId).road)} ／ 重機 ${esc(site(r.siteId).machine)} ／ 立会 ${esc(site(r.siteId).attend)}`],
+       ['荷姿・容器', esc(container(r.containerId).name || '—')]];
+  const lines = `<table class="table table-sm mb-0"><thead><tr><th>品目</th><th class="num">申告数量</th><th>備考</th></tr></thead><tbody>
+    ${(r.lines || []).map(ln => `<tr><td>${esc(item(ln.itemId).name)}${item(ln.itemId).valuable ? ' <span class="badge b-neutral b-sq">有価物</span>' : ''}</td>
+      <td class="num">${dec(ln.qty)} ${esc(ln.unit)}</td><td style="font-size:13px">${esc(ln.memo || '—')}</td></tr>`).join('')}
+  </tbody></table>`;
+
+  return `<div class="card mb-3">
+    <div class="card-head">${r.no}　${mBadge(r.method)}　${stBadge(r.status)}</div>
+    <div class="card-body">
+      ${dl(base.concat(detail))}
+      <h6 class="mt-3 mb-2" style="font-size:14px;font-weight:700">申告内容</h6>
+      <div class="table-wrap">${lines}</div>
+      <h6 class="mt-3 mb-2" style="font-size:14px;font-weight:700">事前チェック</h6>
+      <div class="d-flex flex-column gap-2">${ck.map(chkHtml).join('')}</div>
+      <h6 class="mt-3 mb-2" style="font-size:14px;font-weight:700">枠の消化状況（${fmtMd(r.date)}）</h6>
+      ${meters}${itemMeters}
+      <div class="divline"></div>
+      <div class="d-flex gap-2 flex-wrap">
+        <button class="btn btn-primary" data-act="openApprove" data-no="${r.no}">承認する</button>
+        <button class="btn btn-outline-danger" data-act="openReject" data-no="${r.no}">変更依頼（差戻し）</button>
+        <button class="btn btn-outline-secondary ms-auto" data-act="openResvDetail" data-no="${r.no}">全項目を表示</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ---------- 承認モーダル ---------- */
+var MODALS_APPROVE = payload => {
+  const r = resv(payload.no), isDrop = r.method === 'drop';
+  const cap = capacityOf(payload.date || r.date);
+  const u = usageOf(payload.date || r.date);
+  const slotOpts = cap.slots.map(s => {
+    const uu = u.slots[s.id];
+    return {v:s.id, t:`${s.label}（残 着車${s.trucks - uu.trucks - uu.pTrucks}台／${dec(s.weight - uu.weight - uu.pWeight)}t）`};
+  });
+  const body = isDrop
+    ? `<p class="hint">承認すると予約が確定し、取引先へ通知されます（G-02）。必要に応じて時間帯を調整できます（C-04）。</p>
+       <div class="mb-3"><label class="form-label">搬入日</label>
+         <input type="date" class="form-control" data-mod="date" value="${payload.date || r.date}"></div>
+       <div class="mb-3"><label class="form-label">時間帯<span class="req">必須</span></label>
+         <select class="form-select" data-mod="slotId">${opts(slotOpts, payload.slotId || r.slotId, false)}</select></div>
+       <div class="mb-3"><label class="form-label">取引先への連絡事項<span class="opt">任意</span></label>
+         <textarea class="form-control" rows="2" data-mod="comment" placeholder="例：場内は徐行でお願いします">${esc(payload.comment || '')}</textarea></div>`
+    : `<p class="hint">引取依頼の承認では<b>訪問日時の入力が必須</b>です（C-05／A-09）。第1期では車両・ドライバーへの割当編成はシステム外で行います。</p>
+       <div class="row g-2 mb-3">
+         <div class="col-12 col-sm-5"><label class="form-label">訪問日<span class="req">必須</span></label>
+           <input type="date" class="form-control" data-mod="visitDate" value="${payload.visitDate || r.date}"></div>
+         <div class="col-6 col-sm-3"><label class="form-label">開始<span class="req">必須</span></label>
+           <input type="time" class="form-control" step="1800" data-mod="visitFrom" value="${payload.visitFrom || r.startAt}"></div>
+         <div class="col-6 col-sm-3"><label class="form-label">終了<span class="req">必須</span></label>
+           <input type="time" class="form-control" step="1800" data-mod="visitTo" value="${payload.visitTo || r.endAt}"></div>
+       </div>
+       <div class="mb-3"><label class="form-label">集荷手配メモ<span class="opt">任意</span></label>
+         <input type="text" class="form-control" data-mod="dispatchNote" value="${esc(payload.dispatchNote || '')}" placeholder="例：4t車・ドライバー中村で手配済（台帳）">
+         <div class="form-text">第1期は台帳・電話での手配内容を記録するだけの欄です。配車ボードは第2期。</div></div>
+       <div class="mb-0"><label class="form-label">取引先への連絡事項<span class="opt">任意</span></label>
+         <textarea class="form-control" rows="2" data-mod="comment">${esc(payload.comment || '')}</textarea></div>`;
+  const warn = checksOf(r).filter(c => c.lv !== 'ok');
+  return {
+    title:`${r.no} を承認`,
+    body: (warn.length ? `<div class="d-flex flex-column gap-2 mb-3">${warn.map(chkHtml).join('')}
+      <div class="text-secondary" style="font-size:13px">※ 事前チェックに注意がありますが、可否の判断は承認者が行います。</div></div>` : '') + body,
+    foot:`<button class="btn btn-outline-secondary" data-act="closeModal">キャンセル</button>
+          <button class="btn btn-primary" data-act="doApprove" data-no="${r.no}">この内容で承認する</button>`
+  };
+};
+
+/* ---------- 変更依頼モーダル ---------- */
+var MODALS_REJECT = payload => {
+  const r = resv(payload.no), alts = findAlternatives(r);
+  return {
+    title:`${r.no} に変更依頼（差戻し）`,
+    body:`<p class="hint">変更依頼は取引先へ通知され、取引先が内容を修正して再申請します（A-07／G-02）。</p>
+      <div class="mb-3"><label class="form-label">理由<span class="req">必須</span></label>
+        <textarea class="form-control" rows="3" data-mod="reason" placeholder="例：指定日の午前枠が満車のため、別日への変更をお願いします。">${esc(payload.reason || '')}</textarea>
+        ${payload.err ? `<div class="text-danger mt-1" style="font-size:13px">${esc(payload.err)}</div>` : ''}</div>
+      <label class="form-label">代替候補（クリックで理由欄に追記）</label>
+      ${alts.length ? `<div class="d-flex flex-wrap gap-2">${alts.map(a =>
+        `<button type="button" class="btn btn-outline-primary btn-sm" data-act="pickAlt" data-label="${esc(a.label)}" data-rest="${esc(a.rest)}">
+          ${esc(a.label)}<span class="text-secondary ms-2" style="font-size:12px">${esc(a.rest)}</span></button>`).join('')}</div>`
+        : '<p class="hint">14日以内に空き枠がありません。</p>'}`,
+    foot:`<button class="btn btn-outline-secondary" data-act="closeModal">キャンセル</button>
+          <button class="btn btn-outline-danger" data-act="doReject" data-no="${r.no}">変更依頼を送る</button>`
+  };
+};
+
+/* ---------- 予約詳細モーダル（全項目） ---------- */
+var MODALS_RESV = payload => {
+  const r = resv(payload.no);
+  const rows = [
+    ['受付番号', r.no], ['ステータス', stBadge(r.status)], ['区分', methodLabel(r.method)],
+    ['排出事業者', esc(partner(r.emitterId).name)], ['申請者', esc(partner(r.applicantId).name)],
+    ['申請経路', esc(r.via)], ['申請日時', esc(r.appliedAt)],
+    ['日付', fmtJp(r.date)], ['時間', esc(resvTime(r))]
+  ];
+  if (r.method === 'drop') rows.push(
+    ['車格・台数', `${esc(vehicle(r.vehicleId).name)} × ${r.vCount} 台`],
+    ['車両ナンバー', esc(r.plate)], ['ドライバー', `${esc(r.driver)}（${esc(r.driverTel)}）`]);
+  else rows.push(
+    ['引取場所', `${esc(site(r.siteId).name)}／${esc(site(r.siteId).addr)}`],
+    ['現場条件', `道幅 ${esc(site(r.siteId).road)}／重機 ${esc(site(r.siteId).machine)}／立会 ${esc(site(r.siteId).attend)}`],
+    ['荷姿・容器', esc(container(r.containerId).name || '—')]);
+  (r.lines || []).forEach((ln,i) => rows.push([`品目 ${i+1}`, esc(lineText(ln))]));
+  if (r.approvedAt) rows.push(['承認', `${esc(r.approvedAt)}／${esc(r.approvedBy)}`]);
+  if (r.visitDate) rows.push(['訪問日時（確定）', `${fmtJp(r.visitDate)} ${esc(r.visitFrom)}〜${esc(r.visitTo)}`]);
+  if (r.dispatchNote) rows.push(['集荷手配メモ', esc(r.dispatchNote)]);
+  if (r.rejectReason) rows.push(['変更依頼の理由', `${esc(r.rejectReason)}<div class="text-secondary" style="font-size:12px">${esc(r.rejectedAt || '')} ${esc(r.rejectedBy || '')}</div>`]);
+  if (r.arrivedAt) rows.push(['入場時刻', esc(r.arrivedAt)]);
+  if (r.actualId) rows.push(['実績番号', `<span class="mono">${esc(r.actualId)}</span>`]);
+  const ck = checksOf(r);
+  return {
+    title:`予約詳細 ${r.no}`,
+    body: dl(rows) + `<h6 class="mt-3 mb-2" style="font-size:14px;font-weight:700">事前チェック</h6>
+      <div class="d-flex flex-column gap-2">${ck.map(chkHtml).join('')}</div>`,
+    foot:`<button class="btn btn-outline-secondary" data-act="closeModal">閉じる</button>`
+  };
+};
+
+/* =========================================================================
+   C-03 / C-04 / C-05 予約一覧ボード（日別）
+   ========================================================================= */
+function viewBoard() {
+  const b = state.board, ds = b.date;
+  const cap = capacityOf(ds), u = usageOf(ds), plim = pickupLimitOf(ds);
+  const all = RESV.filter(r => (r.method === 'drop' ? r.date : (r.visitDate || r.date)) === ds
+                            && !['pending','rejected'].includes(r.status));
+  const drops = all.filter(r => r.method === 'drop');
+  const picks = all.filter(r => r.method === 'pickup')
+    .sort((x,y) => (x.visitFrom || x.startAt) < (y.visitFrom || y.startAt) ? -1 : 1);
+
+  const dropRow = r => `<tr>
+    <td class="mono">${r.no}</td>
+    <td>${esc(partner(r.emitterId).name)}${r.applicantId !== r.emitterId ? `<div class="text-secondary" style="font-size:11px">運搬：${esc(partner(r.applicantId).name)}</div>` : ''}</td>
+    <td style="font-size:13px">${esc(linesText(r))}</td>
+    <td>${esc(vehicle(r.vehicleId).name)} ×${r.vCount}<div class="text-secondary" style="font-size:11px">${esc(r.plate)}</div></td>
+    <td style="font-size:13px">${esc(r.driver)}<div class="text-secondary" style="font-size:11px">${esc(r.driverTel)}</div></td>
+    <td>${stBadge(r.status)}${r.arrivedAt ? `<div class="text-secondary" style="font-size:11px">入場 ${esc(r.arrivedAt)}</div>` : ''}</td>
+    <td class="text-end text-nowrap">
+      <button class="btn btn-outline-secondary btn-sm" data-act="openResvDetail" data-no="${r.no}">詳細</button>
+      ${r.status === 'approved' ? `<button class="btn btn-outline-primary btn-sm ms-1" data-act="openChangeSlot" data-no="${r.no}">時間帯変更</button>
+      <button class="btn btn-outline-danger btn-sm ms-1" data-act="openCancel" data-no="${r.no}">取消</button>` : ''}
+    </td></tr>`;
+
+  const dropBlocks = cap.closed
+    ? `<div class="empty">${fmtJp(ds)} は受付停止（${esc(cap.reason)}）</div>`
+    : cap.slots.map(s => {
+        const rs = drops.filter(r => r.slotId === s.id);
+        const uu = u.slots[s.id];
+        return `<div class="card mb-3">
+          <div class="card-head">${s.label}
+            <span class="sub">着車 ${uu.trucks}/${s.trucks} 台　処理量（申告）${dec(uu.weight)}/${s.weight} t${s.override ? '　<span class="badge b-pending b-sq">枠を上書き中</span>' : ''}</span>
+            <span class="ms-auto" style="width:220px">${meter('', uu.trucks, uu.pTrucks, s.trucks, '台')}</span>
+          </div>
+          ${rs.length ? `<table class="table table-hover mb-0">
+            <thead><tr><th>受付番号</th><th>排出事業者</th><th>品目・申告数量</th><th>車格・車番</th><th>ドライバー</th><th>ステータス</th><th></th></tr></thead>
+            <tbody>${rs.map(dropRow).join('')}</tbody></table>`
+          : `<div class="p-3 text-secondary" style="font-size:14px">この時間帯の予約はありません</div>`}
+        </div>`;
+      }).join('');
+
+  const pickBlock = `<div class="card mb-3">
+    <div class="card-head">引取（集荷）
+      <span class="sub">${u.pickup.fixed}/${plim.limit} 件${plim.override ? `　<span class="badge b-pending b-sq">上書き：${esc(plim.reason)}</span>` : ''}</span></div>
+    ${picks.length ? `<table class="table table-hover mb-0">
+      <thead><tr><th>受付番号</th><th>訪問日時</th><th>排出事業者・現場</th><th>品目・想定数量</th><th>現場条件</th><th>集荷手配メモ</th><th>ステータス</th><th></th></tr></thead>
+      <tbody>${picks.map(r => `<tr>
+        <td class="mono">${r.no}</td>
+        <td class="mono">${r.visitFrom ? `${esc(r.visitFrom)} 〜 ${esc(r.visitTo)}` : `<span class="text-secondary">未設定</span>`}</td>
+        <td>${esc(partner(r.emitterId).name)}<div class="text-secondary" style="font-size:11px">${esc(site(r.siteId).name)}／${esc(site(r.siteId).addr)}</div></td>
+        <td style="font-size:13px">${esc(linesText(r))}</td>
+        <td style="font-size:12px">道幅 ${esc(site(r.siteId).road)}／重機 ${esc(site(r.siteId).machine)}／立会 ${esc(site(r.siteId).attend)}</td>
+        <td style="font-size:12px">${esc(r.dispatchNote || '—')}</td>
+        <td>${stBadge(r.status)}</td>
+        <td class="text-end text-nowrap">
+          <button class="btn btn-outline-secondary btn-sm" data-act="openResvDetail" data-no="${r.no}">詳細</button>
+          ${r.status === 'approved' ? `<button class="btn btn-outline-primary btn-sm ms-1" data-act="openChangeVisit" data-no="${r.no}">訪問日時変更</button>
+          <button class="btn btn-outline-danger btn-sm ms-1" data-act="openCancel" data-no="${r.no}">取消</button>` : ''}
+        </td></tr>`).join('')}</tbody></table>`
+    : `<div class="p-3 text-secondary" style="font-size:14px">この日の引取はありません</div>`}
+  </div>`;
+
+  return pageHead('予約一覧ボード',
+    '承認済の持込・引取を日別に表示します。受入順序（時間帯）の調整、引取の訪問日時変更、取消をここで行います。',
+    ['C-03','C-04','C-05'],
+    `<button class="btn btn-outline-primary btn-sm" data-act="exportBoard">CSV出力</button>`) +
+  specNote('board') +
+  `<div class="filterbar">
+    <div class="d-flex align-items-center gap-2">
+      <button class="btn btn-outline-secondary btn-sm" data-act="boardShift" data-n="-1">← 前日</button>
+      <input type="date" class="form-control form-control-sm" style="width:170px" data-act="boardDate" value="${ds}">
+      <button class="btn btn-outline-secondary btn-sm" data-act="boardShift" data-n="1">翌日 →</button>
+      <button class="btn btn-outline-primary btn-sm" data-act="boardToday">本日</button>
+    </div>
+    <div class="ms-2 fw-bold">${fmtJp(ds)}${ds === D(0) ? '　<span class="badge b-method b-sq">本日</span>' : ''}
+      ${cap.closed ? `　<span class="badge b-rejected">受付停止：${esc(cap.reason)}</span>` : ''}</div>
+    <div class="ms-auto">
+      <div class="btn-group btn-group-sm" role="group">
+        ${[['all','すべて'],['drop','持込'],['pickup','引取']].map(([v,t]) =>
+          `<button type="button" class="btn ${b.tab === v ? 'btn-primary' : 'btn-outline-secondary'}" data-act="boardTab" data-tab="${v}">${t}</button>`).join('')}
+      </div>
+    </div>
+  </div>
+  ${b.tab !== 'pickup' ? dropBlocks : ''}
+  ${b.tab !== 'drop' ? pickBlock : ''}`;
+}
+
+/* ---------- 時間帯変更（C-04） ---------- */
+var MODALS_CHANGESLOT = payload => {
+  const r = resv(payload.no);
+  const ds = payload.date || r.date;
+  const cap = capacityOf(ds), u = usageOf(ds);
+  const slotOpts = cap.slots.map(s => {
+    const uu = u.slots[s.id];
+    return {v:s.id, t:`${s.label}（残 着車${s.trucks - uu.trucks - uu.pTrucks}台）`};
+  });
+  return {
+    title:`${r.no} の受入時間帯を調整`,
+    body:`<p class="hint">承認済予約の時間帯を、受入責任者が調整します。変更内容は取引先へ通知されます。</p>
+      <div class="mb-3"><label class="form-label">搬入日</label>
+        <input type="date" class="form-control" data-mod="date" value="${ds}"></div>
+      <div class="mb-3"><label class="form-label">時間帯</label>
+        <select class="form-select" data-mod="slotId">${opts(slotOpts, payload.slotId || r.slotId, false)}</select></div>
+      <div class="mb-0"><label class="form-label">変更理由<span class="req">必須</span></label>
+        <input type="text" class="form-control" data-mod="reason" value="${esc(payload.reason || '')}" placeholder="例：午前の着車が集中したため">
+        ${payload.err ? `<div class="text-danger mt-1" style="font-size:13px">${esc(payload.err)}</div>` : ''}</div>`,
+    foot:`<button class="btn btn-outline-secondary" data-act="closeModal">キャンセル</button>
+          <button class="btn btn-primary" data-act="doChangeSlot" data-no="${r.no}">変更する</button>`
+  };
+};
+
+/* ---------- 訪問日時変更（C-05） ---------- */
+var MODALS_CHANGEVISIT = payload => {
+  const r = resv(payload.no);
+  return {
+    title:`${r.no} の訪問日時を変更`,
+    body:`<p class="hint">変更した訪問日時は取引先へ通知されます（A-09／G-03）。</p>
+      <div class="row g-2 mb-3">
+        <div class="col-12 col-sm-5"><label class="form-label">訪問日</label>
+          <input type="date" class="form-control" data-mod="visitDate" value="${payload.visitDate || r.visitDate || r.date}"></div>
+        <div class="col-6 col-sm-3"><label class="form-label">開始</label>
+          <input type="time" class="form-control" step="1800" data-mod="visitFrom" value="${payload.visitFrom || r.visitFrom || r.startAt}"></div>
+        <div class="col-6 col-sm-3"><label class="form-label">終了</label>
+          <input type="time" class="form-control" step="1800" data-mod="visitTo" value="${payload.visitTo || r.visitTo || r.endAt}"></div>
+      </div>
+      <div class="mb-3"><label class="form-label">集荷手配メモ<span class="opt">任意</span></label>
+        <input type="text" class="form-control" data-mod="dispatchNote" value="${esc(payload.dispatchNote != null ? payload.dispatchNote : (r.dispatchNote || ''))}"></div>
+      <div class="mb-0"><label class="form-label">変更理由<span class="req">必須</span></label>
+        <input type="text" class="form-control" data-mod="reason" value="${esc(payload.reason || '')}" placeholder="例：同方面の集荷とルートを合わせるため">
+        ${payload.err ? `<div class="text-danger mt-1" style="font-size:13px">${esc(payload.err)}</div>` : ''}</div>`,
+    foot:`<button class="btn btn-outline-secondary" data-act="closeModal">キャンセル</button>
+          <button class="btn btn-primary" data-act="doChangeVisit" data-no="${r.no}">変更する</button>`
+  };
+};
+
+/* ---------- 取消 ---------- */
+var MODALS_CANCEL = payload => {
+  const r = resv(payload.no);
+  return {
+    title:`${r.no} を取消`,
+    body:`<p>${fmtJp(r.date)}／${esc(methodLabel(r.method))}／${esc(partner(r.emitterId).name)}<br>${esc(linesText(r))}</p>
+      <div class="mb-0"><label class="form-label">取消理由<span class="req">必須</span></label>
+        <input type="text" class="form-control" data-mod="reason" value="${esc(payload.reason || '')}" placeholder="例：取引先からの電話連絡により取消">
+        ${payload.err ? `<div class="text-danger mt-1" style="font-size:13px">${esc(payload.err)}</div>` : ''}</div>
+      <div class="form-text mt-2">取消すると枠が解放されます。締切後（既定：前日17時）の取消は社内担当のみ操作可（A-07）。</div>`,
+    foot:`<button class="btn btn-outline-secondary" data-act="closeModal">やめる</button>
+          <button class="btn btn-outline-danger" data-act="doCancel" data-no="${r.no}">取消する</button>`
+  };
+};
+
+/* =========================================================================
+   C-06 代行入力フォーム（営業が電話受付を入力）
+   取引先ポータルと同一の登録内容。登録後は同様に承認待ちとなる
+   ========================================================================= */
+const blankLine = () => ({itemId:'', qty:'', unit:'', memo:''});
+const blankProxy = () => ({
+  applicantId:'', emitterId:'', method:'', date:'', slotId:'',
+  startAt:'', endAt:'', siteId:'', containerId:'',
+  lines:[blankLine()],
+  vehicleId:'', vCount:'1', driver:'', driverTel:'', plate:'',
+  memo:'', errors:[]
+});
+function nextResvNo() {
+  const n = RESV.map(r => Number(r.no.slice(-4))).reduce((a,b) => Math.max(a,b), 0);
+  return 'R-2026-' + pad(n + 1);
+}
+/* 申請者が代理できる排出事業者 */
+function emitterOptionsFor(applicantId) {
+  const ap = partner(applicantId);
+  if (!ap.id) return [];
+  const out = [];
+  if (ap.type === 'emitter' || ap.type === 'both') out.push({v:ap.id, t:ap.name + '（自社排出）'});
+  RELATIONS.filter(r => r.carrierId === applicantId && r.proxy && r.emitterId !== applicantId)
+    .forEach(r => out.push({v:r.emitterId, t:partner(r.emitterId).name + '（受託）'}));
+  return out;
+}
+
+function viewProxy() {
+  if (!state.proxy) state.proxy = blankProxy();
+  const d = state.proxy;
+  const emOpts = emitterOptionsFor(d.applicantId);
+  const siteOpts = SITES.filter(s => s.partnerId === d.emitterId).map(s => ({v:s.id, t:`${s.name}（${s.addr}）`}));
+  const cap = d.date ? capacityOf(d.date) : null;
+  const u = d.date ? usageOf(d.date) : null;
+  const slotOpts = cap && !cap.closed ? cap.slots.map(s => {
+    const uu = u.slots[s.id];
+    return {v:s.id, t:`${s.label}（残 着車${s.trucks - uu.trucks - uu.pTrucks}台／${dec(s.weight - uu.weight - uu.pWeight)}t）`};
+  }) : [];
+
+  const err = d.errors.length ? `<div class="alert alert-danger" role="alert" id="elErr" tabindex="-1">
+    <b>入力内容を確認してください</b><ul class="mb-0 mt-2">${d.errors.map(e => `<li>${esc(e)}</li>`).join('')}</ul></div>` : '';
+
+  const lines = d.lines.map((ln,i) => `<div class="border rounded p-3 mb-2">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <b style="font-size:13px;color:var(--ink-sub)">品目 ${i+1}</b>
+      ${d.lines.length > 1 ? `<button class="btn btn-outline-danger btn-sm" data-act="pxRemoveLine" data-idx="${i}">削除</button>` : ''}
+    </div>
+    <div class="row g-2">
+      <div class="col-12 col-md-5"><label class="form-label">品目<span class="req">必須</span></label>
+        <select class="form-select" data-px="lines.${i}.itemId">${opts(o1(ITEMS), ln.itemId)}</select></div>
+      <div class="col-6 col-md-3"><label class="form-label">申告数量<span class="req">必須</span></label>
+        <input type="text" inputmode="decimal" class="form-control" data-px="lines.${i}.qty" value="${esc(ln.qty)}" placeholder="例：1.2"></div>
+      <div class="col-6 col-md-4"><label class="form-label">単位<span class="req">必須</span></label>
+        <select class="form-select" data-px="lines.${i}.unit">${opts(UNITS.map(x => ({v:x,t:x})), ln.unit)}</select></div>
+    </div>
+    <div class="mt-2"><label class="form-label">備考<span class="opt">任意</span></label>
+      <input type="text" class="form-control" data-px="lines.${i}.memo" value="${esc(ln.memo)}" placeholder="荷姿、搬出場所、当日の連絡事項など"></div>
+  </div>`).join('');
+
+  const dropFields = `<div class="card mb-3"><div class="card-head">車両・ドライバー</div><div class="card-body">
+    <div class="row g-3">
+      <div class="col-12 col-md-6"><label class="form-label">車格<span class="req">必須</span></label>
+        <select class="form-select" data-px="vehicleId">${opts(o1(VEHICLES), d.vehicleId)}</select></div>
+      <div class="col-6 col-md-3"><label class="form-label">台数<span class="req">必須</span></label>
+        <input type="text" inputmode="numeric" class="form-control" data-px="vCount" value="${esc(d.vCount)}"></div>
+      <div class="col-6 col-md-3"><label class="form-label">車両ナンバー<span class="req">必須</span></label>
+        <input type="text" class="form-control" data-px="plate" value="${esc(d.plate)}" placeholder="大宮 100 あ 12-34"></div>
+      <div class="col-12 col-md-6"><label class="form-label">ドライバー名<span class="req">必須</span></label>
+        <input type="text" class="form-control" data-px="driver" value="${esc(d.driver)}" placeholder="例：佐藤 健"></div>
+      <div class="col-12 col-md-6"><label class="form-label">連絡先<span class="req">必須</span></label>
+        <input type="tel" class="form-control" data-px="driverTel" value="${esc(d.driverTel)}" placeholder="090-0000-0000"></div>
+    </div></div></div>`;
+
+  const pickFields = `<div class="card mb-3"><div class="card-head">引取場所・荷姿</div><div class="card-body">
+    <div class="mb-3"><label class="form-label">排出現場<span class="req">必須</span></label>
+      <select class="form-select" data-px="siteId">${opts(siteOpts, d.siteId, d.emitterId ? '選択してください' : '先に排出事業者を選択')}</select>
+      ${d.siteId ? `<div class="form-text">道幅 ${esc(site(d.siteId).road)}／重機 ${esc(site(d.siteId).machine)}／立会 ${esc(site(d.siteId).attend)}${site(d.siteId).note ? '／' + esc(site(d.siteId).note) : ''}</div>` : ''}
+      <div class="form-text">未登録の現場は「事業所・排出現場マスタ」で追加してください（スポット現場も登録可）。</div></div>
+    <div class="mb-0"><label class="form-label">荷姿・容器<span class="opt">任意</span></label>
+      <select class="form-select" data-px="containerId">${opts(o1(CONTAINERS), d.containerId)}</select></div>
+  </div></div>`;
+
+  return pageHead('代行入力',
+    '電話で受けた予約・集荷依頼を営業が代行入力します。取引先ポータルからの申請と同じく、登録後は承認待ちになります。',
+    ['C-06','A-04','A-05','A-06'],
+    `<button class="btn btn-outline-secondary btn-sm" data-act="pxReset">入力内容をクリア</button>`) +
+  specNote('proxy') + err +
+  `<div class="row g-3"><div class="col-12 col-xl-8">
+    <div class="card mb-3"><div class="card-head">申請元</div><div class="card-body">
+      <div class="row g-3">
+        <div class="col-12 col-md-6"><label class="form-label">申請者（電話をかけてきた取引先）<span class="req">必須</span></label>
+          <select class="form-select" data-px="applicantId">${opts(PARTNERS.map(p => ({v:p.id, t:`${p.name}（${{emitter:'排出事業者', carrier:'運搬業者', both:'排出／運搬'}[p.type]}）`})), d.applicantId)}</select></div>
+        <div class="col-12 col-md-6"><label class="form-label">排出事業者<span class="req">必須</span></label>
+          <select class="form-select" data-px="emitterId">${opts(emOpts, d.emitterId, d.applicantId ? '選択してください' : '先に申請者を選択')}</select>
+          <div class="form-text">運搬業者が代理で予約できる範囲は取引関係マスタ（E-03）で定義します。</div></div>
+      </div>
+      <div class="mt-3"><span class="form-label d-block">受入方法<span class="req">必須</span></span>
+        <div class="btn-group" role="group">
+          ${[['pickup','引取（当社が集荷に行く）'],['drop','持込（取引先が搬入）']].map(([v,t]) =>
+            `<button type="button" class="btn ${d.method === v ? 'btn-primary' : 'btn-outline-secondary'}" data-act="pxMethod" data-v="${v}">${t}</button>`).join('')}
+        </div></div>
+    </div></div>
+
+    ${d.method ? `<div class="card mb-3"><div class="card-head">日時</div><div class="card-body">
+      <div class="mb-3"><label class="form-label">${d.method === 'drop' ? '搬入日' : '引取希望日'}<span class="req">必須</span></label>
+        <input type="date" class="form-control" style="max-width:220px" data-px="date" value="${d.date}">
+        ${cap && cap.closed ? `<div class="text-danger mt-1" style="font-size:13px">この日は受付停止（${esc(cap.reason)}）</div>` : ''}</div>
+      ${d.method === 'drop'
+        ? `<div class="mb-0"><label class="form-label">時間帯<span class="req">必須</span></label>
+            <select class="form-select" style="max-width:420px" data-px="slotId">${opts(slotOpts, d.slotId, d.date ? '選択してください' : '先に搬入日を選択')}</select></div>`
+        : `<div class="row g-2" style="max-width:420px">
+            <div class="col-6"><label class="form-label">希望開始<span class="req">必須</span></label>
+              <input type="time" step="1800" class="form-control" data-px="startAt" value="${d.startAt}"></div>
+            <div class="col-6"><label class="form-label">希望終了<span class="req">必須</span></label>
+              <input type="time" step="1800" class="form-control" data-px="endAt" value="${d.endAt}"></div>
+            <div class="form-text">引取の時間は希望として受け付け、確定時刻は承認時に返答します（C-05）。</div></div>`}
+    </div></div>
+    ${d.method === 'pickup' ? pickFields : ''}
+    <div class="card mb-3"><div class="card-head">廃棄物の内容</div><div class="card-body">
+      ${lines}
+      <button class="btn btn-outline-primary btn-sm" data-act="pxAddLine">＋ 品目を追加</button>
+    </div></div>
+    ${d.method === 'drop' ? dropFields : ''}
+    <div class="card mb-3"><div class="card-head">社内メモ</div><div class="card-body">
+      <textarea class="form-control" rows="2" data-px="memo" placeholder="電話受付の経緯、先方担当者名など">${esc(d.memo)}</textarea>
+    </div></div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-primary" data-act="pxSubmit">この内容で登録する（承認待ちになります）</button>
+    </div>` : `<div class="card"><div class="card-body text-secondary">受入方法を選ぶと、日時と内容の入力欄が表示されます。</div></div>`}
+  </div>
+
+  <div class="col-12 col-xl-4"><div class="sticky-col">
+    <div class="card"><div class="card-head">事前チェック（A-06）</div><div class="card-body">
+      ${proxyPreview(d)}
+    </div></div>
+  </div></div></div>`;
+}
+
+/* 入力途中の内容で契約・許可・枠を確認する */
+function proxyPreview(d) {
+  if (!d.emitterId || !d.date || !d.method) return '<p class="hint mb-0">申請者・排出事業者・日付・受入方法を入力すると、契約／許可／枠の状況を表示します。</p>';
+  const tmp = {
+    no:'（新規）', method:d.method, status:'pending',
+    emitterId:d.emitterId, applicantId:d.applicantId, date:d.date,
+    slotId:d.slotId, startAt:d.startAt, endAt:d.endAt, siteId:d.siteId,
+    lines:d.lines.filter(l => l.itemId && l.qty), vCount:Number(d.vCount) || 1, vehicleId:d.vehicleId
+  };
+  return `<div class="d-flex flex-column gap-2">${checksOf(tmp).map(chkHtml).join('')}</div>
+    <div class="form-text mt-2">超過・未締結でも登録は可能です。可否の確定判断は承認者が行います。</div>`;
+}
+
+function pxValidate() {
+  const d = state.proxy, e = [];
+  if (!d.applicantId) e.push('申請者を選択してください。');
+  if (!d.emitterId) e.push('排出事業者を選択してください。');
+  if (!d.method) e.push('受入方法を選択してください。');
+  if (!d.date) e.push('日付を入力してください。');
+  if (d.method === 'drop') {
+    if (!d.slotId) e.push('時間帯を選択してください。');
+    if (!d.vehicleId) e.push('車格を選択してください。');
+    if (!/^\d+$/.test(String(d.vCount).trim())) e.push('台数は半角数字で入力してください。');
+    if (!d.driver.trim()) e.push('ドライバー名を入力してください。');
+    if (!d.driverTel.trim()) e.push('ドライバー連絡先を入力してください。');
+    if (!d.plate.trim()) e.push('車両ナンバーを入力してください。');
+  } else if (d.method === 'pickup') {
+    if (!d.startAt) e.push('引取希望時間の開始を入力してください。');
+    if (!d.endAt) e.push('引取希望時間の終了を入力してください。');
+    if (d.startAt && d.endAt && d.endAt <= d.startAt) e.push('終了時間は開始時間より後にしてください。');
+    if (!d.siteId) e.push('排出現場を選択してください。');
+  }
+  d.lines.forEach((ln,i) => {
+    const n = `品目 ${i+1}：`;
+    if (!ln.itemId) e.push(n + '品目を選択してください。');
+    if (!String(ln.qty).trim()) e.push(n + '申告数量を入力してください。');
+    else if (isNaN(Number(ln.qty))) e.push(n + '申告数量は数字で入力してください。');
+    if (!ln.unit) e.push(n + '単位を選択してください。');
+  });
+  d.errors = e;
+  return e.length === 0;
+}
+function pxSubmit() {
+  if (!pxValidate()) { render(); return; }
+  const d = state.proxy, now = new Date();
+  const r = {
+    no: nextResvNo(), method:d.method, status:'pending',
+    emitterId:d.emitterId, applicantId:d.applicantId, date:d.date,
+    lines: d.lines.map(l => ({itemId:l.itemId, qty:Number(l.qty), unit:l.unit, memo:l.memo})),
+    appliedAt: `${D(0)} ${pad(now.getHours())}:${pad(now.getMinutes())}`,
+    via:'電話（営業 代行入力）', memo:d.memo
+  };
+  if (d.method === 'drop') Object.assign(r, {slotId:d.slotId, vehicleId:d.vehicleId,
+    vCount:Number(d.vCount), driver:d.driver, driverTel:d.driverTel, plate:d.plate});
+  else Object.assign(r, {startAt:d.startAt, endAt:d.endAt, siteId:d.siteId, containerId:d.containerId});
+  RESV.unshift(r);
+  audit('代行入力', r.no, `${methodLabel(r.method)}／${partner(r.emitterId).name}／${fmtMd(r.date)}`);
+  state.proxy = blankProxy();
+  state.route = 'approvals';
+  state.approval.sel = r.no;
+  toast(`${r.no} を登録しました。承認キューに追加されています。`);
+  render();
+}
+
+/* =========================================================================
+   B-01〜B-09 受入枠設定 / 引取枠設定
+   ========================================================================= */
+function monthDays(ym) {
+  const [y,m] = ym.split('-').map(Number);
+  const first = new Date(y, m-1, 1), last = new Date(y, m, 0);
+  const cells = [];
+  for (let i = 0; i < first.getDay(); i++) cells.push(null);
+  for (let d = 1; d <= last.getDate(); d++) cells.push(dstr(new Date(y, m-1, d)));
+  while (cells.length % 7) cells.push(null);
+  return cells;
+}
+const shiftMonth = (ym, n) => {
+  const [y,m] = ym.split('-').map(Number);
+  const d = new Date(y, m-1+n, 1);
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}`;
+};
+const monthLabel = ym => `${ym.split('-')[0]}年${Number(ym.split('-')[1])}月`;
+
+/* ---------- 受入枠設定 ---------- */
+function viewCapacity() {
+  const c = state.capacity;
+  const tabs = [['cal','カレンダー／個別日'],['weekly','曜日パターン'],['items','品目別上限'],['slots','時間帯マスタ']];
+  return pageHead('受入枠設定',
+    '持込の受入上限（着車数・処理量・品目別）を設定します。曜日パターンで標準値を作り、個別日で上書きします。',
+    ['B-01','B-02','B-03','B-04','B-06','B-07','B-08','B-09']) +
+  specNote('capacity') +
+  `<ul class="nav nav-tabs mb-3">${tabs.map(([v,t]) =>
+    `<li class="nav-item"><a class="nav-link ${c.tab === v ? 'active' : ''}" href="#" data-act="capTab" data-tab="${v}">${t}</a></li>`).join('')}</ul>
+  ${c.tab === 'cal' ? capCalendar() : c.tab === 'weekly' ? capWeekly() : c.tab === 'items' ? capItems() : capSlots()}`;
+}
+
+function capCalendar() {
+  const ym = state.capacity.month, cells = monthDays(ym);
+  const body = cells.map(ds => {
+    if (!ds) return `<div class="day blank"></div>`;
+    const cap = capacityOf(ds), u = usageOf(ds);
+    const d = parseD(ds);
+    if (cap.closed) return `<button class="day off" data-act="openDayCap" data-date="${ds}">
+      <div class="d">${d.getDate()}</div><div class="m">休業<br>${esc(cap.reason)}</div></button>`;
+    const tCap = cap.slots.reduce((s,x) => s + x.trucks, 0);
+    const tUse = cap.slots.reduce((s,x) => s + u.slots[x.id].trucks + u.slots[x.id].pTrucks, 0);
+    const wCap = cap.slots.reduce((s,x) => s + x.weight, 0);
+    const wUse = cap.slots.reduce((s,x) => s + u.slots[x.id].weight + u.slots[x.id].pWeight, 0);
+    const rate = tCap ? tUse / tCap : 0;
+    const cls = [rate >= 1 ? 'full' : rate >= 0.8 ? 'tight' : '', ds === D(0) ? 'today' : ''].join(' ');
+    return `<button class="day ${cls}" data-act="openDayCap" data-date="${ds}">
+      <div class="d">${d.getDate()}</div>
+      <div class="m">着車 ${tUse}/${tCap}<br>量 ${dec(wUse)}/${wCap}t</div>
+      ${cap.override ? `<div class="ov">上書きあり</div>` : ''}</button>`;
+  }).join('');
+  return `<div class="card"><div class="card-head">
+      <button class="btn btn-outline-secondary btn-sm" data-act="capMonth" data-n="-1">←</button>
+      <span>${monthLabel(ym)}</span>
+      <button class="btn btn-outline-secondary btn-sm" data-act="capMonth" data-n="1">→</button>
+      <span class="sub ms-2">セルをクリックすると、その日の枠を個別に上書きできます（当日も即時変更可・B-08）</span>
+      <span class="ms-auto sub">着車は「承認済＋申請中」の合計を表示</span>
+    </div>
+    <div class="card-body">
+      <div class="cal mb-2">${DOW.map(d => `<div class="dow">${d}</div>`).join('')}</div>
+      <div class="cal">${body}</div>
+      <div class="d-flex gap-3 mt-3 flex-wrap" style="font-size:12px;color:var(--ink-sub)">
+        <span><span class="badge b-neutral b-sq">白</span> 余裕あり</span>
+        <span><span class="badge b-pending b-sq">橙</span> 消化率80%以上</span>
+        <span><span class="badge b-rejected b-sq">赤</span> 上限到達</span>
+        <span><span class="badge b-neutral b-sq">灰</span> 休業日</span>
+      </div>
+    </div></div>`;
+}
+
+function capWeekly() {
+  const rows = [1,2,3,4,5,6,0].map(w => {
+    const p = capacity.weekly[w];
+    return `<tr><td><b>${DOW[w]}曜日</b></td>
+      <td><div class="form-check"><input class="form-check-input" type="checkbox" data-cap="closed.${w}" ${p ? '' : 'checked'}><label class="form-check-label" style="font-size:13px">休業</label></div></td>
+      ${SLOTS.filter(s => s.active).map(s => `
+        <td class="num"><input type="text" inputmode="numeric" class="form-control form-control-sm" style="width:72px;display:inline-block"
+          data-cap="w.${w}.${s.id}.trucks" value="${p && p[s.id] ? p[s.id].trucks : ''}"></td>
+        <td class="num"><input type="text" inputmode="decimal" class="form-control form-control-sm" style="width:80px;display:inline-block"
+          data-cap="w.${w}.${s.id}.weight" value="${p && p[s.id] ? p[s.id].weight : ''}"></td>`).join('')}
+    </tr>`;
+  }).join('');
+  return `<div class="card mb-3"><div class="card-head">曜日ごとの標準枠</div>
+    <div class="table-wrap m-3">
+      <table class="table mb-0"><thead><tr><th rowspan="2">曜日</th><th rowspan="2">稼働</th>
+        ${SLOTS.filter(s => s.active).map(s => `<th colspan="2" class="text-center">${s.label}</th>`).join('')}</tr>
+        <tr>${SLOTS.filter(s => s.active).map(() => '<th class="num">着車(台)</th><th class="num">処理量(t)</th>').join('')}</tr></thead>
+        <tbody>${rows}</tbody></table>
+    </div>
+    <div class="px-3 pb-3"><button class="btn btn-primary" data-act="capSaveWeekly">曜日パターンを保存</button></div>
+  </div>
+  <div class="card"><div class="card-head">指定期間へ一括適用（B-06）</div><div class="card-body">
+    <p class="hint">曜日パターンを指定期間の各日へ書き込みます。期間内の個別上書き（臨時休業を除く）は上書きされます。</p>
+    <div class="row g-2" style="max-width:520px">
+      <div class="col-5"><label class="form-label">開始日</label><input type="date" class="form-control" id="elBulkFrom" value="${D(1)}"></div>
+      <div class="col-5"><label class="form-label">終了日</label><input type="date" class="form-control" id="elBulkTo" value="${D(30)}"></div>
+      <div class="col-2 d-flex align-items-end"><button class="btn btn-outline-primary w-100" data-act="capBulk">適用</button></div>
+    </div>
+  </div></div>`;
+}
+
+function capItems() {
+  return `<div class="card"><div class="card-head">品目別の日次上限（B-04）
+      <span class="sub">品目別上限の合計が総処理量上限を超える設定も許容します</span></div>
+    <div class="table-wrap m-3">
+      <table class="table mb-0"><thead><tr><th>品目</th><th>標準単位</th><th class="num">日次上限</th><th class="num">本日の消化</th></tr></thead>
+      <tbody>${ITEMS.map(it => {
+        const u = usageOf(D(0)).items[it.id];
+        return `<tr><td>${esc(it.name)}</td><td>${it.unit}</td>
+          <td class="num"><input type="text" inputmode="decimal" class="form-control form-control-sm" style="width:100px;display:inline-block"
+            data-cap="item.${it.id}" value="${capacity.itemCaps[it.id] != null ? capacity.itemCaps[it.id] : ''}" placeholder="上限なし"></td>
+          <td class="num">${dec(u.fixed + u.pending)} ${it.unit}</td></tr>`;
+      }).join('')}</tbody></table>
+    </div>
+    <div class="px-3 pb-3"><button class="btn btn-primary" data-act="capSaveItems">保存</button></div>
+  </div>`;
+}
+
+function capSlots() {
+  return `<div class="card"><div class="card-head">時間帯マスタ（B-01）<span class="sub">拠点ごとに受入時間帯を定義します</span></div>
+    <div class="table-wrap m-3">
+      <table class="table mb-0"><thead><tr><th>時間帯ID</th><th>表示名</th><th>開始</th><th>終了</th><th>有効</th></tr></thead>
+      <tbody>${SLOTS.map(s => `<tr class="${s.active ? '' : 'dim'}">
+        <td class="mono">${s.id}</td><td>${esc(s.label)}</td><td class="mono">${s.from}</td><td class="mono">${s.to}</td>
+        <td><div class="form-check form-switch"><input class="form-check-input" type="checkbox" data-cap="slot.${s.id}" ${s.active ? 'checked' : ''}></div></td>
+      </tr>`).join('')}</tbody></table>
+    </div>
+    <div class="px-3 pb-3 d-flex gap-2">
+      <button class="btn btn-primary" data-act="capSaveSlots">有効／無効を保存</button>
+      <span class="align-self-center text-secondary" style="font-size:13px">時間帯の追加・時刻変更はモックでは省略（第1期は設定画面で編集可）</span>
+    </div>
+  </div>`;
+}
+
+/* ---------- 個別日の枠設定モーダル（B-07 / B-08） ---------- */
+var MODALS_DAYCAP = payload => {
+  const ds = payload.date, cap = capacityOf(ds), u = usageOf(ds);
+  const ov = capacity.days[ds] || {};
+  const closed = payload.closed != null ? payload.closed : cap.closed;
+  const base = capacity.weekly[parseD(ds).getDay()];
+  const rows = SLOTS.filter(s => s.active).map(s => {
+    const cur = cap.slots.find(x => x.id === s.id);
+    const b = base && base[s.id];
+    const uu = u.slots[s.id];
+    return `<tr><td>${s.label}<div class="text-secondary" style="font-size:11px">標準 ${b ? `${b.trucks}台／${b.weight}t` : '設定なし'}</div></td>
+      <td class="num"><input type="text" inputmode="numeric" class="form-control form-control-sm" style="width:80px"
+        data-mod="slot.${s.id}.trucks" value="${getPath(payload,'slot.'+s.id+'.trucks') != null ? getPath(payload,'slot.'+s.id+'.trucks') : (cur ? cur.trucks : '')}" ${closed ? 'disabled' : ''}></td>
+      <td class="num"><input type="text" inputmode="decimal" class="form-control form-control-sm" style="width:90px"
+        data-mod="slot.${s.id}.weight" value="${getPath(payload,'slot.'+s.id+'.weight') != null ? getPath(payload,'slot.'+s.id+'.weight') : (cur ? cur.weight : '')}" ${closed ? 'disabled' : ''}></td>
+      <td class="num" style="font-size:13px">${uu.trucks}台／${dec(uu.weight)}t<div class="text-secondary" style="font-size:11px">申請中 +${uu.pTrucks}台</div></td></tr>`;
+  }).join('');
+  return {
+    title:`${fmtJp(ds)} の受入枠`,
+    body:`<div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" data-mod="closed" ${closed ? 'checked' : ''} data-rerender="1">
+        <label class="form-check-label">この日を休業（受付不可）にする</label></div>
+      <div class="table-wrap mb-3"><table class="table table-sm mb-0">
+        <thead><tr><th>時間帯</th><th class="num">着車上限</th><th class="num">処理量上限(t)</th><th class="num">承認済の消化</th></tr></thead>
+        <tbody>${rows}</tbody></table></div>
+      <div class="mb-0"><label class="form-label">変更理由<span class="req">必須</span></label>
+        <input type="text" class="form-control" data-mod="reason" value="${esc(payload.reason != null ? payload.reason : (ov.reason || ''))}" placeholder="例：出勤者が少ないため午後の枠を縮小">
+        ${payload.err ? `<div class="text-danger mt-1" style="font-size:13px">${esc(payload.err)}</div>` : ''}
+        <div class="form-text">変更内容は監査ログに記録されます（G-06）。承認済の予約がある枠を下回る設定も可能ですが、超過表示になります。</div></div>`,
+    foot:`${capacity.days[ds] ? `<button class="btn btn-outline-danger me-auto" data-act="doClearDayCap" data-date="${ds}">上書きを解除</button>` : ''}
+      <button class="btn btn-outline-secondary" data-act="closeModal">キャンセル</button>
+      <button class="btn btn-primary" data-act="doSaveDayCap" data-date="${ds}">保存</button>`
+  };
+};
+
+/* =========================================================================
+   B-05 引取枠設定
+   ========================================================================= */
+function viewPickupCap() {
+  const ym = state.pickupcap.month, cells = monthDays(ym);
+  const calc = pickupCapacity.vehicles * pickupCapacity.perVehicle;
+  const body = cells.map(ds => {
+    if (!ds) return `<div class="day blank"></div>`;
+    const lim = pickupLimitOf(ds), u = usageOf(ds), d = parseD(ds);
+    const used = u.pickup.fixed + u.pickup.pending;
+    const rate = lim.limit ? used / lim.limit : 0;
+    const cls = [lim.limit === 0 ? 'off' : rate >= 1 ? 'full' : rate >= 0.8 ? 'tight' : '', ds === D(0) ? 'today' : ''].join(' ');
+    return `<button class="day ${cls}" data-act="openPickupDay" data-date="${ds}">
+      <div class="d">${d.getDate()}</div>
+      <div class="m">${lim.limit === 0 ? '受付なし' : `${used}/${lim.limit} 件`}</div>
+      ${lim.override ? `<div class="ov">上書きあり</div>` : ''}</button>`;
+  }).join('');
+  return pageHead('引取枠設定',
+    '引取（集荷）の日次受付上限を設定します。第1期は件数の上限のみで、車両への割当編成は行いません。',
+    ['B-05','B-06','B-07']) +
+  specNote('pickupcap') +
+  `<div class="card mb-3"><div class="card-head">既定値の算出</div><div class="card-body">
+    <div class="row g-3 align-items-end" style="max-width:760px">
+      <div class="col-6 col-md-3"><label class="form-label">自社稼働車両台数</label>
+        <input type="text" inputmode="numeric" class="form-control" data-cap="pk.vehicles" value="${pickupCapacity.vehicles}"></div>
+      <div class="col-6 col-md-3"><label class="form-label">1台あたり想定訪問件数</label>
+        <input type="text" inputmode="numeric" class="form-control" data-cap="pk.perVehicle" value="${pickupCapacity.perVehicle}"></div>
+      <div class="col-12 col-md-3">${kpi('算出される既定上限', calc + ' <small>件／日</small>')}</div>
+      <div class="col-12 col-md-3"><button class="btn btn-primary w-100" data-act="pkApplyCalc">平日の既定値に反映</button></div>
+    </div>
+    <div class="form-text mt-2">算出値は手動で上書きできます（B-05）。エリア別の枠分割は第2期。</div>
+  </div></div>
+
+  <div class="card mb-3"><div class="card-head">曜日別の上限</div>
+    <div class="table-wrap m-3"><table class="table mb-0">
+      <thead><tr>${[1,2,3,4,5,6,0].map(w => `<th class="text-center">${DOW[w]}</th>`).join('')}</tr></thead>
+      <tbody><tr>${[1,2,3,4,5,6,0].map(w => `<td class="text-center">
+        <input type="text" inputmode="numeric" class="form-control form-control-sm text-center" style="width:80px;margin:0 auto"
+          data-cap="pkw.${w}" value="${pickupCapacity.weekly[w]}"></td>`).join('')}</tr></tbody></table></div>
+    <div class="px-3 pb-3"><button class="btn btn-primary" data-act="pkSaveWeekly">保存</button></div>
+  </div>
+
+  <div class="card"><div class="card-head">
+      <button class="btn btn-outline-secondary btn-sm" data-act="pkMonth" data-n="-1">←</button>
+      <span>${monthLabel(ym)}</span>
+      <button class="btn btn-outline-secondary btn-sm" data-act="pkMonth" data-n="1">→</button>
+      <span class="sub ms-2">セルをクリックすると個別日の上限を上書きできます</span></div>
+    <div class="card-body">
+      <div class="cal mb-2">${DOW.map(d => `<div class="dow">${d}</div>`).join('')}</div>
+      <div class="cal">${body}</div>
+    </div></div>`;
+}
+
+var MODALS_PICKUPDAY = payload => {
+  const ds = payload.date, lim = pickupLimitOf(ds), u = usageOf(ds);
+  return {
+    title:`${fmtJp(ds)} の引取枠`,
+    body:`<div class="mb-3">${dl([
+      ['受付済', `${u.pickup.fixed} 件（承認済）／ ${u.pickup.pending} 件（申請中）`],
+      ['現在の上限', `${lim.limit} 件${lim.override ? '（個別上書き）' : '（曜日パターン）'}`]
+    ])}</div>
+    <div class="mb-3" style="max-width:220px"><label class="form-label">この日の上限<span class="req">必須</span></label>
+      <input type="text" inputmode="numeric" class="form-control" data-mod="limit" value="${payload.limit != null ? payload.limit : lim.limit}"></div>
+    <div class="mb-0"><label class="form-label">理由<span class="req">必須</span></label>
+      <input type="text" class="form-control" data-mod="reason" value="${esc(payload.reason != null ? payload.reason : lim.reason)}" placeholder="例：ドライバー2名が研修のため">
+      ${payload.err ? `<div class="text-danger mt-1" style="font-size:13px">${esc(payload.err)}</div>` : ''}</div>`,
+    foot:`${pickupCapacity.days[ds] ? `<button class="btn btn-outline-danger me-auto" data-act="doClearPickupDay" data-date="${ds}">上書きを解除</button>` : ''}
+      <button class="btn btn-outline-secondary" data-act="closeModal">キャンセル</button>
+      <button class="btn btn-primary" data-act="doSavePickupDay" data-date="${ds}">保存</button>`
+  };
+};
+
+/* =========================================================================
+   D-01〜D-05 入場受付・計量
+   ========================================================================= */
+const todayList = () => RESV.filter(r =>
+  (r.method === 'drop' ? r.date : (r.visitDate || r.date)) === D(0) &&
+  ['approved','arrived','done'].includes(r.status));
+
+function nextActualId() {
+  const n = ACTUALS.map(a => Number(a.id.slice(-4))).reduce((a,b) => Math.max(a,b), 0);
+  return 'A-2026-' + String(n + 1).padStart(4,'0');
+}
+function nextSalesNo() {
+  const n = SALES.map(s => Number(String(s.no).slice(7,11))).reduce((a,b) => Math.max(a,b), 0);
+  return 'S-2026-' + String(n + 1).padStart(4,'0');
+}
+
+function viewReception() {
+  const q = state.reception.q.trim();
+  let list = todayList();
+  if (q) list = list.filter(r => (r.no + (r.plate || '') + partner(r.emitterId).name).includes(q));
+  list.sort((a,b) => (a.method === 'drop' ? (a.slotId || '') : 'zz') < (b.method === 'drop' ? (b.slotId || '') : 'zz') ? -1 : 1);
+
+  const recvState = r => r.status === 'done' ? {t:'計量済', c:'b-approved'}
+    : r.status === 'arrived' ? {t:'入場済（計量待ち）', c:'b-pending'} : {t:'未着', c:'b-neutral'};
+
+  const rows = list.map(r => {
+    const s = recvState(r);
+    return `<tr>
+      <td class="mono">${r.no}</td>
+      <td>${mBadge(r.method)}</td>
+      <td class="mono">${esc(resvTime(r))}</td>
+      <td>${esc(partner(r.emitterId).name)}<div class="text-secondary" style="font-size:11px">${r.method === 'pickup' ? esc(site(r.siteId).name) : esc(partner(r.applicantId).name)}</div></td>
+      <td style="font-size:13px">${esc(linesText(r))}</td>
+      <td class="mono">${esc(r.plate || '—')}</td>
+      <td><span class="badge ${s.c}">${s.t}</span>${r.arrivedAt ? `<div class="text-secondary" style="font-size:11px">入場 ${esc(r.arrivedAt)}</div>` : ''}</td>
+      <td class="text-end text-nowrap">
+        ${r.status === 'approved' ? `<button class="btn btn-primary btn-sm" data-act="doArrive" data-no="${r.no}">入場受付</button>` : ''}
+        ${r.status === 'arrived' ? `<button class="btn btn-primary btn-sm" data-act="openWeigh" data-no="${r.no}">計量入力</button>` : ''}
+        ${r.status === 'done' ? `<button class="btn btn-outline-secondary btn-sm" data-act="openActual" data-id="${r.actualId}">実績を見る</button>` : ''}
+        ${r.status !== 'done' ? `<button class="btn btn-outline-danger btn-sm ms-1" data-act="openReject2" data-no="${r.no}">受入不可</button>` : ''}
+      </td></tr>`;
+  }).join('');
+
+  const arrived = list.filter(r => r.status === 'arrived').length;
+  const done = list.filter(r => r.status === 'done').length;
+  const netToday = ACTUALS.filter(a => a.date === D(0)).reduce((s,a) => s + (a.unit === 't' ? a.net : 0), 0);
+
+  return pageHead('入場受付・計量',
+    '受付番号または車番で予約を呼び出し、入場時刻と計量実績を記録します。実数の記録が売上計上の起点になります。',
+    ['D-01','D-02','D-03','D-04','D-05','C-07'],
+    `<button class="btn btn-outline-primary btn-sm" data-act="openSpot">飛び込み搬入を登録</button>`) +
+  specNote('reception') +
+  `<div class="row g-3 mb-3">
+    <div class="col-6 col-lg-3">${kpi('本日の予定', list.length + ' <small>件</small>')}</div>
+    <div class="col-6 col-lg-3">${kpi('入場済（計量待ち）', arrived + ' <small>件</small>', '', arrived ? 'alert-kpi' : '')}</div>
+    <div class="col-6 col-lg-3">${kpi('計量済', done + ' <small>件</small>')}</div>
+    <div class="col-6 col-lg-3">${kpi('本日の正味重量', dec(netToday) + ' <small>t</small>')}</div>
+  </div>
+  <div class="filterbar">
+    <div class="f" style="flex:1"><label>受付番号・車番・取引先で検索（D-01）</label>
+      <input type="text" class="form-control" data-act="recQ" value="${esc(state.reception.q)}" placeholder="例：R-2026-0165 / 大宮 100 き 11-22" autocomplete="off"></div>
+    <div class="align-self-center text-secondary" style="font-size:13px">本日：${fmtJp(D(0))}</div>
+  </div>
+  <div class="table-wrap">
+    <table class="table table-hover mb-0">
+      <thead><tr><th>受付番号</th><th>区分</th><th>時間</th><th>取引先</th><th>申告内容</th><th>車番</th><th>状態</th><th></th></tr></thead>
+      <tbody>${rows || `<tr><td colspan="8" class="text-center text-secondary py-4">該当する予約がありません</td></tr>`}</tbody>
+    </table>
+  </div>`;
+}
+
+/* ---------- 計量モーダル（D-02〜D-04） ---------- */
+function weighInit(no) {
+  const r = resv(no);
+  return {
+    no, gross:'', tare:'',
+    lines: r.lines.map(ln => ({itemId:ln.itemId, declared:toStd(ln.qty, ln.unit, ln.itemId), qty:dec(toStd(ln.qty, ln.unit, ln.itemId))})),
+    diffReason:'', extras:[], multi:false,
+    alloc: r.method === 'pickup' ? [{siteId:r.siteId, qty:''}, {siteId:'', qty:''}] : []
+  };
+}
+var MODALS_WEIGH = p => {
+  const r = resv(p.no);
+  const net = (Number(p.gross) - Number(p.tare)) / 1000;
+  const netOk = p.gross && p.tare && net > 0;
+  const sumW = p.lines.reduce((s,l) => s + (item(l.itemId).unit === 't' ? Number(l.qty) || 0 : 0), 0);
+  const gap = netOk ? net - sumW : 0;
+  const hasDiff = p.lines.some(l => Math.abs((Number(l.qty) || 0) - l.declared) / Math.max(l.declared, 0.01) > 0.1);
+
+  const lineRows = p.lines.map((l,i) => {
+    const it = item(l.itemId);
+    const d = (Number(l.qty) || 0) - l.declared;
+    return `<tr>
+      <td><select class="form-select form-select-sm" data-mod="lines.${i}.itemId" data-rerender="1">${opts(o1(ITEMS), l.itemId, false)}</select></td>
+      <td class="num">${dec(l.declared)} ${it.unit}</td>
+      <td class="num"><input type="text" inputmode="decimal" class="form-control form-control-sm text-end" style="width:96px" data-mod="lines.${i}.qty" data-rerender="1" value="${esc(l.qty)}"></td>
+      <td class="num">${it.unit}</td>
+      <td class="num ${Math.abs(d) > 0.001 ? 'text-danger fw-bold' : ''}">${d > 0 ? '+' : ''}${dec(d)}</td>
+      <td>${p.lines.length > 1 ? `<button class="btn btn-outline-danger btn-sm" data-act="weighRemoveLine" data-idx="${i}">削除</button>` : ''}</td>
+    </tr>`;
+  }).join('');
+
+  const allocBlock = r.method === 'pickup' ? `
+    <div class="form-check form-switch mb-2">
+      <input class="form-check-input" type="checkbox" data-mod="multi" data-rerender="1" ${p.multi ? 'checked' : ''}>
+      <label class="form-check-label">1運行で複数現場を回った（現場別に按分する・D-03）</label></div>
+    ${p.multi ? `<div class="table-wrap mb-2"><table class="table table-sm mb-0">
+      <thead><tr><th>排出現場</th><th class="num">数量(t)</th><th></th></tr></thead>
+      <tbody>${p.alloc.map((a,i) => `<tr>
+        <td><select class="form-select form-select-sm" data-mod="alloc.${i}.siteId" data-rerender="1">${opts(SITES.map(s => ({v:s.id, t:`${partner(s.partnerId).name}／${s.name}`})), a.siteId)}</select></td>
+        <td class="num"><input type="text" inputmode="decimal" class="form-control form-control-sm text-end" style="width:96px" data-mod="alloc.${i}.qty" data-rerender="1" value="${esc(a.qty)}"></td>
+        <td>${p.alloc.length > 2 ? `<button class="btn btn-outline-danger btn-sm" data-act="weighRemoveAlloc" data-idx="${i}">削除</button>` : ''}</td></tr>`).join('')}
+      </tbody></table></div>
+      <button class="btn btn-outline-primary btn-sm mb-2" data-act="weighAddAlloc">＋ 現場を追加</button>
+      <div class="${Math.abs(p.alloc.reduce((s,a) => s + (Number(a.qty)||0), 0) - sumW) < 0.01 ? 'text-secondary' : 'text-danger fw-bold'}" style="font-size:13px">
+        按分合計 ${dec(p.alloc.reduce((s,a) => s + (Number(a.qty)||0), 0))} t ／ 実数量合計 ${dec(sumW)} t</div>` : ''}` : '';
+
+  return {
+    title:`計量入力　${r.no}　${esc(partner(r.emitterId).name)}`,
+    body:`<div class="row g-3 mb-3">
+        <div class="col-6 col-md-3"><label class="form-label">総重量（kg）<span class="req">必須</span></label>
+          <input type="text" inputmode="numeric" class="form-control" data-mod="gross" data-rerender="1" value="${esc(p.gross)}" placeholder="例：6120"></div>
+        <div class="col-6 col-md-3"><label class="form-label">空車重量（kg）<span class="req">必須</span></label>
+          <input type="text" inputmode="numeric" class="form-control" data-mod="tare" data-rerender="1" value="${esc(p.tare)}" placeholder="例：2480"></div>
+        <div class="col-12 col-md-6">${kpi('正味重量（自動算出）', netOk ? dec(net) + ' <small>t</small>' : '<small class="text-secondary">総重量・空車重量を入力</small>')}</div>
+      </div>
+      <h6 style="font-size:14px;font-weight:700">実搬入内容（申告との差異を記録します・D-04）</h6>
+      <div class="table-wrap mb-2"><table class="table table-sm mb-0">
+        <thead><tr><th style="width:34%">品目</th><th class="num">申告</th><th class="num">実数量</th><th class="num">単位</th><th class="num">差異</th><th></th></tr></thead>
+        <tbody>${lineRows}</tbody></table></div>
+      <button class="btn btn-outline-primary btn-sm mb-3" data-act="weighAddLine">＋ 品目を追加</button>
+      ${netOk && Math.abs(gap) > 0.05 ? `<div class="chk wa mb-3"><span class="m">⚠ 差異</span><span>重量計上品目の実数量合計（${dec(sumW)} t）と正味重量（${dec(net)} t）が ${dec(Math.abs(gap))} t ずれています。体積計上品目がある場合は正常です。</span></div>` : ''}
+      ${hasDiff ? `<div class="mb-3"><label class="form-label">差異理由<span class="req">必須</span></label>
+        <select class="form-select" data-mod="diffReason">${opts([
+          {v:'実測差（申告は目安）',t:'実測差（申告は目安）'},{v:'品目の相違',t:'品目の相違'},
+          {v:'追加発生分あり',t:'追加発生分あり'},{v:'異物混入',t:'異物混入'},{v:'その他',t:'その他'}], p.diffReason)}</select>
+        ${p.err2 ? `<div class="text-danger mt-1" style="font-size:13px">${esc(p.err2)}</div>` : ''}</div>` : ''}
+      ${allocBlock}
+      <div class="mb-2"><label class="form-label">追加料金（F-03）<span class="opt">任意</span></label>
+        <div class="d-flex gap-3 flex-wrap">${EXTRA_CHARGES.map(x => `
+          <div class="form-check"><input class="form-check-input" type="checkbox" data-mod="extra.${x.id}" ${p.extras.find(e => e.id === x.id) ? 'checked' : ''}>
+            <label class="form-check-label" style="font-size:14px">${esc(x.name)}（${yen(x.price)}／${x.type}）</label></div>`).join('')}</div></div>
+      ${p.err ? `<div class="text-danger" style="font-size:13px">${esc(p.err)}</div>` : ''}
+      <div class="form-text">確定すると契約単価が適用され、売上明細が自動生成されます（F-01）。適用単価は明細にスナップショットとして保存されます。</div>`,
+    foot:`<button class="btn btn-outline-secondary" data-act="closeModal">キャンセル</button>
+          <button class="btn btn-primary" data-act="doWeigh" data-no="${r.no}">実績を確定して売上明細を作成</button>`
+  };
+};
+
+/* ---------- 飛び込み搬入（C-07） ---------- */
+var MODALS_SPOT = p => {
+  const siteOpts = SITES.filter(s => s.partnerId === p.partnerId).map(s => ({v:s.id, t:s.name}));
+  const net = (Number(p.gross) - Number(p.tare)) / 1000;
+  return {
+    title:'飛び込み搬入の登録',
+    body:`<p class="hint">予約を伴わない搬入を、実績として直接登録します。契約・単価が未登録の場合は金額未確定の明細になります。</p>
+      <div class="row g-3">
+        <div class="col-12 col-md-6"><label class="form-label">取引先<span class="req">必須</span></label>
+          <select class="form-select" data-mod="partnerId" data-rerender="1">${opts(o1(PARTNERS), p.partnerId)}</select></div>
+        <div class="col-12 col-md-6"><label class="form-label">排出現場<span class="opt">任意</span></label>
+          <select class="form-select" data-mod="siteId">${opts(siteOpts, p.siteId, '（指定なし）')}</select></div>
+        <div class="col-12 col-md-6"><label class="form-label">品目<span class="req">必須</span></label>
+          <select class="form-select" data-mod="itemId" data-rerender="1">${opts(o1(ITEMS), p.itemId)}</select></div>
+        <div class="col-6 col-md-3"><label class="form-label">車格</label>
+          <select class="form-select" data-mod="vehicleId">${opts(o1(VEHICLES), p.vehicleId)}</select></div>
+        <div class="col-6 col-md-3"><label class="form-label">車両ナンバー</label>
+          <input type="text" class="form-control" data-mod="plate" value="${esc(p.plate || '')}"></div>
+        <div class="col-6 col-md-3"><label class="form-label">総重量(kg)<span class="req">必須</span></label>
+          <input type="text" inputmode="numeric" class="form-control" data-mod="gross" data-rerender="1" value="${esc(p.gross || '')}"></div>
+        <div class="col-6 col-md-3"><label class="form-label">空車重量(kg)<span class="req">必須</span></label>
+          <input type="text" inputmode="numeric" class="form-control" data-mod="tare" data-rerender="1" value="${esc(p.tare || '')}"></div>
+        <div class="col-12 col-md-6">${kpi('正味重量', p.gross && p.tare ? dec(net) + ' <small>t</small>' : '—')}</div>
+      </div>
+      ${p.itemId && item(p.itemId).unit === 'm3' ? `<div class="mt-3" style="max-width:220px"><label class="form-label">体積(m3)<span class="req">必須</span></label>
+        <input type="text" inputmode="decimal" class="form-control" data-mod="vol" value="${esc(p.vol || '')}"></div>` : ''}
+      ${p.err ? `<div class="text-danger mt-2" style="font-size:13px">${esc(p.err)}</div>` : ''}`,
+    foot:`<button class="btn btn-outline-secondary" data-act="closeModal">キャンセル</button>
+          <button class="btn btn-primary" data-act="doSpot">実績として登録</button>`
+  };
+};
+
+/* ---------- 受入拒否・集荷不可（D-05） ---------- */
+var MODALS_REJECT2 = p => {
+  const r = resv(p.no);
+  return {
+    title:`${r.no} の${r.method === 'drop' ? '受入拒否' : '集荷不可'}を記録`,
+    body:`<p class="hint">当日の受入拒否・集荷不可を記録します。枠は解放され、取引先へ通知されます。</p>
+      <div class="mb-0"><label class="form-label">理由<span class="req">必須</span></label>
+        <select class="form-select" data-mod="reason">${opts(
+          (r.method === 'drop'
+            ? ['異物混入のため受入不可','契約外品目のため受入不可','車両・書類不備','その他']
+            : ['現場都合により集荷不可','荷量が想定を大きく超過','進入不可（道幅・駐車）','その他']
+          ).map(x => ({v:x,t:x})), p.reason)}</select>
+        ${p.err ? `<div class="text-danger mt-1" style="font-size:13px">${esc(p.err)}</div>` : ''}</div>`,
+    foot:`<button class="btn btn-outline-secondary" data-act="closeModal">やめる</button>
+          <button class="btn btn-outline-danger" data-act="doReject2" data-no="${r.no}">記録する</button>`
+  };
+};
+
+/* =========================================================================
+   D-06 実績一覧 ／ F-01〜F-06 締め処理・売上一覧
+   ========================================================================= */
+const salesOf = actualId => SALES.filter(s => s.actualId === actualId);
+const amountOf = actualId => salesOf(actualId).reduce((s,x) => s + x.amount, 0);
+const isClosed = ym => CLOSINGS.some(c => c.ym === ym);
+
+function filteredActuals() {
+  const f = state.actuals;
+  return ACTUALS.filter(a =>
+    a.date >= f.from && a.date <= f.to &&
+    (!f.partnerId || a.partnerId === f.partnerId) &&
+    (!f.itemId || a.itemId === f.itemId) &&
+    (!f.method || a.method === f.method) &&
+    (!f.diffOnly || (a.diffReason && a.diffReason !== ''))
+  ).sort((x,y) => x.date === y.date ? (x.id < y.id ? 1 : -1) : (x.date < y.date ? 1 : -1));
+}
+
+function viewActuals() {
+  const f = state.actuals, list = filteredActuals();
+  const netT = list.filter(a => a.unit === 't').reduce((s,a) => s + a.net, 0);
+  const sales = list.reduce((s,a) => s + salesOf(a.id).filter(x => x.kind === 'sales').reduce((t,x) => t + x.amount, 0), 0);
+  const buy   = list.reduce((s,a) => s + salesOf(a.id).filter(x => x.kind === 'purchase').reduce((t,x) => t + x.amount, 0), 0);
+
+  const rows = list.slice(0, 200).map(a => {
+    const d = a.net - a.declared;
+    return `<tr class="clickable" data-act="openActual" data-id="${a.id}">
+      <td class="mono">${a.id}</td>
+      <td class="mono">${fmtMd(a.date)}</td>
+      <td class="mono">${esc(a.resvNo || '—')}${a.spot ? ' <span class="badge b-neutral b-sq">飛込</span>' : ''}</td>
+      <td>${mBadge(a.method)}</td>
+      <td>${esc(partner(a.partnerId).name)}<div class="text-secondary" style="font-size:11px">${esc(site(a.siteId).name || '—')}</div></td>
+      <td>${esc(item(a.itemId).name)}</td>
+      <td class="num">${dec(a.declared)}</td>
+      <td class="num fw-bold">${dec(a.net)} ${a.unit}</td>
+      <td class="num ${Math.abs(d) > 0.001 ? 'text-danger' : ''}">${d > 0 ? '+' : ''}${dec(d)}
+        ${a.diffReason ? `<div class="text-secondary" style="font-size:11px">${esc(a.diffReason)}</div>` : ''}</td>
+      <td class="num">${yen(amountOf(a.id))}</td>
+      <td>${a.status === 'closed' ? '<span class="badge b-neutral">締め済</span>' : '<span class="badge b-approved">確定</span>'}</td>
+    </tr>`;
+  }).join('');
+
+  return pageHead('実績一覧',
+    '計量実績を検索・確認します。予約との差異、現場別按分、売上金額をここで突き合わせます。',
+    ['D-06','D-04','D-03'],
+    `<button class="btn btn-outline-primary btn-sm" data-act="exportActuals">CSV出力</button>`) +
+  specNote('actuals') +
+  `<div class="row g-3 mb-3">
+    <div class="col-6 col-lg-3">${kpi('実績件数', list.length + ' <small>件</small>')}</div>
+    <div class="col-6 col-lg-3">${kpi('正味重量合計', dec(netT) + ' <small>t</small>')}</div>
+    <div class="col-6 col-lg-3">${kpi('売上（税抜）', yen(sales))}</div>
+    <div class="col-6 col-lg-3">${kpi('仕入（有価物）', yen(buy))}</div>
+  </div>
+  <div class="filterbar">
+    <div class="f"><label>開始日</label><input type="date" class="form-control form-control-sm" data-act="acFilter" data-key="from" value="${f.from}"></div>
+    <div class="f"><label>終了日</label><input type="date" class="form-control form-control-sm" data-act="acFilter" data-key="to" value="${f.to}"></div>
+    <div class="f"><label>取引先</label><select class="form-select form-select-sm" data-act="acFilter" data-key="partnerId">${opts(o1(PARTNERS), f.partnerId, 'すべて')}</select></div>
+    <div class="f"><label>品目</label><select class="form-select form-select-sm" data-act="acFilter" data-key="itemId">${opts(o1(ITEMS), f.itemId, 'すべて')}</select></div>
+    <div class="f"><label>区分</label><select class="form-select form-select-sm" data-act="acFilter" data-key="method">${opts([{v:'drop',t:'持込'},{v:'pickup',t:'引取'}], f.method, 'すべて')}</select></div>
+    <div class="f align-self-end"><div class="form-check"><input class="form-check-input" type="checkbox" data-act="acFilter" data-key="diffOnly" ${f.diffOnly ? 'checked' : ''}>
+      <label class="form-check-label" style="font-size:13px">差異のある実績のみ</label></div></div>
+  </div>
+  <div class="table-wrap">
+    <table class="table table-hover mb-0">
+      <thead><tr><th>実績番号</th><th>日付</th><th>受付番号</th><th>区分</th><th>取引先・現場</th><th>品目</th>
+        <th class="num">申告</th><th class="num">実数量</th><th class="num">差異</th><th class="num">金額</th><th>状態</th></tr></thead>
+      <tbody>${rows || `<tr><td colspan="11" class="text-center text-secondary py-4">該当する実績がありません</td></tr>`}</tbody>
+    </table>
+  </div>
+  ${list.length > 200 ? `<p class="hint mt-2">先頭200件を表示しています（全 ${list.length} 件）。CSV出力には全件が含まれます。</p>` : ''}`;
+}
+
+/* ---------- 実績詳細 ---------- */
+var MODALS_ACTUAL = p => {
+  const a = ACTUALS.find(x => x.id === p.id);
+  const ss = salesOf(a.id);
+  const rows = [
+    ['実績番号', `<span class="mono">${a.id}</span>`],
+    ['日付', fmtJp(a.date)],
+    ['受付番号', a.resvNo ? `<span class="mono">${esc(a.resvNo)}</span>` : '飛び込み搬入（予約なし）'],
+    ['区分', methodLabel(a.method)],
+    ['取引先', esc(partner(a.partnerId).name)],
+    ['排出現場', esc(site(a.siteId).name || '—')],
+    ['品目', esc(item(a.itemId).name) + (item(a.itemId).valuable ? ' <span class="badge b-neutral b-sq">有価物</span>' : '')],
+    ['申告数量', `${dec(a.declared)} ${a.unit}`],
+    ['計量', a.gross ? `総重量 ${num(a.gross)} kg − 空車重量 ${num(a.tare)} kg` : '—'],
+    ['正味（実数量）', `<b>${dec(a.net)} ${a.unit}</b>`],
+    ['差異理由', a.diffReason ? esc(a.diffReason) : '—'],
+    ['車格・車番', `${esc(vehicle(a.vehicleId).name || '—')}／${esc(a.plate || '—')}`],
+    ['状態', a.status === 'closed' ? '締め済（編集不可）' : '確定']
+  ];
+  if (a.allocations) rows.push(['現場別按分',
+    a.allocations.map(x => `${esc(site(x.siteId).name)}：${dec(x.qty)} t`).join('<br>')]);
+  return {
+    title:`実績詳細 ${a.id}`,
+    body: dl(rows) + `<h6 class="mt-3 mb-2" style="font-size:14px;font-weight:700">売上明細（F-01）</h6>
+      <div class="table-wrap"><table class="table table-sm mb-0">
+        <thead><tr><th>明細番号</th><th>区分</th><th>内容</th><th class="num">数量</th><th class="num">単価</th><th class="num">金額</th></tr></thead>
+        <tbody>${ss.map(s => `<tr class="${s.red ? 'dim' : ''}">
+          <td class="mono">${esc(s.no)}</td>
+          <td>${s.kind === 'purchase' ? '<span class="badge b-neutral">仕入</span>' : '<span class="badge b-method">売上</span>'}</td>
+          <td>${esc(s.category)}${s.minApplied ? ' <span class="badge b-pending b-sq">最低料金</span>' : ''}${s.red ? ' <span class="badge b-rejected b-sq">赤伝</span>' : ''}
+            ${s.warn ? `<div class="text-danger" style="font-size:11px">${esc(s.warn)}</div>` : ''}</td>
+          <td class="num">${dec(s.qty)} ${esc(s.unit)}</td>
+          <td class="num">${s.unitPrice == null ? '—' : yen(s.unitPrice)}</td>
+          <td class="num fw-bold">${yen(s.amount)}</td></tr>`).join('')}
+        </tbody></table></div>
+      ${a.status === 'closed' ? `<div class="chk wa mt-3"><span class="m">⚠ 締め済</span>
+        <span>締め後の実績は編集できません。修正は赤伝（マイナス明細）で行います（F-05）。</span></div>` : ''}`,
+    foot:`${a.status === 'closed' && !ss.some(s => s.red) ? `<button class="btn btn-outline-danger me-auto" data-act="doRed" data-id="${a.id}">赤伝を起票</button>` : ''}
+      <button class="btn btn-outline-secondary" data-act="closeModal">閉じる</button>`
+  };
+};
+
+/* =========================================================================
+   締め処理・売上一覧
+   ========================================================================= */
+const CSV_TEMPLATES = [
+  {id:'generic', name:'汎用フォーマット'},
+  {id:'acctA',   name:'会計ソフトA 仕訳インポート'},
+  {id:'acctB',   name:'会計ソフトB 売上補助'}
+];
+function viewClosing() {
+  const ym = state.closing.ym;
+  const lines = SALES.filter(s => ymOf(s.date) === ym);
+  const closed = isClosed(ym);
+  const cl = CLOSINGS.find(c => c.ym === ym);
+  const sales = lines.filter(s => s.kind === 'sales').reduce((t,s) => t + s.amount, 0);
+  const buy   = lines.filter(s => s.kind === 'purchase').reduce((t,s) => t + s.amount, 0);
+  const notFixed = RESV.filter(r => ymOf(r.date) === ym && ['approved','arrived'].includes(r.status)).length;
+  const warnLines = lines.filter(s => s.warn).length;
+
+  const byPartner = {};
+  lines.forEach(s => {
+    const k = s.partnerId;
+    byPartner[k] = byPartner[k] || {sales:0, buy:0, cnt:0};
+    byPartner[k][s.kind === 'purchase' ? 'buy' : 'sales'] += s.amount;
+    byPartner[k].cnt++;
+  });
+
+  const rows = Object.entries(byPartner).map(([pid,v]) => {
+    const open = state.closing.expand === pid;
+    const det = open ? `<tr><td colspan="6" class="p-0"><div class="p-3" style="background:#FAFAFA">
+      <table class="table table-sm mb-0">
+        <thead><tr><th>日付</th><th>明細番号</th><th>実績番号</th><th>内容</th><th class="num">数量</th><th class="num">単価</th><th class="num">金額</th></tr></thead>
+        <tbody>${lines.filter(s => s.partnerId === pid).sort((a,b) => a.date < b.date ? -1 : 1).map(s => `<tr>
+          <td class="mono">${fmtMd(s.date)}</td><td class="mono">${esc(s.no)}</td>
+          <td class="mono"><a href="#" data-act="openActual" data-id="${esc(s.actualId)}">${esc(s.actualId)}</a></td>
+          <td>${esc(s.category)}${s.itemId ? '／' + esc(item(s.itemId).name) : ''}
+            ${s.minApplied ? ' <span class="badge b-pending b-sq">最低料金</span>' : ''}
+            ${s.kind === 'purchase' ? ' <span class="badge b-neutral b-sq">仕入</span>' : ''}
+            ${s.red ? ' <span class="badge b-rejected b-sq">赤伝</span>' : ''}</td>
+          <td class="num">${dec(s.qty)} ${esc(s.unit)}</td>
+          <td class="num">${s.unitPrice == null ? '—' : yen(s.unitPrice)}</td>
+          <td class="num">${yen(s.amount)}</td></tr>`).join('')}</tbody></table></div></td></tr>` : '';
+    return `<tr class="clickable" data-act="expandPartner" data-pid="${pid}">
+      <td>${open ? '▾' : '▸'} ${esc(partner(pid).name)}</td>
+      <td>${esc(partner(pid).invoice || '—')}</td>
+      <td class="num">${v.cnt}</td>
+      <td class="num">${yen(v.sales)}</td>
+      <td class="num">${v.buy ? yen(v.buy) : '—'}</td>
+      <td class="num fw-bold">${yen(v.sales + v.buy)}</td></tr>${det}`;
+  }).join('');
+
+  return pageHead('締め処理・売上一覧',
+    '計量実績から自動生成された売上明細を確認し、月次で締めます。締め後の実績は編集不可となり、修正は赤伝方式で行います。',
+    ['F-01','F-02','F-03','F-04','F-05','F-06'],
+    `<select class="form-select form-select-sm" style="width:auto" id="elCsvTpl">${CSV_TEMPLATES.map(t => `<option value="${t.id}">${t.name}</option>`).join('')}</select>
+     <button class="btn btn-outline-primary btn-sm" data-act="exportSales">CSV出力</button>`) +
+  specNote('closing') +
+  `<div class="filterbar">
+    <button class="btn btn-outline-secondary btn-sm" data-act="clMonth" data-n="-1">←</button>
+    <div class="fw-bold fs-5 align-self-center">${monthLabel(ym)}</div>
+    <button class="btn btn-outline-secondary btn-sm" data-act="clMonth" data-n="1">→</button>
+    <div class="align-self-center ms-2">${closed
+      ? `<span class="badge b-approved">締め済</span> <span class="text-secondary" style="font-size:13px">${esc(cl.closedAt)}／${esc(cl.by)}</span>`
+      : `<span class="badge b-pending">未締め</span>`}</div>
+    <div class="ms-auto">${closed
+      ? `<button class="btn btn-outline-secondary btn-sm" disabled>締め済み</button>`
+      : `<button class="btn btn-primary" data-act="openClose">${monthLabel(ym)}を締める</button>`}</div>
+  </div>
+  <div class="row g-3 mb-3">
+    <div class="col-6 col-lg-3">${kpi('売上合計（税抜）', yen(sales))}</div>
+    <div class="col-6 col-lg-3">${kpi('仕入合計（有価物）', yen(buy))}</div>
+    <div class="col-6 col-lg-3">${kpi('明細件数', lines.length + ' <small>件</small>')}</div>
+    <div class="col-6 col-lg-3">${kpi('未計量の予約', notFixed + ' <small>件</small>', '', notFixed ? 'alert-kpi' : '')}</div>
+  </div>
+  ${warnLines ? `<div class="chk ng mb-3"><span class="m">✕ 単価未登録</span><span>契約・単価が未登録のため金額が確定していない明細が ${warnLines} 件あります。マスタを登録してください。</span></div>` : ''}
+  <div class="table-wrap">
+    <table class="table table-hover mb-0">
+      <thead><tr><th>取引先</th><th>インボイス登録番号</th><th class="num">明細数</th><th class="num">売上</th><th class="num">仕入</th><th class="num">差引</th></tr></thead>
+      <tbody>${rows || `<tr><td colspan="6" class="text-center text-secondary py-4">この月の売上明細はありません</td></tr>`}</tbody>
+    </table>
+  </div>`;
+}
+
+var MODALS_CLOSE = p => {
+  const ym = p.ym;
+  const notFixed = RESV.filter(r => ymOf(r.date) === ym && ['approved','arrived'].includes(r.status));
+  const warn = SALES.filter(s => ymOf(s.date) === ym && s.warn);
+  return {
+    title:`${monthLabel(ym)} の月次締め`,
+    body:`<p>対象期間の実績を確定します。締め後の実績は編集できなくなり、修正は赤伝方式となります（F-05）。</p>
+      ${notFixed.length ? `<div class="chk wa mb-2"><span class="m">⚠ 未計量</span>
+        <span>計量が済んでいない予約が ${notFixed.length} 件あります：${notFixed.slice(0,5).map(r => r.no).join('、')}${notFixed.length > 5 ? ' ほか' : ''}</span></div>` : ''}
+      ${warn.length ? `<div class="chk ng mb-2"><span class="m">✕ 単価未登録</span>
+        <span>金額未確定の明細が ${warn.length} 件あります。締めると 0円で確定します。</span></div>` : ''}
+      ${!notFixed.length && !warn.length ? `<div class="chk ok mb-2"><span class="m">✓ 確認</span><span>未処理の実績はありません。</span></div>` : ''}
+      <div class="mt-3">${dl([
+        ['対象期間', `${ym}-01 〜 ${ym}-${pad(new Date(Number(ym.split('-')[0]), Number(ym.split('-')[1]), 0).getDate())}`],
+        ['売上合計', yen(SALES.filter(s => ymOf(s.date) === ym && s.kind === 'sales').reduce((t,s) => t + s.amount, 0))],
+        ['仕入合計', yen(SALES.filter(s => ymOf(s.date) === ym && s.kind === 'purchase').reduce((t,s) => t + s.amount, 0))],
+        ['実行者', esc(me().user)]
+      ])}</div>`,
+    foot:`<button class="btn btn-outline-secondary" data-act="closeModal">キャンセル</button>
+          <button class="btn btn-primary" data-act="doClose" data-ym="${ym}">締め処理を実行する</button>`
+  };
+};
+
+/* =========================================================================
+   E-01〜E-10 各種マスタ（共通の一覧＋編集モーダルで実装）
+   ========================================================================= */
+function getPath(o, p) { return p.split('.').reduce((t,k) => (t == null ? t : t[k]), o); }
+function setPath(o, p, v) {
+  const ks = p.split('.'); let t = o;
+  for (let i = 0; i < ks.length - 1; i++) { if (t[ks[i]] == null) t[ks[i]] = {}; t = t[ks[i]]; }
+  t[ks[ks.length-1]] = v;
+}
+const partnersOf = type => PARTNERS.filter(p => p.type === type || p.type === 'both').map(p => ({v:p.id, t:p.name}));
+
+const MASTERS = {
+  m_partners: {
+    title:'取引先マスタ', ids:['E-01'], data:() => PARTNERS,
+    lead:'排出事業者・運搬業者の法人情報、インボイス登録番号、支払条件、収集運搬業許可を管理します。',
+    cols:[
+      {k:'name', label:'取引先名', type:'text', list:true, req:true},
+      {k:'kana', label:'カナ', type:'text'},
+      {k:'type', label:'種別', type:'select', list:true, opts:() => [{v:'emitter',t:'排出事業者'},{v:'carrier',t:'運搬業者'},{v:'both',t:'排出／運搬'}], req:true},
+      {k:'invoice', label:'インボイス登録番号', type:'text', list:true},
+      {k:'pay', label:'支払サイト', type:'text', list:true},
+      {k:'credit', label:'与信区分', type:'select', list:true, opts:() => ['A','B','C'].map(x => ({v:x,t:x}))},
+      {k:'tel', label:'電話番号', type:'text'},
+      {k:'addr', label:'住所', type:'text'},
+      {k:'permit.no', label:'収集運搬業許可番号', type:'text'},
+      {k:'permit.pref', label:'許可自治体', type:'text'},
+      {k:'permit.expire', label:'許可有効期限', type:'date', list:true}
+    ]
+  },
+  m_sites: {
+    title:'事業所・排出現場マスタ', ids:['E-02'], data:() => SITES,
+    lead:'取引先配下の事業所・排出現場。現場条件（道幅・重機有無・立会要否）は引取の可否判断に使います。スポット案件の現場も登録できます。',
+    cols:[
+      {k:'partnerId', label:'取引先', type:'select', list:true, opts:() => o1(PARTNERS), fmt:v => partner(v).name, req:true},
+      {k:'name', label:'現場名', type:'text', list:true, req:true},
+      {k:'addr', label:'住所', type:'text', list:true},
+      {k:'road', label:'道幅', type:'select', list:true, opts:() => ['4m以上','3m未満'].map(x => ({v:x,t:x}))},
+      {k:'machine', label:'重機', type:'select', list:true, opts:() => ['あり','なし'].map(x => ({v:x,t:x}))},
+      {k:'attend', label:'立会', type:'select', list:true, opts:() => ['要','不要'].map(x => ({v:x,t:x}))},
+      {k:'note', label:'備考', type:'text', list:true}
+    ]
+  },
+  m_relations: {
+    title:'取引関係マスタ', ids:['E-03'], data:() => RELATIONS,
+    lead:'運搬業者が代理で予約できる排出事業者の範囲を定義します。承認画面の「代理」チェックはこの定義を参照します。',
+    cols:[
+      {k:'carrierId', label:'運搬業者', type:'select', list:true, opts:() => partnersOf('carrier'), fmt:v => partner(v).name, req:true},
+      {k:'emitterId', label:'排出事業者', type:'select', list:true, opts:() => partnersOf('emitter'), fmt:v => partner(v).name, req:true},
+      {k:'proxy', label:'代理予約', type:'bool', list:true},
+      {k:'note', label:'備考', type:'text', list:true}
+    ]
+  },
+  m_contracts: {
+    title:'契約マスタ', ids:['E-07','E-12'], data:() => CONTRACTS,
+    lead:'排出事業者との委託契約。承認時の契約有無チェック、売上計算の単価参照はこの契約を基準にします。',
+    cols:[
+      {k:'partnerId', label:'排出事業者', type:'select', list:true, opts:() => partnersOf('emitter'), fmt:v => partner(v).name, req:true},
+      {k:'kind', label:'契約種別', type:'select', list:true, opts:() => ['自動更新','スポット'].map(x => ({v:x,t:x})), req:true},
+      {k:'from', label:'開始日', type:'date', list:true, req:true},
+      {k:'to', label:'終了日', type:'date', list:true, req:true},
+      {k:'items', label:'対象品目', type:'multi', list:true, opts:() => o1(ITEMS), fmt:v => (v||[]).map(x => item(x).name).join('、')},
+      {k:'pay', label:'支払条件', type:'text', list:true},
+      {k:'file', label:'契約書ファイル', type:'text', list:true}
+    ]
+  },
+  m_dprice: {
+    title:'処分単価マスタ', ids:['E-08','E-10'], data:() => DISPOSAL_PRICES,
+    lead:'契約×品目×適用開始日で単価を世代管理します。過去実績の金額は単価改定で再計算されません（明細にスナップショット保存）。',
+    cols:[
+      {k:'contractId', label:'契約', type:'select', list:true, opts:() => CONTRACTS.map(k => ({v:k.id, t:`${partner(k.partnerId).name}（${k.kind}）`})), fmt:v => partner(contract(v).partnerId).name, req:true},
+      {k:'itemId', label:'品目', type:'select', list:true, opts:() => o1(ITEMS), fmt:v => item(v).name, req:true},
+      {k:'type', label:'単価型', type:'select', list:true, opts:() => ['t','m3','台'].map(x => ({v:x,t:x+'単価'})), fmt:v => v + '単価', req:true},
+      {k:'price', label:'単価（円・マイナスは有価物の買取）', type:'number', list:true, fmt:v => yen(v), req:true},
+      {k:'min', label:'最低料金（円）', type:'number', list:true, fmt:v => v ? yen(v) : '—'},
+      {k:'from', label:'適用開始日', type:'date', list:true, req:true}
+    ],
+    extraCol:{label:'状態', fmt:row => {
+      const same = DISPOSAL_PRICES.filter(x => x.contractId === row.contractId && x.itemId === row.itemId);
+      const s = priceState(row, same);
+      return `<span class="badge ${s.c}">${s.t}</span>`;
+    }}
+  },
+  m_tprice: {
+    title:'運搬単価マスタ', ids:['E-09','E-10'], data:() => TRANSPORT_PRICES,
+    lead:'引取の運搬費。契約×排出現場×車格ごとの固定運賃を基本形とします。',
+    cols:[
+      {k:'contractId', label:'契約', type:'select', list:true, opts:() => CONTRACTS.map(k => ({v:k.id, t:`${partner(k.partnerId).name}（${k.kind}）`})), fmt:v => partner(contract(v).partnerId).name, req:true},
+      {k:'siteId', label:'排出現場', type:'select', list:true, opts:() => SITES.map(s => ({v:s.id, t:`${partner(s.partnerId).name}／${s.name}`})), fmt:v => site(v).name, req:true},
+      {k:'vehicleId', label:'車格', type:'select', list:true, opts:() => o1(VEHICLES), fmt:v => vehicle(v).name, req:true},
+      {k:'price', label:'固定運賃（円）', type:'number', list:true, fmt:v => yen(v), req:true},
+      {k:'from', label:'適用開始日', type:'date', list:true, req:true}
+    ]
+  },
+  m_items: {
+    title:'品目マスタ', ids:['E-04'], data:() => ITEMS,
+    lead:'法定20種類区分と自社実務区分、標準単位、有価物フラグを管理します。有価物は売上ではなく仕入として計上されます。',
+    cols:[
+      {k:'name', label:'品目名', type:'text', list:true, req:true},
+      {k:'legal', label:'法定区分', type:'text', list:true},
+      {k:'practical', label:'自社実務区分', type:'text', list:true},
+      {k:'unit', label:'標準単位', type:'select', list:true, opts:() => ['t','m3','台'].map(x => ({v:x,t:x})), req:true},
+      {k:'valuable', label:'有価物', type:'bool', list:true}
+    ]
+  },
+  m_vehicles: {
+    title:'車格マスタ', ids:['E-05'], data:() => VEHICLES,
+    lead:'車格区分と標準積載量。枠消費量の目安算出に使用します。',
+    cols:[
+      {k:'name', label:'車格', type:'text', list:true, req:true},
+      {k:'loadT', label:'標準積載量（t）', type:'number', list:true},
+      {k:'loadM3', label:'標準容積（m3）', type:'number', list:true},
+      {k:'note', label:'備考', type:'text', list:true}
+    ]
+  },
+  m_containers: {
+    title:'荷姿・容器マスタ', ids:['E-06'], data:() => CONTAINERS,
+    lead:'フレコン・ドラム・コンテナ等の種別と標準容量。第1期は記録と数量目安への利用のみで、在庫・配置管理は行いません。',
+    cols:[
+      {k:'name', label:'荷姿・容器', type:'text', list:true, req:true},
+      {k:'volM3', label:'標準容量（m3）', type:'number', list:true},
+      {k:'note', label:'備考', type:'text', list:true}
+    ]
+  }
+};
+
+function cellText(col, row) {
+  const v = getPath(row, col.k);
+  if (col.type === 'bool') return v ? '<span class="badge b-approved b-sq">✓</span>' : '<span class="text-secondary">—</span>';
+  if (col.fmt) return v == null || v === '' ? '<span class="text-secondary">—</span>' : col.fmt(v);
+  if (col.type === 'select' && col.opts) {
+    const o = col.opts().find(x => String(x.v) === String(v));
+    return o ? esc(o.t) : (v ? esc(v) : '<span class="text-secondary">—</span>');
+  }
+  return v == null || v === '' ? '<span class="text-secondary">—</span>' : esc(v);
+}
+
+function viewMaster(route) {
+  const m = MASTERS[route], rows = m.data();
+  const cols = m.cols.filter(c => c.list);
+  return pageHead(m.title, m.lead, m.ids,
+    `<button class="btn btn-primary btn-sm" data-act="mAdd" data-m="${route}">＋ 新規登録</button>
+     <button class="btn btn-outline-primary btn-sm" data-act="mCsv" data-m="${route}">CSV出力</button>`) +
+  specNote(route) +
+  `<div class="table-wrap"><table class="table table-hover mb-0">
+    <thead><tr>${cols.map(c => `<th>${esc(c.label)}</th>`).join('')}${m.extraCol ? `<th>${m.extraCol.label}</th>` : ''}<th></th></tr></thead>
+    <tbody>${rows.length ? rows.map((r,i) => `<tr>
+      ${cols.map(c => `<td${c.type === 'number' ? ' class="num"' : ''}>${cellText(c, r)}</td>`).join('')}
+      ${m.extraCol ? `<td>${m.extraCol.fmt(r)}</td>` : ''}
+      <td class="text-end text-nowrap">
+        <button class="btn btn-outline-secondary btn-sm" data-act="mEdit" data-m="${route}" data-i="${i}">編集</button>
+        <button class="btn btn-outline-danger btn-sm ms-1" data-act="mDel" data-m="${route}" data-i="${i}">削除</button></td>
+    </tr>`).join('') : `<tr><td colspan="${cols.length + 2}" class="text-center text-secondary py-4">登録がありません</td></tr>`}</tbody>
+  </table></div>`;
+}
+
+var MODALS_MASTER = p => {
+  const m = MASTERS[p.m], d = p.row;
+  const field = c => {
+    const v = getPath(d, c.k);
+    const lbl = `<label class="form-label">${esc(c.label)}${c.req ? '<span class="req">必須</span>' : ''}</label>`;
+    if (c.type === 'bool') return `<div class="form-check mt-2"><input class="form-check-input" type="checkbox" data-mod="row.${c.k}" ${v ? 'checked' : ''}>
+      <label class="form-check-label">${esc(c.label)}</label></div>`;
+    if (c.type === 'select') return `${lbl}<select class="form-select" data-mod="row.${c.k}">${opts(c.opts(), v)}</select>`;
+    if (c.type === 'multi') return `${lbl}<div class="d-flex flex-wrap gap-3 border rounded p-2">${c.opts().map(o => `
+      <div class="form-check"><input class="form-check-input" type="checkbox" data-mod="multi.${c.k}.${o.v}" ${(v||[]).includes(o.v) ? 'checked' : ''}>
+        <label class="form-check-label" style="font-size:14px">${esc(o.t)}</label></div>`).join('')}</div>`;
+    if (c.type === 'date') return `${lbl}<input type="date" class="form-control" data-mod="row.${c.k}" value="${esc(v || '')}">`;
+    if (c.type === 'number') return `${lbl}<input type="text" inputmode="decimal" class="form-control" data-mod="row.${c.k}" value="${v == null ? '' : esc(v)}">`;
+    return `${lbl}<input type="text" class="form-control" data-mod="row.${c.k}" value="${esc(v || '')}">`;
+  };
+  return {
+    title:`${m.title}　${p.idx == null ? '新規登録' : '編集'}`,
+    body:`<div class="row g-3">${m.cols.map(c => `<div class="col-12 col-md-6">${field(c)}</div>`).join('')}</div>
+      ${p.err ? `<div class="text-danger mt-2" style="font-size:13px">${esc(p.err)}</div>` : ''}`,
+    foot:`<button class="btn btn-outline-secondary" data-act="closeModal">キャンセル</button>
+          <button class="btn btn-primary" data-act="mSave">保存</button>`
+  };
+};
+
+/* =========================================================================
+   G-06 監査ログ
+   ========================================================================= */
+function viewAudit() {
+  return pageHead('監査ログ',
+    '枠設定の変更、承認・変更依頼、訪問日時の設定、単価変更、締め処理を記録します。この画面での操作も随時記録されます。',
+    ['G-06'],
+    `<button class="btn btn-outline-primary btn-sm" data-act="exportAudit">CSV出力</button>`) +
+  specNote('audit') +
+  `<div class="table-wrap"><table class="table mb-0">
+    <thead><tr><th>日時</th><th>操作者</th><th>ロール</th><th>操作</th><th>対象</th><th>内容</th></tr></thead>
+    <tbody>${AUDIT.map(a => `<tr>
+      <td class="mono">${esc(a.at)}</td><td>${esc(a.user)}</td><td>${esc(a.role)}</td>
+      <td><span class="badge b-neutral b-sq">${esc(a.act)}</span></td>
+      <td class="mono">${esc(a.target)}</td><td style="font-size:13px">${esc(a.detail)}</td></tr>`).join('')}
+    </tbody></table></div>`;
+}
+
+/* =========================================================================
+   画面ごとの仕様メモ（要件を詰めるための論点つき）
+   ========================================================================= */
+const SPEC_NOTES = {
+  approvals:{
+    rules:[
+      '第1期は<b>自動確定なし</b>。持込・引取とも全件が「申請中」から始まり、責任者が承認または変更依頼を返す（C-01／C-02）。',
+      '承認は持込＝受入責任者、引取＝配車責任者。兼務あり。ロール切替で見え方が変わる。',
+      '事前チェック（契約・許可・代理関係・枠残）は<b>判断材料の提示のみ</b>。超過していても承認は可能（A-06）。',
+      '変更依頼は理由必須。14日以内の空き枠を代替候補として提示する（C-02）。'
+    ],
+    out:['承認の自動化・ルールベース判定','エリア別の枠判定'],
+    q:['新着通知のチャネル（LINE／LINE WORKS／メール）は本システムの運用可否を左右するため優先確定が必要（G-01）。',
+       '承認の権限分担：持込＝受入責任者／引取＝配車責任者で固定か、どちらも操作可とするか。',
+       '受付番号の採番タイミング：仕様書A-08は「承認時」だが、排出元ポータル（作成済モック）は「申請時」に採番している。本モックは<b>申請時採番</b>で実装。どちらに寄せるか要決定。']
+  },
+  board:{
+    rules:[
+      '承認済の予約・依頼を日別に表示。持込は時間帯ごと、引取は訪問時刻順（C-03）。',
+      '受入順序の調整＝時間帯の変更（C-04）。引取は訪問日時の変更（C-05）。いずれも取引先へ通知。',
+      '取消は枠を解放する。締切（既定：前日17時）後は社内担当のみ操作可（A-07）。'
+    ],
+    out:['配車ボード（車両・ドライバー割当編成）は第2期','運行指示書の出力、地図表示、ルート最適化'],
+    q:['当日の順番待ち（場内の受入順）まで管理するか、時間帯単位で十分か。',
+       '取消時に取引先へ再申請を促す通知を出すか。']
+  },
+  proxy:{
+    rules:[
+      '営業が電話で受けた内容を、取引先ポータルと同一項目で入力する（C-06）。',
+      '登録後は取引先からの申請と同じく承認待ちとなる。申請経路は「電話（営業 代行入力）」として記録。',
+      '運搬業者が代理申請できる排出事業者の範囲は取引関係マスタ（E-03）で制御。'
+    ],
+    q:['代行入力した予約を、営業がそのまま承認できてよいか（自己承認の可否）。',
+       '電話受付時に取引先へ返す受付番号の伝え方（口頭／SMS／メール）。']
+  },
+  capacity:{
+    rules:[
+      '曜日パターンで標準枠を作り、指定期間へ一括適用、個別日で上書きする（B-06）。',
+      '着車数・総処理量・品目別の3種類の上限を持つ。品目別上限の合計が総量上限を超える設定も許容（B-02〜B-04）。',
+      '当日を含む枠の緊急変更・臨時開放が可能。変更は監査ログに残る（B-08／G-06）。',
+      'カレンダーの消化状況は「承認済＋申請中」を合算表示（B-09）。'
+    ],
+    out:['出勤者数・作業員スキル連動の動的な処理能力算出（Could）','週次消化率などの分析ダッシュボード（第2期）'],
+    q:['処理量の枠消費は「申告数量」で仮押さえし、計量後に実数へ置き換えるか（現状は申告ベース）。',
+       'm3計上品目の重量換算係数（現在は暫定 0.3t/m3）を品目マスタに持たせるか。',
+       '時間帯の粒度（現行：午前・午後の2枠）で足りるか。1時間刻みの要望があるか。']
+  },
+  pickupcap:{
+    rules:[
+      '引取枠は日単位の受付上限件数のみ。既定値は「自社稼働車両台数 × 1台あたり想定訪問件数」から算出し、手動上書き可（B-05）。',
+      '休業日は受付不可。曜日別の上限と個別日の上書きを持つ。'
+    ],
+    out:['エリア（方面）別の枠分割は第2期（B-11）','車両カレンダーによる空き判定は第2期'],
+    q:['引取の受付上限は件数だけでよいか（重量・容積の上限も要るか）。',
+       '午前／午後の希望を受ける場合、枠も午前／午後で分けるか。']
+  },
+  reception:{
+    rules:[
+      '受付番号または車番で予約を検索し、入場時刻を記録する（D-01）。',
+      '総重量−空車重量＝正味重量を自動算出。体積計上品目は体積を入力（D-02）。',
+      '申告と実数の差異は理由とともに記録する（D-04）。',
+      '1運行で複数現場を回った引取は、現場別に按分または個別入力する（D-03）。',
+      '予約のない搬入は飛び込みとして実績を直接登録できる（C-07）。'
+    ],
+    out:['トラックスケール・計量システムとのCSV／API連携（Should・D-07）','構内工程管理、在庫管理'],
+    q:['1台に複数品目が積まれている場合の実数按分ルール（本モックは品目ごとに実数を手入力）。',
+       '計量票の出力・印刷は必要か（第1期の要否）。',
+       '入場時刻は自動（バーコード・ナンバー認識）か手動か。']
+  },
+  actuals:{
+    rules:['期間・取引先・品目・区分での検索とCSV出力（D-06）。','差異のある実績を抽出して確認できる。'],
+    q:['CSVの列構成は会計・分析のどちらに合わせるか。','実績の訂正権限（誰がどこまで直せるか）。']
+  },
+  closing:{
+    rules:[
+      '実績確定時に契約単価を適用して売上明細を自動生成する。適用単価は明細にスナップショット保存し、単価改定で過去分は再計算しない（F-01／E-10）。',
+      '引取は処分費と運搬費を別明細として生成する（F-02）。',
+      '算出額が最低料金を下回る場合は最低料金を適用（F-03）。',
+      '単価が負値（有価物）の場合は売上ではなく仕入として区分する。同一取引先に売上と仕入が併存してよい（F-04）。',
+      '締め後の実績は編集不可。修正は赤伝（マイナス明細）方式（F-05）。',
+      'CSVは出力テンプレートを切り替えられる（F-06）。'
+    ],
+    out:['請求書発行・インボイス帳票（第2期・F-07）','会計ソフトAPI連携（第3期・F-08）'],
+    q:['締め日は月末固定か、取引先ごとの締め日（20日締め等）に対応するか。',
+       '消費税の扱い（明細は税抜前提。税計算・端数処理のルール確認）。',
+       '有価物の仕入計上を会計側でどう受けるか（CSV列の分け方）。']
+  },
+  m_partners:{rules:['取引先種別により、予約時に選べる立場（排出／運搬）が変わる。','許可情報は承認画面の許可有効性チェック（C-09）で参照する。'],
+    q:['許可証の写し（PDF）の添付保管は第1期に含めるか（E-12はShould）。']},
+  m_sites:{rules:['現場条件（道幅・重機・立会）は引取の可否判断の材料。','スポット案件の現場も登録できる。'],
+    q:['取引先ポータルから現場を新規登録できるようにするか（排出元モックでは「現場マスタに登録する」チェックあり）。']},
+  m_relations:{rules:['運搬業者が代理予約できる排出事業者を定義する。未登録の組み合わせは承認画面で警告になる。'],
+    q:['委託の実在性を契約側でも確認するか（二重管理の整理）。']},
+  m_contracts:{rules:['契約期間と対象品目が、承認時の契約チェックと単価参照の基準になる。'],
+    out:['契約書の作成・電子締結'],
+    q:['契約書PDFからの単価抽出（E-11・Should）を第1期に前倒しするか。']},
+  m_dprice:{rules:['契約×品目×適用開始日で世代管理。負値は有価物の買取単価。','最低料金・追加料金は売上計算時に適用される。'],
+    q:['品目ごとではなく「契約単位の一律単価」の運用があるか。','数量帯別（従量）単価の要否。']},
+  m_tprice:{rules:['契約×排出現場×車格の固定運賃を基本形とする。'],
+    q:['距離・時間ベースの運賃計算が必要な取引先があるか。']},
+  m_items:{rules:['法定20種類区分と自社実務区分を併記する。標準単位が売上計算の単位になる。','有価物フラグが立つと仕入として計上される。']},
+  m_vehicles:{rules:['標準積載量は枠消費量の目安算出に使用する。']},
+  m_containers:{rules:['第1期は記録と数量目安のみ。コンテナの在庫・配置管理は将来。']},
+  audit:{rules:['枠設定変更、承認・変更依頼、訪問日時設定、単価変更、締め処理を記録する（G-06）。'],
+    q:['保持期間と、取引先側の操作ログを含めるかどうか。']}
+};
+
+/* =========================================================================
+   ルーティング・描画
+   ========================================================================= */
+const VIEWS = {
+  approvals: viewApprovals, board: viewBoard, proxy: viewProxy,
+  capacity: viewCapacity, pickupcap: viewPickupCap,
+  reception: viewReception, actuals: viewActuals, closing: viewClosing,
+  audit: viewAudit
+};
+Object.keys(MASTERS).forEach(k => VIEWS[k] = () => viewMaster(k));
+
+const MODALS = {
+  approve: MODALS_APPROVE, reject: MODALS_REJECT, resv: MODALS_RESV,
+  changeSlot: MODALS_CHANGESLOT, changeVisit: MODALS_CHANGEVISIT, cancel: MODALS_CANCEL,
+  daycap: MODALS_DAYCAP, pickupday: MODALS_PICKUPDAY,
+  weigh: MODALS_WEIGH, spot: MODALS_SPOT, reject2: MODALS_REJECT2,
+  actual: MODALS_ACTUAL, close: MODALS_CLOSE, master: MODALS_MASTER
+};
+
+const nowHm = () => { const d = new Date(); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+let lastRoute = null;
+
+function focusKey(el) {
+  if (!el || !el.dataset) return null;
+  const d = el.dataset;
+  if (d.px)  return 'px:'  + d.px;
+  if (d.mod) return 'mod:' + d.mod;
+  if (d.cap) return 'cap:' + d.cap;
+  if (d.key) return 'key:' + d.key;
+  return null;
+}
+function restoreFocus(key, pos) {
+  if (!key) return;
+  const i = key.indexOf(':'), t = key.slice(0, i), v = key.slice(i+1);
+  const el = document.querySelector(`[data-${t}="${window.CSS && CSS.escape ? CSS.escape(v) : v}"]`);
+  if (!el) return;
+  el.focus({preventScroll:true});
+  try { el.setSelectionRange(pos, pos); } catch (e) {}
+}
+
+function renderSidebar() {
+  const html = NAV.map(sec => {
+    const items = sec.items.map(it => {
+      const lock = !allowed(it.route);
+      const cnt = it.badge ? pendingCount() : 0;
+      return `<a href="#${it.route}" class="navitem ${state.route === it.route ? 'active' : ''} ${lock ? 'locked' : ''}"
+        data-act="go" data-route="${it.route}" ${lock ? 'aria-disabled="true" title="このロールでは利用できません"' : ''}>
+        <span class="ico">${it.ico}</span><span>${it.label}</span>
+        ${cnt ? `<span class="cnt">${cnt}</span>` : ''}${lock ? '<span class="tag">権限外</span>' : ''}</a>`;
+    }).join('');
+    return `<div class="navsec">${sec.sec}</div>${items}`;
+  }).join('');
+  document.getElementById('elSidebar').innerHTML = html;
+}
+
+function renderChrome() {
+  const ss = document.getElementById('elSiteSel');
+  if (!ss.options.length) {
+    ss.innerHTML = BASES.map(b => `<option value="${b.id}" ${b.disabled ? 'disabled' : ''}>${b.name}</option>`).join('');
+    document.getElementById('elRoleSel').innerHTML = ROLES.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+  }
+  ss.value = state.base;
+  document.getElementById('elRoleSel').value = state.role;
+  const n = pendingCount();
+  document.getElementById('elNotifCnt').innerHTML = n
+    ? ` <span class="badge b-rejected b-sq" style="padding:1px 6px">${n}</span>` : '';
+}
+
+function render() {
+  const y = window.scrollY;
+  const af = document.activeElement, fk = focusKey(af);
+  const pos = af && af.setSelectionRange ? (af.selectionStart || 0) : 0;
+  renderChrome();
+  renderSidebar();
+  const el = document.getElementById('elView');
+  if (!allowed(state.route)) {
+    el.innerHTML = `<div class="empty"><b>${esc(ROLES.find(r => r.id === state.role).name)}</b> のロールでは、この画面を利用できません。<br>
+      <span style="font-size:13px">画面ごとの権限は、右上のロール切替で確認できます。</span></div>`;
+  } else {
+    el.innerHTML = VIEWS[state.route]();
+  }
+  if (state.route !== lastRoute) { window.scrollTo(0,0); lastRoute = state.route; }
+  else window.scrollTo(0, y);
+  restoreFocus(fk, pos);
+  if (location.hash.slice(1) !== state.route) history.replaceState(null, '', '#' + state.route);
+}
+
+function go(route) {
+  state.route = route;
+  document.getElementById('elSidebar').classList.remove('open');
+  render();
+}
+
+/* =========================================================================
+   イベント
+   ========================================================================= */
+/* --- 入力（テキスト・数値） --- */
+document.addEventListener('input', e => {
+  const d = e.target.dataset;
+  const val = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+  if (d.px) { setPath(state.proxy, d.px, val); if (d.px === 'date' || d.px === 'emitterId') render(); return; }
+  if (d.mod) { modBind(d.mod, val, e.target); if (d.rerender) renderModal(); return; }
+  if (d.act === 'apFilter') { state.approval[d.key] = val; render(); return; }
+  if (d.act === 'recQ') { state.reception.q = val; render(); return; }
+  if (d.act === 'acFilter') { state.actuals[d.key] = val; render(); return; }
+});
+/* --- 変更（セレクト・チェック・日付） ---
+   テキスト入力の change はフォーカスが外れた瞬間に発火する。ここで再描画すると、
+   クリックしようとしたボタンが mousedown と mouseup の間で作り直されてクリックが
+   失われるため、再描画はセレクト・チェックボックス・日付だけに限定する。
+   テキスト入力の値は input イベント側で保持済み。 */
+document.addEventListener('change', e => {
+  const d = e.target.dataset;
+  const val = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+  const structural = e.target.tagName === 'SELECT' || ['checkbox','radio','date'].includes(e.target.type);
+  if (d.px) {
+    setPath(state.proxy, d.px, val);
+    if (d.px === 'applicantId') { state.proxy.emitterId = ''; state.proxy.siteId = ''; }
+    if (d.px === 'emitterId') state.proxy.siteId = '';
+    if (d.px === 'date') state.proxy.slotId = '';
+    if (structural) render();
+    return;
+  }
+  if (d.mod) { modBind(d.mod, val, e.target); if (structural) renderModal(); return; }
+  if (d.act === 'boardDate') { state.board.date = val; render(); return; }
+  if (d.act === 'acFilter') { state.actuals[d.key] = val; if (structural) render(); return; }
+  if (d.act === 'apFilter') { state.approval[d.key] = val; if (structural) render(); return; }
+  if (d.act === 'switchRole') { state.role = val; if (!allowed(state.route)) state.route = 'approvals'; render(); return; }
+  if (d.act === 'switchSite') { state.base = val; render(); return; }
+});
+
+function modBind(key, val, el) {
+  const m = state.modal; if (!m) return;
+  if (key.startsWith('row.'))  { setPath(m.row, key.slice(4), val); return; }
+  if (key.startsWith('multi.')) {
+    const [, f, v] = key.split('.');
+    m.row[f] = m.row[f] || [];
+    if (val) { if (!m.row[f].includes(v)) m.row[f].push(v); }
+    else m.row[f] = m.row[f].filter(x => x !== v);
+    return;
+  }
+  if (key.startsWith('extra.')) {
+    const id = key.split('.')[1];
+    m.extras = m.extras || [];
+    if (val) { if (!m.extras.find(x => x.id === id)) m.extras.push({id, qty:1}); }
+    else m.extras = m.extras.filter(x => x.id !== id);
+    return;
+  }
+  setPath(m, key, val);
+}
+
+/* --- クリック --- */
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  const a = el.dataset.act, d = el.dataset;
+  if (el.tagName === 'A') e.preventDefault();
+  if (el.tagName === 'SELECT' || el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') return;
+  const m = state.modal;
+
+  switch (a) {
+    /* ---- 共通 ---- */
+    case 'go': if (allowed(d.route)) go(d.route); else toast('このロールでは利用できない画面です', 'warn'); break;
+    case 'toggleNav': document.getElementById('elSidebar').classList.toggle('open'); break;
+    case 'toggleNote': state.noteOpen = state.noteOpen === d.route ? null : d.route; render(); break;
+    case 'closeModal': closeModal(); render(); break;
+    case 'openNotif':
+      toast(`承認待ち ${pendingCount()} 件（G-01：本番の通知チャネルはLINE／LINE WORKS等を想定・要確定）`);
+      go('approvals'); break;
+
+    /* ---- 承認キュー ---- */
+    case 'selApproval': state.approval.sel = d.no; render(); break;
+    case 'openResvDetail': openModal('resv', {no:d.no}); break;
+    case 'openApprove': {
+      const r = resv(d.no);
+      openModal('approve', {no:d.no, date:r.date, slotId:r.slotId,
+        visitDate:r.date, visitFrom:r.startAt, visitTo:r.endAt, dispatchNote:r.dispatchNote || '', comment:''});
+      break;
+    }
+    case 'openReject': openModal('reject', {no:d.no, reason:''}); break;
+    case 'pickAlt':
+      m.reason = (m.reason ? m.reason.replace(/\s*$/,'') + '\n' : '') + `代替候補：${d.label}（${d.rest}）`;
+      renderModal(); break;
+    case 'doApprove': {
+      const r = resv(m.no);
+      if (r.method === 'drop') {
+        r.date = m.date || r.date; r.slotId = m.slotId || r.slotId;
+      } else {
+        if (!m.visitDate || !m.visitFrom || !m.visitTo) { m.err = '訪問日時を入力してください。'; renderModal(); return; }
+        if (m.visitTo <= m.visitFrom) { m.err = '終了時刻は開始時刻より後にしてください。'; renderModal(); return; }
+        Object.assign(r, {visitDate:m.visitDate, visitFrom:m.visitFrom, visitTo:m.visitTo, dispatchNote:m.dispatchNote || ''});
+      }
+      r.status = 'approved'; r.approvedAt = `${D(0)} ${nowHm()}`; r.approvedBy = me().user;
+      if (m.comment) r.approveComment = m.comment;
+      audit('承認', r.no, r.method === 'drop'
+        ? `持込／${fmtMd(r.date)} ${slotDef(r.slotId).label}`
+        : `引取／訪問 ${fmtMd(r.visitDate)} ${r.visitFrom}〜${r.visitTo}`);
+      closeModal();
+      state.approval.sel = null;
+      toast(`${r.no} を承認しました。取引先へ通知を送信しました（G-02${r.method === 'pickup' ? '／G-03 訪問日時' : ''}）。`);
+      render(); break;
+    }
+    case 'doReject': {
+      if (!m.reason || !m.reason.trim()) { m.err = '理由を入力してください。'; renderModal(); return; }
+      const r = resv(m.no);
+      r.status = 'rejected'; r.rejectReason = m.reason.trim();
+      r.rejectedAt = `${D(0)} ${nowHm()}`; r.rejectedBy = me().user;
+      audit('変更依頼', r.no, m.reason.trim().split('\n')[0]);
+      closeModal(); state.approval.sel = null;
+      toast(`${r.no} に変更依頼を送りました。取引先が修正して再申請します。`, 'warn');
+      render(); break;
+    }
+
+    /* ---- 予約一覧ボード ---- */
+    case 'boardShift': state.board.date = dstr(addDays(parseD(state.board.date), Number(d.n))); render(); break;
+    case 'boardToday': state.board.date = D(0); render(); break;
+    case 'boardTab': state.board.tab = d.tab; render(); break;
+    case 'openChangeSlot': { const r = resv(d.no); openModal('changeSlot', {no:d.no, date:r.date, slotId:r.slotId, reason:''}); break; }
+    case 'doChangeSlot': {
+      if (!m.reason || !m.reason.trim()) { m.err = '変更理由を入力してください。'; renderModal(); return; }
+      const r = resv(m.no), before = `${fmtMd(r.date)} ${slotDef(r.slotId).label}`;
+      r.date = m.date; r.slotId = m.slotId;
+      audit('受入順序の調整', r.no, `${before} → ${fmtMd(r.date)} ${slotDef(r.slotId).label}（${m.reason}）`);
+      closeModal(); toast(`${r.no} の時間帯を変更し、取引先へ通知しました。`); render(); break;
+    }
+    case 'openChangeVisit': { const r = resv(d.no);
+      openModal('changeVisit', {no:d.no, visitDate:r.visitDate || r.date, visitFrom:r.visitFrom || r.startAt,
+        visitTo:r.visitTo || r.endAt, dispatchNote:r.dispatchNote || '', reason:''}); break; }
+    case 'doChangeVisit': {
+      if (!m.reason || !m.reason.trim()) { m.err = '変更理由を入力してください。'; renderModal(); return; }
+      if (m.visitTo <= m.visitFrom) { m.err = '終了時刻は開始時刻より後にしてください。'; renderModal(); return; }
+      const r = resv(m.no);
+      Object.assign(r, {visitDate:m.visitDate, visitFrom:m.visitFrom, visitTo:m.visitTo, dispatchNote:m.dispatchNote});
+      audit('訪問日時の変更', r.no, `${fmtMd(r.visitDate)} ${r.visitFrom}〜${r.visitTo}（${m.reason}）`);
+      closeModal(); toast(`${r.no} の訪問日時を変更し、取引先へ通知しました（G-03）。`); render(); break;
+    }
+    case 'openCancel': openModal('cancel', {no:d.no, reason:''}, 'modal-md'); break;
+    case 'doCancel': {
+      if (!m.reason || !m.reason.trim()) { m.err = '取消理由を入力してください。'; renderModal(); return; }
+      const r = resv(m.no);
+      r.status = 'canceled'; r.cancelReason = m.reason.trim();
+      audit('取消', r.no, m.reason.trim());
+      closeModal(); toast(`${r.no} を取消しました。枠を解放しました。`, 'warn'); render(); break;
+    }
+    case 'exportBoard': {
+      const ds = state.board.date;
+      const rows = [['日付','受付番号','区分','ステータス','時間','排出事業者','申請者','品目・申告数量','車格','台数','車番','ドライバー','現場']];
+      RESV.filter(r => (r.method === 'drop' ? r.date : (r.visitDate || r.date)) === ds && !['pending','rejected'].includes(r.status))
+        .forEach(r => rows.push([ds, r.no, methodLabel(r.method), STATUS[r.status].t, resvTime(r),
+          partner(r.emitterId).name, partner(r.applicantId).name, linesText(r),
+          vehicle(r.vehicleId).name || '', r.vCount || '', r.plate || '', r.driver || '', site(r.siteId).name || '']));
+      downloadCsv(`予約一覧_${ds}.csv`, rows);
+      toast('CSVを出力しました。'); break;
+    }
+
+    /* ---- 代行入力 ---- */
+    case 'pxMethod':
+      state.proxy.method = d.v; state.proxy.slotId = ''; state.proxy.errors = []; render(); break;
+    case 'pxAddLine': state.proxy.lines.push(blankLine()); render(); break;
+    case 'pxRemoveLine':
+      state.proxy.lines.splice(Number(d.idx), 1);
+      if (!state.proxy.lines.length) state.proxy.lines.push(blankLine());
+      render(); break;
+    case 'pxReset': state.proxy = blankProxy(); render(); break;
+    case 'pxSubmit': pxSubmit(); break;
+
+    /* ---- 受入枠設定 ---- */
+    case 'capTab': state.capacity.tab = d.tab; render(); break;
+    case 'capMonth': state.capacity.month = shiftMonth(state.capacity.month, Number(d.n)); render(); break;
+    case 'openDayCap': openModal('daycap', {date:d.date}); break;
+    case 'doSaveDayCap': {
+      if (!m.reason || !String(m.reason).trim()) { m.err = '変更理由を入力してください。'; renderModal(); return; }
+      const ds = d.date;
+      if (m.closed) capacity.days[ds] = {closed:true, reason:String(m.reason).trim()};
+      else {
+        const slots = {};
+        SLOTS.filter(s => s.active).forEach(s => {
+          const t = getPath(m, `slot.${s.id}.trucks`), w = getPath(m, `slot.${s.id}.weight`);
+          const cur = capacityOf(ds).slots.find(x => x.id === s.id);
+          slots[s.id] = {trucks: Number(t != null && t !== '' ? t : (cur ? cur.trucks : 0)),
+                         weight: Number(w != null && w !== '' ? w : (cur ? cur.weight : 0))};
+        });
+        capacity.days[ds] = {slots, reason:String(m.reason).trim()};
+      }
+      audit('枠設定変更', `受入枠 ${ds}`, `${m.closed ? '臨時休業' : '枠を上書き'}（${String(m.reason).trim()}）`);
+      closeModal(); toast(`${fmtMd(ds)} の受入枠を変更しました。`); render(); break;
+    }
+    case 'doClearDayCap':
+      delete capacity.days[d.date];
+      audit('枠設定変更', `受入枠 ${d.date}`, '個別上書きを解除（曜日パターンに戻す）');
+      closeModal(); toast(`${fmtMd(d.date)} の上書きを解除しました。`); render(); break;
+    case 'capSaveWeekly': {
+      [0,1,2,3,4,5,6].forEach(w => {
+        const cb = document.querySelector(`[data-cap="closed.${w}"]`);
+        if (cb && cb.checked) { capacity.weekly[w] = null; return; }
+        const o = {};
+        SLOTS.filter(s => s.active).forEach(s => {
+          const t = document.querySelector(`[data-cap="w.${w}.${s.id}.trucks"]`);
+          const g = document.querySelector(`[data-cap="w.${w}.${s.id}.weight"]`);
+          const tv = t && t.value !== '' ? Number(t.value) : null;
+          const gv = g && g.value !== '' ? Number(g.value) : null;
+          if (tv != null || gv != null) o[s.id] = {trucks: tv || 0, weight: gv || 0};
+        });
+        capacity.weekly[w] = Object.keys(o).length ? o : null;
+      });
+      audit('枠設定変更', '曜日パターン', '受入枠の曜日パターンを更新');
+      toast('曜日パターンを保存しました。'); render(); break;
+    }
+    case 'capBulk': {
+      const from = document.getElementById('elBulkFrom').value, to = document.getElementById('elBulkTo').value;
+      if (!from || !to || to < from) { toast('期間の指定を確認してください。', 'err'); return; }
+      let n = 0;
+      for (let dt = parseD(from); dstr(dt) <= to; dt = addDays(dt, 1)) {
+        const ds = dstr(dt), ov = capacity.days[ds];
+        if (ov && ov.closed) continue;         /* 臨時休業は残す */
+        delete capacity.days[ds]; n++;
+      }
+      audit('枠設定変更', `一括適用 ${from}〜${to}`, `${n} 日に曜日パターンを適用（個別上書きを解除）`);
+      toast(`${from} 〜 ${to} の ${n} 日へ曜日パターンを適用しました。`); render(); break;
+    }
+    case 'capSaveItems': {
+      ITEMS.forEach(it => {
+        const el2 = document.querySelector(`[data-cap="item.${it.id}"]`);
+        if (!el2) return;
+        if (el2.value === '') delete capacity.itemCaps[it.id];
+        else capacity.itemCaps[it.id] = Number(el2.value);
+      });
+      audit('枠設定変更', '品目別上限', '日次の品目別上限を更新');
+      toast('品目別上限を保存しました。'); render(); break;
+    }
+    case 'capSaveSlots': {
+      SLOTS.forEach(s => {
+        const el2 = document.querySelector(`[data-cap="slot.${s.id}"]`);
+        if (el2) s.active = el2.checked;
+      });
+      audit('枠設定変更', '時間帯マスタ', '時間帯の有効／無効を更新');
+      toast('時間帯マスタを保存しました。'); render(); break;
+    }
+
+    /* ---- 引取枠設定 ---- */
+    case 'pkMonth': state.pickupcap.month = shiftMonth(state.pickupcap.month, Number(d.n)); render(); break;
+    case 'pkApplyCalc': {
+      const v = document.querySelector('[data-cap="pk.vehicles"]').value;
+      const p = document.querySelector('[data-cap="pk.perVehicle"]').value;
+      pickupCapacity.vehicles = Number(v) || 0; pickupCapacity.perVehicle = Number(p) || 0;
+      const base = pickupCapacity.vehicles * pickupCapacity.perVehicle;
+      [1,2,3,4,5].forEach(w => pickupCapacity.weekly[w] = base);
+      audit('枠設定変更', '引取枠', `既定値を平日へ反映（${pickupCapacity.vehicles}台 × ${pickupCapacity.perVehicle}件 = ${base}件／日）`);
+      toast(`平日の引取枠を ${base} 件／日に設定しました。`); render(); break;
+    }
+    case 'pkSaveWeekly': {
+      [0,1,2,3,4,5,6].forEach(w => {
+        const el2 = document.querySelector(`[data-cap="pkw.${w}"]`);
+        if (el2) pickupCapacity.weekly[w] = Number(el2.value) || 0;
+      });
+      audit('枠設定変更', '引取枠', '曜日別の上限を更新');
+      toast('引取枠の曜日別上限を保存しました。'); render(); break;
+    }
+    case 'openPickupDay': openModal('pickupday', {date:d.date}, 'modal-md'); break;
+    case 'doSavePickupDay': {
+      if (!m.reason || !String(m.reason).trim()) { m.err = '理由を入力してください。'; renderModal(); return; }
+      pickupCapacity.days[d.date] = {limit: Number(m.limit) || 0, reason: String(m.reason).trim()};
+      audit('枠設定変更', `引取枠 ${d.date}`, `上限 ${Number(m.limit) || 0} 件（${String(m.reason).trim()}）`);
+      closeModal(); toast(`${fmtMd(d.date)} の引取枠を変更しました。`); render(); break;
+    }
+    case 'doClearPickupDay':
+      delete pickupCapacity.days[d.date];
+      audit('枠設定変更', `引取枠 ${d.date}`, '個別上書きを解除');
+      closeModal(); toast(`${fmtMd(d.date)} の上書きを解除しました。`); render(); break;
+
+    /* ---- 入場受付・計量 ---- */
+    case 'doArrive': {
+      const r = resv(d.no);
+      r.status = 'arrived'; r.arrivedAt = nowHm();
+      audit('入場受付', r.no, `入場時刻 ${r.arrivedAt}`);
+      toast(`${r.no} を入場受付しました（${r.arrivedAt}）。`); render(); break;
+    }
+    case 'openWeigh': openModal('weigh', weighInit(d.no), 'modal-xl'); break;
+    case 'weighAddLine': m.lines.push({itemId:'', declared:0, qty:''}); renderModal(); break;
+    case 'weighRemoveLine': m.lines.splice(Number(d.idx), 1); renderModal(); break;
+    case 'weighAddAlloc': m.alloc.push({siteId:'', qty:''}); renderModal(); break;
+    case 'weighRemoveAlloc': m.alloc.splice(Number(d.idx), 1); renderModal(); break;
+    case 'doWeigh': {
+      const r = resv(m.no);
+      const g = Number(m.gross), t = Number(m.tare);
+      if (!m.gross || !m.tare || isNaN(g) || isNaN(t)) { m.err = '総重量・空車重量を数字で入力してください。'; renderModal(); return; }
+      if (g <= t) { m.err = '総重量は空車重量より大きい値を入力してください。'; renderModal(); return; }
+      if (m.lines.some(l => !l.itemId || l.qty === '' || isNaN(Number(l.qty)) || Number(l.qty) <= 0)) {
+        m.err = '実数量は品目ごとに正の数で入力してください。'; renderModal(); return;
+      }
+      const hasDiff = m.lines.some(l => Math.abs(Number(l.qty) - l.declared) / Math.max(l.declared, 0.01) > 0.1);
+      if (hasDiff && !m.diffReason) { m.err2 = '差異理由を選択してください。'; renderModal(); return; }
+      if (m.multi) {
+        const sumA = m.alloc.reduce((s,x) => s + (Number(x.qty) || 0), 0);
+        const sumW = m.lines.reduce((s,l) => s + (item(l.itemId).unit === 't' ? Number(l.qty) : 0), 0);
+        if (m.alloc.filter(x => x.siteId).length < 2) { m.err = '按分する現場を2件以上指定してください。'; renderModal(); return; }
+        if (Math.abs(sumA - sumW) > 0.01) { m.err = '按分の合計が実数量の合計と一致していません。'; renderModal(); return; }
+      }
+      let total = 0, first = null;
+      m.lines.forEach((l, i) => {
+        const it = item(l.itemId);
+        const a = {
+          id: nextActualId(), date: D(0), resvNo: r.no, method: r.method,
+          partnerId: r.emitterId,
+          siteId: r.method === 'pickup' ? r.siteId : ((SITES.find(s => s.partnerId === r.emitterId) || {}).id || ''),
+          itemId: l.itemId, unit: it.unit, declared: l.declared,
+          gross: i === 0 ? g : null, tare: i === 0 ? t : null, net: Number(l.qty),
+          vehicleId: r.vehicleId || null, plate: r.plate || '',
+          diffReason: m.diffReason || '', spot: false, status: 'fixed',
+          allocations: (m.multi && i === 0) ? m.alloc.filter(x => x.siteId && x.qty).map(x => ({siteId:x.siteId, qty:Number(x.qty)})) : null,
+          extras: i === 0 ? (m.extras || []) : []
+        };
+        ACTUALS.push(a);
+        const sl = buildSalesFor(a, nextSalesNo());
+        SALES.push(...sl);
+        total += sl.reduce((s,x) => s + x.amount, 0);
+        if (i === 0) first = a.id;
+      });
+      r.status = 'done'; r.actualId = first;
+      audit('計量実績の登録', r.no, `正味 ${dec((g - t) / 1000)} t／売上明細 ${yen(total)}`);
+      closeModal();
+      toast(`${r.no} の実績を確定しました。売上明細を生成しました（${yen(total)}）。`);
+      render(); break;
+    }
+    case 'openSpot': openModal('spot', {partnerId:'', siteId:'', itemId:'', vehicleId:'', plate:'', gross:'', tare:'', vol:''}); break;
+    case 'doSpot': {
+      if (!m.partnerId || !m.itemId) { m.err = '取引先と品目を選択してください。'; renderModal(); return; }
+      const g = Number(m.gross), t = Number(m.tare);
+      if (!m.gross || !m.tare || isNaN(g) || isNaN(t) || g <= t) { m.err = '総重量・空車重量を確認してください。'; renderModal(); return; }
+      const it = item(m.itemId);
+      const netW = (g - t) / 1000;
+      if (it.unit === 'm3' && (!m.vol || isNaN(Number(m.vol)))) { m.err = '体積を入力してください。'; renderModal(); return; }
+      const a = {
+        id: nextActualId(), date: D(0), resvNo: null, method: 'drop',
+        partnerId: m.partnerId, siteId: m.siteId || '', itemId: m.itemId, unit: it.unit,
+        declared: 0, gross: g, tare: t, net: it.unit === 'm3' ? Number(m.vol) : Math.round(netW*100)/100,
+        vehicleId: m.vehicleId || null, plate: m.plate || '', diffReason: '飛び込み搬入（予約なし）',
+        spot: true, status: 'fixed', allocations: null, extras: []
+      };
+      ACTUALS.push(a);
+      const sl = buildSalesFor(a, nextSalesNo());
+      SALES.push(...sl);
+      audit('飛び込み搬入の登録', a.id, `${partner(a.partnerId).name}／${item(a.itemId).name} ${dec(a.net)}${a.unit}`);
+      closeModal();
+      toast(`飛び込み搬入 ${a.id} を実績登録しました（${yen(sl.reduce((s,x) => s + x.amount, 0))}）。`);
+      render(); break;
+    }
+    case 'openReject2': openModal('reject2', {no:d.no, reason:''}, 'modal-md'); break;
+    case 'doReject2': {
+      if (!m.reason) { m.err = '理由を選択してください。'; renderModal(); return; }
+      const r = resv(m.no);
+      r.status = 'canceled'; r.cancelReason = m.reason;
+      audit(r.method === 'drop' ? '受入拒否の記録' : '集荷不可の記録', r.no, m.reason);
+      closeModal(); toast(`${r.no} を「${m.reason}」として記録しました。`, 'warn'); render(); break;
+    }
+
+    /* ---- 実績・締め ---- */
+    case 'openActual': openModal('actual', {id:d.id}); break;
+    case 'acFilterDiff': state.actuals.diffOnly = !state.actuals.diffOnly; render(); break;
+    case 'doRed': {
+      const id = d.id;
+      const red = salesOf(id).filter(s => !s.red).map(s => Object.assign({}, s, {
+        no: s.no + '-R', amount: -s.amount, red: true, closed: false, date: D(0)
+      }));
+      SALES.push(...red);
+      audit('赤伝の起票', id, `${red.length} 明細をマイナス計上（${yen(red.reduce((t,s) => t + s.amount, 0))}）`);
+      toast(`${id} の赤伝を起票しました。当月の売上に反映されます。`, 'warn');
+      renderModal(); render(); break;
+    }
+    case 'exportActuals': {
+      const rows = [['実績番号','日付','受付番号','区分','取引先','排出現場','品目','申告数量','実数量','単位','総重量kg','空車重量kg','差異理由','金額','状態']];
+      filteredActuals().forEach(a => rows.push([a.id, a.date, a.resvNo || '', methodLabel(a.method),
+        partner(a.partnerId).name, site(a.siteId).name || '', item(a.itemId).name,
+        a.declared, a.net, a.unit, a.gross || '', a.tare || '', a.diffReason || '',
+        amountOf(a.id), a.status === 'closed' ? '締め済' : '確定']));
+      downloadCsv(`実績一覧_${state.actuals.from}_${state.actuals.to}.csv`, rows);
+      toast(`実績 ${filteredActuals().length} 件をCSV出力しました。`); break;
+    }
+    case 'clMonth': state.closing.ym = shiftMonth(state.closing.ym, Number(d.n)); state.closing.expand = null; render(); break;
+    case 'expandPartner': state.closing.expand = state.closing.expand === d.pid ? null : d.pid; render(); break;
+    case 'openClose': openModal('close', {ym:state.closing.ym}); break;
+    case 'doClose': {
+      const ym = d.ym;
+      CLOSINGS.push({ym, closedAt:`${D(0)} ${nowHm()}`, by:me().user});
+      SALES.forEach(s => { if (ymOf(s.date) === ym) s.closed = true; });
+      ACTUALS.forEach(x => { if (ymOf(x.date) === ym) x.status = 'closed'; });
+      audit('締め処理', `月次締め ${ym}`, '対象期間の実績を確定（以降の修正は赤伝）');
+      closeModal(); toast(`${monthLabel(ym)} を締めました。以降の修正は赤伝で行ってください。`); render(); break;
+    }
+    case 'exportSales': {
+      const ym = state.closing.ym;
+      const tpl = (document.getElementById('elCsvTpl') || {}).value || 'generic';
+      const lines = SALES.filter(s => ymOf(s.date) === ym);
+      let rows;
+      if (tpl === 'acctA') {
+        rows = [['伝票日付','借方科目','貸方科目','金額','摘要','取引先コード','税区分']];
+        lines.forEach(s => rows.push([s.date.replace(/-/g,'/'),
+          s.kind === 'purchase' ? '仕入高' : '売掛金',
+          s.kind === 'purchase' ? '買掛金' : '売上高',
+          Math.round(Math.abs(s.amount)) * (s.amount < 0 ? -1 : 1),
+          `${s.category}${s.itemId ? '／' + item(s.itemId).name : ''}`,
+          s.partnerId, '課税売上10%']));
+      } else if (tpl === 'acctB') {
+        rows = [['得意先名','登録番号','売上日','品名','数量','単位','単価','金額']];
+        lines.forEach(s => rows.push([partner(s.partnerId).name, partner(s.partnerId).invoice || '',
+          s.date, `${s.category}${s.itemId ? '／' + item(s.itemId).name : ''}`,
+          s.qty, s.unit, s.unitPrice == null ? '' : s.unitPrice, Math.round(s.amount)]));
+      } else {
+        rows = [['明細番号','日付','実績番号','取引先','排出現場','売上区分','内容','品目','数量','単位','単価','単価型','最低料金適用','金額','契約ID','締め']];
+        lines.forEach(s => rows.push([s.no, s.date, s.actualId, partner(s.partnerId).name, site(s.siteId).name || '',
+          s.kind === 'purchase' ? '仕入' : '売上', s.category, s.itemId ? item(s.itemId).name : '',
+          s.qty, s.unit, s.unitPrice == null ? '' : s.unitPrice, s.priceType || '',
+          s.minApplied ? '○' : '', Math.round(s.amount), s.contractId || '', s.closed ? '締め済' : '']));
+      }
+      downloadCsv(`売上明細_${ym}_${tpl}.csv`, rows);
+      audit('CSV出力', `売上明細 ${ym}`, `テンプレート：${CSV_TEMPLATES.find(t => t.id === tpl).name}／${lines.length} 明細`);
+      toast(`${lines.length} 明細をCSV出力しました。`); break;
+    }
+
+    /* ---- マスタ ---- */
+    case 'mAdd': {
+      const mm = MASTERS[d.m], row = {};
+      mm.cols.forEach(c => setPath(row, c.k, c.type === 'bool' ? false : (c.type === 'multi' ? [] : '')));
+      openModal('master', {m:d.m, idx:null, row}); break;
+    }
+    case 'mEdit': openModal('master', {m:d.m, idx:Number(d.i), row: JSON.parse(JSON.stringify(MASTERS[d.m].data()[Number(d.i)]))}); break;
+    case 'mDel': {
+      const arr = MASTERS[d.m].data(), i = Number(d.i);
+      if (!confirm(`${MASTERS[d.m].title}の「${arr[i].name || arr[i].id}」を削除します。よろしいですか？`)) return;
+      const removed = arr.splice(i, 1)[0];
+      audit('マスタ削除', MASTERS[d.m].title, `${removed.name || removed.id} を削除`);
+      toast('削除しました。', 'warn'); render(); break;
+    }
+    case 'mSave': {
+      const mm = MASTERS[m.m], arr = mm.data();
+      const miss = mm.cols.filter(c => c.req && !getPath(m.row, c.k));
+      if (miss.length) { m.err = `必須項目が未入力です：${miss.map(c => c.label).join('、')}`; renderModal(); return; }
+      mm.cols.forEach(c => {
+        if (c.type === 'number') {
+          const v = getPath(m.row, c.k);
+          setPath(m.row, c.k, v === '' || v == null ? null : Number(v));
+        }
+      });
+      if (m.idx == null) {
+        const pref = (arr[0] && arr[0].id ? String(arr[0].id).replace(/\d+$/,'') : 'x');
+        let n = arr.length + 1;
+        while (arr.find(x => x.id === pref + n)) n++;
+        m.row.id = pref + n;
+        arr.push(m.row);
+        audit('マスタ登録', mm.title, `${m.row.name || m.row.id} を登録`);
+      } else {
+        Object.assign(arr[m.idx], m.row);
+        audit('マスタ更新', mm.title, `${arr[m.idx].name || arr[m.idx].id} を更新`);
+      }
+      closeModal(); toast('保存しました。'); render(); break;
+    }
+    case 'mCsv': {
+      const mm = MASTERS[d.m], cols = mm.cols;
+      const rows = [cols.map(c => c.label)];
+      mm.data().forEach(r => rows.push(cols.map(c => {
+        const v = getPath(r, c.k);
+        return Array.isArray(v) ? v.map(x => item(x).name || x).join('／') : (v == null ? '' : v);
+      })));
+      downloadCsv(`${mm.title}.csv`, rows);
+      toast('CSVを出力しました。'); break;
+    }
+    case 'exportAudit': {
+      const rows = [['日時','操作者','ロール','操作','対象','内容']];
+      AUDIT.forEach(x => rows.push([x.at, x.user, x.role, x.act, x.target, x.detail]));
+      downloadCsv('監査ログ.csv', rows);
+      toast('CSVを出力しました。'); break;
+    }
+  }
+});
+
+/* =========================================================================
+   初期化
+   ========================================================================= */
+if (location.hash && VIEWS[location.hash.slice(1)]) state.route = location.hash.slice(1);
+window.addEventListener('hashchange', () => {
+  const r = location.hash.slice(1);
+  if (VIEWS[r] && r !== state.route) { state.route = r; render(); }
+});
+render();
+</script>
+</body>
+</html>
