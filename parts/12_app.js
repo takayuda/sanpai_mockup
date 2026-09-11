@@ -14,7 +14,7 @@ const MODALS = {
   changeSlot: MODALS_CHANGESLOT, changeVisit: MODALS_CHANGEVISIT, cancel: MODALS_CANCEL,
   slot: MODALS_SLOT, holiday: MODALS_HOLIDAY, plantFlag: MODALS_PLANTFLAG,
   weigh: MODALS_WEIGH, spot: MODALS_SPOT, refuse: MODALS_REFUSE,
-  invite: MODALS_INVITE, company: MODALS_COMPANY, master: MODALS_MASTER
+  reissue: MODALS_REISSUE, company: MODALS_COMPANY, master: MODALS_MASTER
 };
 
 /* 同じファイルに排出者ポータルが同梱されていれば、その場で切り替える。
@@ -139,6 +139,8 @@ document.addEventListener('change', e => {
   if (d.mod) { modBind(d.mod, val); if (structural) renderModal(); return; }
   if (d.inv) { state.invite.form[d.inv] = val; return; }
   if (d.act === 'boardDate')   { state.board.date = val; render(); return; }
+  if (d.act === 'recDate')     { state.reception.date = val; render(); return; }
+  if (d.act === 'boardVoid')   { state.board.showVoid = val; render(); return; }
   if (d.act === 'acFilter')    { state.actuals[d.key] = val; if (structural) render(); return; }
   if (d.act === 'apFilter')    { state.approval[d.key] = val; if (structural) render(); return; }
   if (d.act === 'switchPlant') { state.plantId = val; state.approval.sel = null; render(); return; }
@@ -180,7 +182,7 @@ document.addEventListener('click', e => {
       toast(`承認待ち ${pendingCount()} 件（通知チャネルはLINE／LINE WORKS等を想定・要確定）`);
       go('approvals'); break;
 
-    /* ---- 承認キュー ---- */
+    /* ---- 予約の承認 ---- */
     case 'selApproval': state.approval.sel = d.id; render(); break;
     case 'openPickupDetail': openModal('pickup', {id:d.id}); break;
     case 'openApprove': {
@@ -221,7 +223,7 @@ document.addEventListener('click', e => {
       render(); break;
     }
 
-    /* ---- 予約一覧ボード ---- */
+    /* ---- 確定した予約 ---- */
     case 'boardShift': state.board.date = dstr(addDays(parseD(state.board.date), Number(d.n))); render(); break;
     case 'boardToday': state.board.date = D(0); render(); break;
     case 'boardTab': state.board.tab = d.tab; render(); break;
@@ -268,7 +270,7 @@ document.addEventListener('click', e => {
       toast('CSVを出力しました。'); break;
     }
 
-    /* ---- 代行入力 ---- */
+    /* ---- 予約の代行作成 ---- */
     case 'pxType': state.proxy.type = d.v; state.proxy.slotId = ''; state.proxy.errors = []; render(); break;
     case 'pxAddLine': state.proxy.lines.push(blankLine()); render(); break;
     case 'pxRemoveLine':
@@ -342,6 +344,8 @@ document.addEventListener('click', e => {
     }
 
     /* ---- 入場受付・計量 ---- */
+    case 'recShift': state.reception.date = dstr(addDays(parseD(state.reception.date), Number(d.n))); render(); break;
+    case 'recToday': state.reception.date = D(0); render(); break;
     case 'openWeigh': openModal('weigh', weighInit(d.id), 'modal-lg'); break;
     case 'doWeigh': {
       const p = pk(m.id), w = Number(m.weight);
@@ -371,11 +375,11 @@ document.addEventListener('click', e => {
       if (!m.items.length) { m.err = '含まれていた品目を1つ以上選んでください。'; renderModal(); return; }
       const id = nextPickupNo();
       PICKUPS.unshift({id, type:'drop', status:'done', company_id:m.company_id, plant_id:m.plant_id,
-        date:D(0), begin_time:m.arrived_at, end_time:m.arrived_at,
+        date:recDate(), begin_time:m.arrived_at, end_time:m.arrived_at,
         car_number:m.car_number || '', driver_name:'', driver_tel:'',
         applied_at:`${D(0)} ${nowHm()}`, via:'飛び込み',
         approved_at:`${D(0)} ${nowHm()}`, approved_by:`${ME.role} ${ME.name.split(' ')[0]}`,
-        arrived_at:m.arrived_at, receipt_number:nextReceiptNumber(m.plant_id, D(0)),
+        arrived_at:m.arrived_at, receipt_number:nextReceiptNumber(m.plant_id, recDate()),
         weight:w, diff:0, weigh_memo:m.memo || ''});
       m.items.forEach(it => PICKUP_ITEMS.push({id:'pi' + (++_pi), pickup_id:id, item_id:it, unit_id:'u2', qty:null}));
       closeModal();
@@ -402,17 +406,13 @@ document.addEventListener('click', e => {
     }
 
     /* ---- 取引先マスタ ---- */
-    case 'newInvite': {
-      const v = {id:'iv' + Date.now().toString(36), token:randToken(), issued_at:`${D(0)} ${nowHm()}`};
-      INVITES.push(v);
-      openModal('invite', {token:v.token}, 'modal-md');
-      break;
-    }
-    case 'showInvite': openModal('invite', {token:d.token}, 'modal-md'); break;
-    case 'delInvite': {
-      if (!confirm('この登録用URLを失効させます。よろしいですか？')) return;
-      INVITES = INVITES.filter(x => x.id !== d.id);
-      toast('登録用URLを失効しました。', 'warn'); render(); break;
+    case 'openReissue': openModal('reissue', {ack:false}, 'modal-md'); break;
+    case 'doReissue': {
+      if (!m.ack) { m.err = '内容を確認してチェックを入れてください。'; renderModal(); return; }
+      INVITE_LINK = {token:randToken(), issued_at:`${D(0)} ${nowHm()}`};
+      closeModal();
+      toast('登録用URLを再発行しました。旧URLは使えません。', 'warn');
+      render(); break;
     }
     case 'copyInvite': {
       const url = INVITE_BASE + d.token;
@@ -424,7 +424,7 @@ document.addEventListener('click', e => {
       state.invite = {token:d.token, form:null, done:false};
       go('invite'); break;
     case 'doInvite': {
-      const iv = INVITES.find(x => x.token === d.token), f = state.invite.form, e2 = [];
+      const f = state.invite.form, e2 = [];
       if (!f.name.trim()) e2.push('会社名を入力してください。');
       if (!f.is_generator && !f.is_transporter) e2.push('区分を1つ以上選択してください。');
       if (!f.contact.trim()) e2.push('ご担当者名を入力してください。');
@@ -442,9 +442,7 @@ document.addEventListener('click', e => {
         contact:f.contact, email:f.email, phone:f.phone,
         postalcode:f.postalcode, pref:f.pref, address:f.address,
         invoice:f.invoice, bank:f.bank, credit:'',
-        status:'active', token:iv.token,
-        invited_at:iv.issued_at, registered_at:`${D(0)} ${nowHm()}`});
-      INVITES = INVITES.filter(x => x.id !== iv.id);
+        status:'active', registered_at:`${D(0)} ${nowHm()}`});
       state.invite.done = true;
       toast('本登録が完了しました。');
       render(); break;
@@ -457,15 +455,17 @@ document.addEventListener('click', e => {
     }
     case 'delCompany': {
       const c = COMPANIES[Number(d.i)];
-      if (!confirm(`取引先「${c.name || '未登録'}」を削除します。よろしいですか？`)) return;
+      const used = PICKUPS.filter(p => p.company_id === c.id).length;
+      if (used) { toast(`「${c.name}」には予約・実績が ${used} 件あります。削除できません。`, 'err'); return; }
+      if (!confirm(`取引先「${c.name}」を削除します。よろしいですか？`)) return;
       COMPANIES.splice(Number(d.i), 1);
       toast('削除しました。', 'warn'); render(); break;
     }
     case 'csvCompanies': {
-      const rows = [['取引先名','フリガナ','排出事業者','運搬業者','担当者','メールアドレス','電話番号','郵便番号','都道府県','住所','インボイス登録番号','振込先口座','与信区分','URL発行日時','登録日時']];
+      const rows = [['取引先名','フリガナ','排出事業者','運搬業者','担当者','メールアドレス','電話番号','郵便番号','都道府県','住所','インボイス登録番号','振込先口座','与信区分','登録日時']];
       COMPANIES.filter(c => c.status === 'active').forEach(c => rows.push([c.name, c.kana, c.is_generator ? '○' : '', c.is_transporter ? '○' : '',
         c.contact, c.email, c.phone, c.postalcode, c.pref, c.address, c.invoice, c.bank, c.credit,
-        c.invited_at || '', c.registered_at || '']));
+        c.registered_at || '']));
       downloadCsv('取引先マスタ.csv', rows);
       toast('CSVを出力しました。'); break;
     }
@@ -479,9 +479,18 @@ document.addEventListener('click', e => {
     }
     case 'mEdit': openModal('master', {m:d.m, idx:Number(d.i), row:JSON.parse(JSON.stringify(MASTERS[d.m].data()[Number(d.i)]))}); break;
     case 'mDel': {
-      const arr = MASTERS[d.m].data(), i = Number(d.i);
-      if (!confirm(`${MASTERS[d.m].title}の「${arr[i].name}」を削除します。よろしいですか？`)) return;
-      const removed = arr.splice(i, 1)[0];
+      const arr = MASTERS[d.m].data(), i = Number(d.i), row = arr[i];
+      /* 使用中のマスタは削除させない（予約・実績の参照が壊れるため） */
+      const used = d.m === 'm_plants' ? PICKUPS.filter(p => p.plant_id === row.id).length
+                 : d.m === 'm_items'  ? PICKUP_ITEMS.filter(l => l.item_id === row.id).length
+                 : d.m === 'm_units'  ? PICKUP_ITEMS.filter(l => l.unit_id === row.id).length : 0;
+      if (used) { toast(`「${row.name}」は予約・実績で ${used} 件使われています。削除できません。`, 'err'); return; }
+      if (!confirm(`${MASTERS[d.m].title}の「${row.name}」を削除します。よろしいですか？`)) return;
+      arr.splice(i, 1);
+      if (d.m === 'm_plants') {                       /* 選択中の拠点が消えたら戻す */
+        if (state.plantId === row.id) state.plantId = 'all';
+        if (state.hours.plantId === row.id) state.hours.plantId = (PLANTS[0] || {}).id;
+      }
       toast('削除しました。', 'warn'); render(); break;
     }
     case 'mSave': {

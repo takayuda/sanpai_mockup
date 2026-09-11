@@ -1,6 +1,6 @@
 
 /* =========================================================================
-   予約一覧ボード（日別）
+   確定した予約（日別）
    持込・引取で同じ列構成・同じ列幅にそろえる
    ========================================================================= */
 const BOARD_COLS = `<colgroup>
@@ -37,22 +37,25 @@ function viewBoard() {
 
   const blocks = plants.map(pl => {
     const cl = isClosed(pl.id, ds);
-    const all = PICKUPS.filter(p => p.plant_id === pl.id && p.date === ds && !['pending','rejected'].includes(p.status));
+    const all = PICKUPS.filter(p => p.plant_id === pl.id && p.date === ds && !['pending','rejected','canceled'].includes(p.status));
+    const voids = PICKUPS.filter(p => p.plant_id === pl.id && p.date === ds && ['rejected','canceled'].includes(p.status));
     const drops = all.filter(p => p.type === 'drop');
     const picks = all.filter(p => p.type === 'pickup').sort((x,y) => x.begin_time < y.begin_time ? -1 : 1);
     const groups = (pl.slots || []).map(s => ({s, rows:drops.filter(p => p.begin_time === s.from && p.end_time === s.to)}));
     const other = drops.filter(p => !groups.some(g => g.rows.includes(p)));
 
-    const dropHtml = b.tab === 'pickup' || !pl.is_delivery ? '' :
-      groups.map(g => `<div class="card mb-3">
+    /* 対応していない拠点でも、予約が残っていれば必ず表示する */
+    const dropHtml = b.tab === 'pickup' || (!pl.is_delivery && !drops.length) ? '' :
+      (pl.is_delivery ? groups : []).map(g => `<div class="card mb-3">
         <div class="card-head">持込　${g.s.name}　${g.s.from} 〜 ${g.s.to}<span class="sub">${g.rows.length} 件</span></div>
         ${g.rows.length ? boardTable(g.rows) : `<div class="p-3 text-secondary" style="font-size:14px">予約はありません</div>`}
       </div>`).join('') +
       (other.length ? `<div class="card mb-3"><div class="card-head">持込　枠外の時間<span class="sub">${other.length} 件</span></div>
         ${boardTable(other)}</div>` : '');
 
-    const pickHtml = b.tab === 'drop' || !pl.is_pickup ? '' : `<div class="card mb-3">
-      <div class="card-head">引取（集荷）　${pl.begin_time} 〜 ${pl.end_time}<span class="sub">${picks.length} 件</span></div>
+    const pickHtml = b.tab === 'drop' || (!pl.is_pickup && !picks.length) ? '' : `<div class="card mb-3">
+      <div class="card-head">引取（集荷）　${pl.begin_time} 〜 ${pl.end_time}<span class="sub">${picks.length} 件</span>
+        ${!pl.is_pickup ? '<span class="badge b-pending b-sq">この拠点は引取対応外</span>' : ''}</div>
       ${picks.length ? boardTable(picks) : `<div class="p-3 text-secondary" style="font-size:14px">予約はありません</div>`}
     </div>`;
 
@@ -63,10 +66,26 @@ function viewBoard() {
              : `<span class="badge b-neutral">持込 ${drops.length} 件／引取 ${picks.length} 件</span>`}
       </div>
       ${cl && !all.length ? `<div class="empty mb-3">休業日です（${esc(cl.reason)}）</div>` : dropHtml + pickHtml}
+      ${b.showVoid && voids.length ? `<div class="card mb-3">
+        <div class="card-head">取消・差戻し<span class="sub">${voids.length} 件</span></div>
+        <table class="table board-tbl mb-0">${BOARD_COLS}${BOARD_HEAD}
+          <tbody>${voids.map(p => `<tr class="dim">
+            <td class="mono">${p.id}</td>
+            <td class="mono nowrap">${timeRange(p)}</td>
+            <td>${esc(company(p.company_id).name)}</td>
+            <td style="font-size:13px">${esc(linesText(p.id))}</td>
+            <td class="mono" style="font-size:13px">${esc(p.car_number || '—')}</td>
+            <td style="font-size:13px">${esc(p.driver_name || '—')}</td>
+            <td style="font-size:12px">${esc(p.reject_reason || p.cancel_reason || '—')}</td>
+            <td>${stBadge(p.status)}</td>
+            <td class="text-end text-nowrap">
+              <button class="btn btn-outline-secondary btn-sm" data-act="openPickupDetail" data-id="${p.id}">詳細</button></td>
+          </tr>`).join('')}</tbody></table>
+      </div>` : ''}
     </div>`;
   }).join('');
 
-  return pageHead('予約一覧ボード',
+  return pageHead('確定した予約',
     `<button class="btn btn-outline-primary btn-sm" data-act="exportBoard">${ic('download')}CSV出力</button>`) +
   `<div class="filterbar">
     <div class="d-flex align-items-center gap-2">
@@ -76,7 +95,9 @@ function viewBoard() {
       <button class="btn btn-outline-primary btn-sm" data-act="boardToday">本日</button>
     </div>
     <div class="ms-2 fw-bold">${fmtJp(ds)}${ds === D(0) ? '　<span class="badge b-method b-sq">本日</span>' : ''}</div>
-    <div class="ms-auto">
+    <div class="ms-auto d-flex align-items-center gap-3">
+      <div class="form-check mb-0"><input class="form-check-input" type="checkbox" data-act="boardVoid" ${b.showVoid ? 'checked' : ''}>
+        <label class="form-check-label" style="font-size:13px">取消・差戻しも表示</label></div>
       <div class="btn-group btn-group-sm" role="group">
         ${[['all','すべて'],['drop','持込'],['pickup','引取']].map(([v,t]) =>
           `<button type="button" class="btn ${b.tab === v ? 'btn-primary' : 'btn-outline-secondary'}" data-act="boardTab" data-tab="${v}">${t}</button>`).join('')}

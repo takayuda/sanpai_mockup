@@ -66,34 +66,32 @@ let COMPANIES = [
    phone:'048-000-0001', email:'kanri@sample-kensetsu.example.jp', contact:'山田 太郎',
    invoice:'T1234567890123', bank:'埼玉りそな銀行 大宮支店 普通 1234567',
    credit:'A',
-   status:'active', token:'a1b2c3d4e5', invited_at:'2026-04-02 10:00', registered_at:'2026-04-03 09:20'},
+   status:'active', registered_at:'2026-04-03 09:20'},
   {id:'c2', name:'大宮運輸株式会社', kana:'オオミヤウンユカブシキガイシャ',
    is_generator:false, is_transporter:true,
    postalcode:'331-0804', pref:'埼玉県', address:'さいたま市北区土呂町0-0-0',
    phone:'048-000-0002', email:'haisha@omiya-unyu.example.jp', contact:'鈴木 一郎',
    invoice:'T2345678901234', bank:'武蔵野銀行 大宮支店 普通 2345678',
    credit:'B',
-   status:'active', token:'b2c3d4e5f6', invited_at:'2026-04-02 10:05', registered_at:'2026-04-04 14:10'},
+   status:'active', registered_at:'2026-04-04 14:10'},
   {id:'c3', name:'埼玉建設工業株式会社', kana:'サイタマケンセツコウギョウカブシキガイシャ',
    is_generator:true, is_transporter:true,
    postalcode:'330-0061', pref:'埼玉県', address:'さいたま市浦和区常盤0-0-0',
    phone:'048-000-0003', email:'soumu@saitama-kk.example.jp', contact:'佐々木 花子',
    invoice:'T3456789012345', bank:'埼玉りそな銀行 浦和支店 普通 3456789',
    credit:'A',
-   status:'active', token:'c3d4e5f6g7', invited_at:'2026-04-05 11:00', registered_at:'2026-04-06 08:45'},
+   status:'active', registered_at:'2026-04-06 08:45'},
   {id:'c5', name:'武蔵野解体株式会社', kana:'ムサシノカイタイカブシキガイシャ',
    is_generator:true, is_transporter:false,
    postalcode:'338-0001', pref:'埼玉県', address:'さいたま市中央区上落合0-0-0',
    phone:'048-000-0005', email:'info@musashino-kaitai.example.jp', contact:'渡辺 翔',
    invoice:'T5678901234567', bank:'りそな銀行 与野支店 普通 5678901',
    credit:'B',
-   status:'active', token:'e5f6g7h8i9', invited_at:'2026-08-01 09:00', registered_at:'2026-08-01 17:30'}
+   status:'active', registered_at:'2026-08-01 17:30'}
 ];
 
-/* 発行済みの登録用URL（取引先が本登録すると COMPANIES に移る） */
-let INVITES = [
-  {id:'iv1', token:'d4e5f6g7h8', issued_at:D(-1)+' 16:30'}
-];
+/* 取引先の登録用URL。処理業者ごとに1本を使い回し、必要なときだけ再発行する */
+let INVITE_LINK = {token:'d4e5f6g7h8', issued_at:'2026-04-01 10:00'};
 
 /* =========================================================================
    items：品目マスタ　/　units：単位マスタ
@@ -162,7 +160,7 @@ addPickup({id:'R-2026-0161', type:'drop', status:'pending', company_id:'c5', pla
 
 addPickup({id:'R-2026-0162', type:'pickup', status:'pending', company_id:'c5', plant_id:'pl1',
   date:B(1), begin_time:'13:00', end_time:'16:00',
-  applied_at:D(0)+' 10:02', via:'電話（代行入力）', note:'解体ガラ混じり'},
+  applied_at:D(0)+' 10:02', via:'電話（代行作成）', note:'解体ガラ混じり'},
   [{item_id:'i2', unit_id:'u2', qty:2.0}, {item_id:'i7', unit_id:'u3', qty:4}]);
 
 addPickup({id:'R-2026-0163', type:'drop', status:'pending', company_id:'c1', plant_id:'pl2',
@@ -218,7 +216,7 @@ addPickup({id:'R-2026-0167', type:'pickup', status:'approved', company_id:'c1', 
 addPickup({id:'R-2026-0168', type:'drop', status:'approved', company_id:'c1', plant_id:'pl2',
   date:D(0), begin_time:'13:00', end_time:'17:00',
   car_number:'大宮 100 あ 33-44', driver_name:'渡辺 翔', driver_tel:'090-4444-4444',
-  applied_at:D(-1)+' 13:00', via:'電話（代行入力）',
+  applied_at:D(-1)+' 13:00', via:'電話（代行作成）',
   approved_at:D(-1)+' 13:20', approved_by:'受入担当 田中'},
   [{item_id:'i7', unit_id:'u3', qty:8}]);
 

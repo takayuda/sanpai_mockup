@@ -1,8 +1,8 @@
 
 /* =========================================================================
    取引先マスタ
-   社内では情報を登録せず、登録用URLを発行して取引先に渡すだけ。
-   取引先が URL から社名・連絡先・ログイン情報を本登録する。
+   社内では情報を登録せず、登録用URLを取引先に渡すだけ。
+   URLは1本を使い回し、必要なときだけ再発行する（再発行すると旧URLは無効）。
    ========================================================================= */
 const INVITE_BASE = 'https://sanpai.example.jp/invite/';
 const randToken = () => Math.random().toString(36).slice(2,10) + Math.random().toString(36).slice(2,4);
@@ -23,41 +23,43 @@ function viewCompanies() {
         <button class="btn btn-outline-danger btn-sm ms-1" data-act="delCompany" data-i="${i}">削除</button></td></tr>`;
   }).join('');
 
-  const invites = INVITES.map(v => `<tr>
-      <td class="mono" style="font-size:12px">${esc(v.issued_at)}</td>
-      <td style="font-size:12px;word-break:break-all">${INVITE_BASE}${esc(v.token)}</td>
-      <td class="text-end text-nowrap">
-        <button class="btn btn-outline-secondary btn-sm" data-act="copyInvite" data-token="${esc(v.token)}">${ic('copy',14)}コピー</button>
-        <button class="btn btn-outline-secondary btn-sm ms-1 mockbtn" data-act="openInvitePage" data-token="${esc(v.token)}">登録画面</button>
-        <button class="btn btn-outline-danger btn-sm ms-1" data-act="delInvite" data-id="${v.id}">失効</button></td></tr>`).join('');
-
   return pageHead('取引先',
-    `<button class="btn btn-primary btn-sm" data-act="newInvite">${ic('link',15)}登録用URLを発行</button>
-     <button class="btn btn-outline-primary btn-sm" data-act="csvCompanies">${ic('download')}CSV出力</button>`) +
-  `<div class="table-wrap mb-4">
+    `<button class="btn btn-outline-primary btn-sm" data-act="csvCompanies">${ic('download')}CSV出力</button>`) +
+  `<div class="card mb-4">
+    <div class="card-head">${ic('link',16)}取引先の登録用URL
+      <span class="sub">このURLを取引先に送ると、取引先が自分で登録できます</span></div>
+    <div class="card-body">
+      <div class="urlbox"><code>${INVITE_BASE}${esc(INVITE_LINK.token)}</code>
+        <button class="btn btn-outline-secondary btn-sm ms-auto text-nowrap" data-act="copyInvite" data-token="${esc(INVITE_LINK.token)}">${ic('copy',14)}コピー</button></div>
+      <div class="d-flex gap-2 mt-3 flex-wrap align-items-center">
+        <button class="btn btn-outline-primary btn-sm mockbtn" data-act="openInvitePage" data-token="${esc(INVITE_LINK.token)}">${ic('login',15)}登録画面を開く</button>
+        <button class="btn btn-outline-danger btn-sm" data-act="openReissue">URLを再発行</button>
+        <span class="text-secondary ms-auto" style="font-size:12px">発行日時 ${esc(INVITE_LINK.issued_at)}</span>
+      </div>
+    </div>
+  </div>
+  <div class="table-wrap">
     <table class="table table-hover mb-0">
       <thead><tr><th style="width:24%">取引先名</th><th style="width:12%">区分</th><th style="width:12%">担当者</th>
         <th style="width:20%">連絡先</th><th style="width:14%">インボイス登録番号</th><th style="width:10%">登録日時</th><th></th></tr></thead>
       <tbody>${rows || `<tr><td colspan="7" class="text-center text-secondary py-4">登録済みの取引先はありません</td></tr>`}</tbody>
     </table>
-  </div>
-  ${INVITES.length ? `<div class="card">
-    <div class="card-head">${ic('link',16)}発行済みの登録用URL<span class="sub">取引先が本登録を完了すると上の一覧に追加されます</span></div>
-    <table class="table mb-0">
-      <thead><tr><th style="width:180px">発行日時</th><th>URL</th><th style="width:300px"></th></tr></thead>
-      <tbody>${invites}</tbody></table>
-  </div>` : ''}`;
+  </div>`;
 }
 
-/* ---------- 登録用URL ---------- */
-var MODALS_INVITE = m => ({
-  title:'登録用URL',
-  body:`<div class="urlbox"><code>${INVITE_BASE}${esc(m.token)}</code>
-      <button class="btn btn-outline-secondary btn-sm ms-auto text-nowrap" data-act="copyInvite" data-token="${esc(m.token)}">${ic('copy',14)}コピー</button></div>
-    <div class="d-flex gap-2 mt-3 flex-wrap">
-      <button class="btn btn-outline-primary btn-sm mockbtn" data-act="openInvitePage" data-token="${esc(m.token)}">${ic('login',15)}登録画面を開く</button>
-    </div>`,
-  foot:`<button class="btn btn-primary" data-act="closeModal">閉じる</button>`
+/* ---------- 登録用URLの再発行 ---------- */
+var MODALS_REISSUE = m => ({
+  title:'登録用URLを再発行',
+  body:`<div class="warnbox danger mb-3">${ic('alert',16)}<span>再発行すると現在のURLは使えなくなります。
+      すでにURLを送付済みで未登録の取引先には、新しいURLを送り直す必要があります。</span></div>
+    ${dl([['現在のURL', `<span style="word-break:break-all;font-size:12px">${INVITE_BASE}${esc(INVITE_LINK.token)}</span>`],
+          ['発行日時', esc(INVITE_LINK.issued_at)]])}
+    <div class="form-check mt-3">
+      <input class="form-check-input" type="checkbox" data-mod="ack" ${m.ack ? 'checked' : ''} data-rerender="1">
+      <label class="form-check-label">上記を確認しました</label></div>
+    ${m.err ? `<div class="text-danger mt-2" style="font-size:13px">${esc(m.err)}</div>` : ''}`,
+  foot:`<button class="btn btn-outline-secondary" data-act="closeModal">キャンセル</button>
+        <button class="btn btn-outline-danger" data-act="doReissue" ${m.ack ? '' : 'disabled'}>再発行する</button>`
 });
 
 /* ---------- 取引先の編集 ---------- */
@@ -108,8 +110,8 @@ function viewInvite() {
         <div><button class="btn btn-outline-secondary btn-sm mockbtn" data-act="go" data-route="m_companies">処理業者側の管理画面に戻る</button></div>
       </div></div></div>`;
   }
-  const iv = INVITES.find(x => x.token === state.invite.token);
-  if (!iv) return `<div class="invitewrap"><div class="empty">この登録用URLは無効です。</div></div>`;
+  if (state.invite.token !== INVITE_LINK.token)
+    return `<div class="invitewrap"><div class="empty">この登録用URLは無効です。処理業者にご確認ください。</div></div>`;
   if (!state.invite.form) state.invite.form = {
     name:'', kana:'', is_generator:true, is_transporter:false,
     contact:'', email:'', password:'', password2:'',
@@ -148,7 +150,7 @@ function viewInvite() {
         <div class="col-12 col-md-6">${fi('invoice','インボイス登録番号','text','')}</div>
         <div class="col-12 col-md-6">${fi('bank','振込先口座','text','')}</div>
       </div>
-      <button class="btn btn-primary w-100 mt-4" data-act="doInvite" data-token="${esc(iv.token)}">この内容で登録する</button>
+      <button class="btn btn-primary w-100 mt-4" data-act="doInvite" data-token="${esc(INVITE_LINK.token)}">この内容で登録する</button>
     </div></div>
     <div class="text-center mt-3">
       <button class="btn btn-outline-secondary btn-sm mockbtn" data-act="go" data-route="m_companies">処理業者側の管理画面に戻る</button>

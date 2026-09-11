@@ -14,7 +14,7 @@ function declaredKg(pickupId) {
     return s;
   }, 0);
 }
-const todayList = () => PICKUPS.filter(p => p.date === D(0) && inScope(p) && ['approved','done'].includes(p.status));
+const dayList = ds => PICKUPS.filter(p => p.date === ds && inScope(p) && ['approved','done'].includes(p.status));
 function nextReceiptNumber(plantId, ds) {
   const n = PICKUPS.filter(p => p.plant_id === plantId && p.date === ds && p.receipt_number)
     .reduce((a,p) => Math.max(a, p.receipt_number), 0);
@@ -22,8 +22,8 @@ function nextReceiptNumber(plantId, ds) {
 }
 
 function viewReception() {
-  const q = state.reception.q.trim();
-  let list = todayList();
+  const q = state.reception.q.trim(), ds = state.reception.date;
+  let list = dayList(ds);
   if (q) list = list.filter(p => (p.id + (p.car_number || '') + company(p.company_id).name).includes(q));
   list.sort((a,b) => a.begin_time < b.begin_time ? -1 : 1);
 
@@ -50,15 +50,21 @@ function viewReception() {
   return pageHead('計量入力',
     `<button class="btn btn-outline-primary btn-sm" data-act="openSpot">${ic('plus',15)}飛び込み搬入を登録</button>`) +
   `<div class="row g-3 mb-3">
-    <div class="col-6 col-lg-3">${kpi('本日の予定', list.length + ' <small>件</small>')}</div>
+    <div class="col-6 col-lg-3">${kpi('この日の予定', list.length + ' <small>件</small>')}</div>
     <div class="col-6 col-lg-3">${kpi('未計量', yet + ' <small>件</small>', '', yet ? 'alert-kpi' : '')}</div>
     <div class="col-6 col-lg-3">${kpi('計量済', done + ' <small>件</small>')}</div>
-    <div class="col-6 col-lg-3">${kpi('本日の正味重量', num(net) + ' <small>kg</small>')}</div>
+    <div class="col-6 col-lg-3">${kpi('正味重量 合計', num(net) + ' <small>kg</small>')}</div>
   </div>
   <div class="filterbar">
-    <div class="f" style="flex:1"><label>検索</label>
-      <input type="text" class="form-control" data-act="recQ" value="${esc(state.reception.q)}" placeholder="受付番号・車両ナンバー・取引先" autocomplete="off"></div>
-    <div class="align-self-center fw-bold">${fmtJp(D(0))}</div>
+    <div class="d-flex align-items-center gap-2">
+      <button class="btn btn-outline-secondary btn-sm btn-icon" data-act="recShift" data-n="-1" aria-label="前日">${ic('left')}</button>
+      <input type="date" class="form-control form-control-sm" style="width:170px" data-act="recDate" value="${ds}">
+      <button class="btn btn-outline-secondary btn-sm btn-icon" data-act="recShift" data-n="1" aria-label="翌日">${ic('right')}</button>
+      <button class="btn btn-outline-primary btn-sm" data-act="recToday">本日</button>
+    </div>
+    <div class="ms-2 fw-bold">${fmtJp(ds)}${ds === D(0) ? '　<span class="badge b-method b-sq">本日</span>' : ''}</div>
+    <div class="f ms-auto" style="min-width:260px"><label>検索</label>
+      <input type="text" class="form-control form-control-sm" data-act="recQ" value="${esc(state.reception.q)}" placeholder="受付番号・車両ナンバー・取引先" autocomplete="off"></div>
   </div>
   <div class="table-wrap">
     <table class="table table-hover mb-0">
@@ -73,6 +79,8 @@ function viewReception() {
 function weighInit(id) {
   return {id, arrived_at:nowHm(), weight:'', items:linesOf(id).map(l => l.item_id), memo:''};
 }
+/* 表示中の日付。過去日の計量漏れもここから入力できる */
+const recDate = () => state.reception.date;
 /* 品目のチェックボックス（申告にあった品目は申告数量を併記） */
 function itemChecks(lines, checked, prefix) {
   return `<div class="itemgrid">${ITEMS.map(it => {

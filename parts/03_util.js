@@ -67,9 +67,9 @@ const inHours = (pl, p) => p.begin_time >= pl.begin_time && p.end_time <= pl.end
    ========================================================================= */
 const NAV = [
   {sec:'受付・承認', items:[
-    {route:'approvals', label:'承認キュー',     ico:'inbox', badge:true},
-    {route:'board',     label:'予約一覧ボード', ico:'clipboard'},
-    {route:'proxy',     label:'代行入力',       ico:'phone'}
+    {route:'approvals', label:'予約の承認',     ico:'inbox', badge:true},
+    {route:'board',     label:'確定した予約',   ico:'clipboard'},
+    {route:'proxy',     label:'予約の代行作成', ico:'phone'}
   ]},
   {sec:'稼働設定', items:[
     {route:'hours',     label:'受付時間・休業日', ico:'clock'}
@@ -92,10 +92,10 @@ const NAV = [
 const state = {
   route:'approvals', plantId:'all', modal:null, emitter:false,
   approval:{sel:null, type:'all', keyword:''},
-  board:{date:D(0), tab:'all'},
+  board:{date:D(0), tab:'all', showVoid:false},
   proxy:null,
   hours:{plantId:'pl1', month:ymOf(D(0))},
-  reception:{q:''},
+  reception:{q:'', date:D(0)},
   actuals:{from:D(-30), to:D(0), companyId:'', itemId:'', type:'', diffOnly:false},
   master:{},
   invite:{token:null, form:null}

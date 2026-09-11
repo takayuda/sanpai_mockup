@@ -1055,34 +1055,32 @@ let COMPANIES = [
    phone:'048-000-0001', email:'kanri@sample-kensetsu.example.jp', contact:'山田 太郎',
    invoice:'T1234567890123', bank:'埼玉りそな銀行 大宮支店 普通 1234567',
    credit:'A',
-   status:'active', token:'a1b2c3d4e5', invited_at:'2026-04-02 10:00', registered_at:'2026-04-03 09:20'},
+   status:'active', registered_at:'2026-04-03 09:20'},
   {id:'c2', name:'大宮運輸株式会社', kana:'オオミヤウンユカブシキガイシャ',
    is_generator:false, is_transporter:true,
    postalcode:'331-0804', pref:'埼玉県', address:'さいたま市北区土呂町0-0-0',
    phone:'048-000-0002', email:'haisha@omiya-unyu.example.jp', contact:'鈴木 一郎',
    invoice:'T2345678901234', bank:'武蔵野銀行 大宮支店 普通 2345678',
    credit:'B',
-   status:'active', token:'b2c3d4e5f6', invited_at:'2026-04-02 10:05', registered_at:'2026-04-04 14:10'},
+   status:'active', registered_at:'2026-04-04 14:10'},
   {id:'c3', name:'埼玉建設工業株式会社', kana:'サイタマケンセツコウギョウカブシキガイシャ',
    is_generator:true, is_transporter:true,
    postalcode:'330-0061', pref:'埼玉県', address:'さいたま市浦和区常盤0-0-0',
    phone:'048-000-0003', email:'soumu@saitama-kk.example.jp', contact:'佐々木 花子',
    invoice:'T3456789012345', bank:'埼玉りそな銀行 浦和支店 普通 3456789',
    credit:'A',
-   status:'active', token:'c3d4e5f6g7', invited_at:'2026-04-05 11:00', registered_at:'2026-04-06 08:45'},
+   status:'active', registered_at:'2026-04-06 08:45'},
   {id:'c5', name:'武蔵野解体株式会社', kana:'ムサシノカイタイカブシキガイシャ',
    is_generator:true, is_transporter:false,
    postalcode:'338-0001', pref:'埼玉県', address:'さいたま市中央区上落合0-0-0',
    phone:'048-000-0005', email:'info@musashino-kaitai.example.jp', contact:'渡辺 翔',
    invoice:'T5678901234567', bank:'りそな銀行 与野支店 普通 5678901',
    credit:'B',
-   status:'active', token:'e5f6g7h8i9', invited_at:'2026-08-01 09:00', registered_at:'2026-08-01 17:30'}
+   status:'active', registered_at:'2026-08-01 17:30'}
 ];
 
-/* 発行済みの登録用URL（取引先が本登録すると COMPANIES に移る） */
-let INVITES = [
-  {id:'iv1', token:'d4e5f6g7h8', issued_at:D(-1)+' 16:30'}
-];
+/* 取引先の登録用URL。処理業者ごとに1本を使い回し、必要なときだけ再発行する */
+let INVITE_LINK = {token:'d4e5f6g7h8', issued_at:'2026-04-01 10:00'};
 
 /* =========================================================================
    items：品目マスタ　/　units：単位マスタ
@@ -1151,7 +1149,7 @@ addPickup({id:'R-2026-0161', type:'drop', status:'pending', company_id:'c5', pla
 
 addPickup({id:'R-2026-0162', type:'pickup', status:'pending', company_id:'c5', plant_id:'pl1',
   date:B(1), begin_time:'13:00', end_time:'16:00',
-  applied_at:D(0)+' 10:02', via:'電話（代行入力）', note:'解体ガラ混じり'},
+  applied_at:D(0)+' 10:02', via:'電話（代行作成）', note:'解体ガラ混じり'},
   [{item_id:'i2', unit_id:'u2', qty:2.0}, {item_id:'i7', unit_id:'u3', qty:4}]);
 
 addPickup({id:'R-2026-0163', type:'drop', status:'pending', company_id:'c1', plant_id:'pl2',
@@ -1207,7 +1205,7 @@ addPickup({id:'R-2026-0167', type:'pickup', status:'approved', company_id:'c1', 
 addPickup({id:'R-2026-0168', type:'drop', status:'approved', company_id:'c1', plant_id:'pl2',
   date:D(0), begin_time:'13:00', end_time:'17:00',
   car_number:'大宮 100 あ 33-44', driver_name:'渡辺 翔', driver_tel:'090-4444-4444',
-  applied_at:D(-1)+' 13:00', via:'電話（代行入力）',
+  applied_at:D(-1)+' 13:00', via:'電話（代行作成）',
   approved_at:D(-1)+' 13:20', approved_by:'受入担当 田中'},
   [{item_id:'i7', unit_id:'u3', qty:8}]);
 
@@ -1336,9 +1334,9 @@ const inHours = (pl, p) => p.begin_time >= pl.begin_time && p.end_time <= pl.end
    ========================================================================= */
 const NAV = [
   {sec:'受付・承認', items:[
-    {route:'approvals', label:'承認キュー',     ico:'inbox', badge:true},
-    {route:'board',     label:'予約一覧ボード', ico:'clipboard'},
-    {route:'proxy',     label:'代行入力',       ico:'phone'}
+    {route:'approvals', label:'予約の承認',     ico:'inbox', badge:true},
+    {route:'board',     label:'確定した予約',   ico:'clipboard'},
+    {route:'proxy',     label:'予約の代行作成', ico:'phone'}
   ]},
   {sec:'稼働設定', items:[
     {route:'hours',     label:'受付時間・休業日', ico:'clock'}
@@ -1361,10 +1359,10 @@ const NAV = [
 const state = {
   route:'approvals', plantId:'all', modal:null, emitter:false,
   approval:{sel:null, type:'all', keyword:''},
-  board:{date:D(0), tab:'all'},
+  board:{date:D(0), tab:'all', showVoid:false},
   proxy:null,
   hours:{plantId:'pl1', month:ymOf(D(0))},
-  reception:{q:''},
+  reception:{q:'', date:D(0)},
   actuals:{from:D(-30), to:D(0), companyId:'', itemId:'', type:'', diffOnly:false},
   master:{},
   invite:{token:null, form:null}
@@ -1434,7 +1432,7 @@ const pendingList = () => PICKUPS.filter(p => p.status === 'pending' && inScope(
 const pendingCount = () => pendingList().length;
 
 /* =========================================================================
-   承認キュー
+   予約の承認
    ========================================================================= */
 /* 変更依頼のときに提示する代替候補（稼働日と受入時間枠から作る） */
 function findAlternatives(p) {
@@ -1478,12 +1476,12 @@ function viewApprovals() {
       <td style="font-size:13px">${esc(linesText(p.id))}</td>
     </tr>`).join('');
 
-  return pageHead('承認キュー') +
+  return pageHead('予約の承認') +
   `<div class="row g-3 mb-3">
     <div class="col-6 col-lg-3">${kpi('承認待ち', pendingCount() + ' <small>件</small>', urgent ? `うち明日まで ${urgent} 件` : '', urgent ? 'alert-kpi' : '')}</div>
     <div class="col-6 col-lg-3">${kpi('本日の持込', todays.filter(p => p.type === 'drop').length + ' <small>件</small>')}</div>
     <div class="col-6 col-lg-3">${kpi('本日の引取', todays.filter(p => p.type === 'pickup').length + ' <small>件</small>')}</div>
-    <div class="col-6 col-lg-3">${kpi('登録済の取引先', COMPANIES.filter(c => c.status === 'active').length + ' <small>社</small>')}</div>
+    <div class="col-6 col-lg-3">${kpi('差戻し中', PICKUPS.filter(p => p.status === 'rejected' && inScope(p)).length + ' <small>件</small>')}</div>
   </div>
 
   <div class="filterbar">
@@ -1640,7 +1638,7 @@ var MODALS_PICKUP = m => {
 };
 
 /* =========================================================================
-   予約一覧ボード（日別）
+   確定した予約（日別）
    持込・引取で同じ列構成・同じ列幅にそろえる
    ========================================================================= */
 const BOARD_COLS = `<colgroup>
@@ -1677,22 +1675,25 @@ function viewBoard() {
 
   const blocks = plants.map(pl => {
     const cl = isClosed(pl.id, ds);
-    const all = PICKUPS.filter(p => p.plant_id === pl.id && p.date === ds && !['pending','rejected'].includes(p.status));
+    const all = PICKUPS.filter(p => p.plant_id === pl.id && p.date === ds && !['pending','rejected','canceled'].includes(p.status));
+    const voids = PICKUPS.filter(p => p.plant_id === pl.id && p.date === ds && ['rejected','canceled'].includes(p.status));
     const drops = all.filter(p => p.type === 'drop');
     const picks = all.filter(p => p.type === 'pickup').sort((x,y) => x.begin_time < y.begin_time ? -1 : 1);
     const groups = (pl.slots || []).map(s => ({s, rows:drops.filter(p => p.begin_time === s.from && p.end_time === s.to)}));
     const other = drops.filter(p => !groups.some(g => g.rows.includes(p)));
 
-    const dropHtml = b.tab === 'pickup' || !pl.is_delivery ? '' :
-      groups.map(g => `<div class="card mb-3">
+    /* 対応していない拠点でも、予約が残っていれば必ず表示する */
+    const dropHtml = b.tab === 'pickup' || (!pl.is_delivery && !drops.length) ? '' :
+      (pl.is_delivery ? groups : []).map(g => `<div class="card mb-3">
         <div class="card-head">持込　${g.s.name}　${g.s.from} 〜 ${g.s.to}<span class="sub">${g.rows.length} 件</span></div>
         ${g.rows.length ? boardTable(g.rows) : `<div class="p-3 text-secondary" style="font-size:14px">予約はありません</div>`}
       </div>`).join('') +
       (other.length ? `<div class="card mb-3"><div class="card-head">持込　枠外の時間<span class="sub">${other.length} 件</span></div>
         ${boardTable(other)}</div>` : '');
 
-    const pickHtml = b.tab === 'drop' || !pl.is_pickup ? '' : `<div class="card mb-3">
-      <div class="card-head">引取（集荷）　${pl.begin_time} 〜 ${pl.end_time}<span class="sub">${picks.length} 件</span></div>
+    const pickHtml = b.tab === 'drop' || (!pl.is_pickup && !picks.length) ? '' : `<div class="card mb-3">
+      <div class="card-head">引取（集荷）　${pl.begin_time} 〜 ${pl.end_time}<span class="sub">${picks.length} 件</span>
+        ${!pl.is_pickup ? '<span class="badge b-pending b-sq">この拠点は引取対応外</span>' : ''}</div>
       ${picks.length ? boardTable(picks) : `<div class="p-3 text-secondary" style="font-size:14px">予約はありません</div>`}
     </div>`;
 
@@ -1703,10 +1704,26 @@ function viewBoard() {
              : `<span class="badge b-neutral">持込 ${drops.length} 件／引取 ${picks.length} 件</span>`}
       </div>
       ${cl && !all.length ? `<div class="empty mb-3">休業日です（${esc(cl.reason)}）</div>` : dropHtml + pickHtml}
+      ${b.showVoid && voids.length ? `<div class="card mb-3">
+        <div class="card-head">取消・差戻し<span class="sub">${voids.length} 件</span></div>
+        <table class="table board-tbl mb-0">${BOARD_COLS}${BOARD_HEAD}
+          <tbody>${voids.map(p => `<tr class="dim">
+            <td class="mono">${p.id}</td>
+            <td class="mono nowrap">${timeRange(p)}</td>
+            <td>${esc(company(p.company_id).name)}</td>
+            <td style="font-size:13px">${esc(linesText(p.id))}</td>
+            <td class="mono" style="font-size:13px">${esc(p.car_number || '—')}</td>
+            <td style="font-size:13px">${esc(p.driver_name || '—')}</td>
+            <td style="font-size:12px">${esc(p.reject_reason || p.cancel_reason || '—')}</td>
+            <td>${stBadge(p.status)}</td>
+            <td class="text-end text-nowrap">
+              <button class="btn btn-outline-secondary btn-sm" data-act="openPickupDetail" data-id="${p.id}">詳細</button></td>
+          </tr>`).join('')}</tbody></table>
+      </div>` : ''}
     </div>`;
   }).join('');
 
-  return pageHead('予約一覧ボード',
+  return pageHead('確定した予約',
     `<button class="btn btn-outline-primary btn-sm" data-act="exportBoard">${ic('download')}CSV出力</button>`) +
   `<div class="filterbar">
     <div class="d-flex align-items-center gap-2">
@@ -1716,7 +1733,9 @@ function viewBoard() {
       <button class="btn btn-outline-primary btn-sm" data-act="boardToday">本日</button>
     </div>
     <div class="ms-2 fw-bold">${fmtJp(ds)}${ds === D(0) ? '　<span class="badge b-method b-sq">本日</span>' : ''}</div>
-    <div class="ms-auto">
+    <div class="ms-auto d-flex align-items-center gap-3">
+      <div class="form-check mb-0"><input class="form-check-input" type="checkbox" data-act="boardVoid" ${b.showVoid ? 'checked' : ''}>
+        <label class="form-check-label" style="font-size:13px">取消・差戻しも表示</label></div>
       <div class="btn-group btn-group-sm" role="group">
         ${[['all','すべて'],['drop','持込'],['pickup','引取']].map(([v,t]) =>
           `<button type="button" class="btn ${b.tab === v ? 'btn-primary' : 'btn-outline-secondary'}" data-act="boardTab" data-tab="${v}">${t}</button>`).join('')}
@@ -1782,11 +1801,11 @@ var MODALS_CANCEL = m => {
 };
 
 /* =========================================================================
-   代行入力（電話で受けた予約・集荷依頼を社内が入力）
+   予約の代行作成（電話で受けた予約・集荷依頼を社内が入力）
    ========================================================================= */
 const blankLine = () => ({item_id:'', qty:'', unit_id:''});
 const blankProxy = () => ({
-  company_id:'', plant_id:'pl1', type:'', date:'', slotId:'',
+  company_id:'', plant_id: state.plantId !== 'all' ? state.plantId : PLANTS[0].id, type:'', date:'', slotId:'',
   begin_time:'', end_time:'',
   lines:[blankLine()],
   car_number:'', driver_name:'', driver_tel:'',
@@ -1794,7 +1813,7 @@ const blankProxy = () => ({
 });
 function nextPickupNo() {
   const n = PICKUPS.map(p => Number(p.id.slice(-4))).reduce((a,b) => Math.max(a,b), 0);
-  return 'R-2026-' + pad(n + 1);
+  return 'R-2026-' + String(n + 1).padStart(4, '0');
 }
 
 function viewProxy() {
@@ -1821,7 +1840,7 @@ function viewProxy() {
     </div>
   </div>`).join('');
 
-  return pageHead('代行入力',
+  return pageHead('予約の代行作成',
     `<button class="btn btn-outline-secondary btn-sm" data-act="pxReset">入力内容をクリア</button>`) +
   err +
   `<div style="max-width:860px">
@@ -1912,7 +1931,7 @@ function pxSubmit() {
     begin_time: d.type === 'drop' ? s.from : d.begin_time,
     end_time:   d.type === 'drop' ? s.to   : d.end_time,
     applied_at:`${D(0)} ${pad(now.getHours())}:${pad(now.getMinutes())}`,
-    via:'電話（代行入力）', note:d.note
+    via:'電話（代行作成）', note:d.note
   };
   if (d.type === 'drop') Object.assign(p, {car_number:d.car_number, driver_name:d.driver_name, driver_tel:d.driver_tel});
   PICKUPS.unshift(p);
@@ -2110,7 +2129,7 @@ function declaredKg(pickupId) {
     return s;
   }, 0);
 }
-const todayList = () => PICKUPS.filter(p => p.date === D(0) && inScope(p) && ['approved','done'].includes(p.status));
+const dayList = ds => PICKUPS.filter(p => p.date === ds && inScope(p) && ['approved','done'].includes(p.status));
 function nextReceiptNumber(plantId, ds) {
   const n = PICKUPS.filter(p => p.plant_id === plantId && p.date === ds && p.receipt_number)
     .reduce((a,p) => Math.max(a, p.receipt_number), 0);
@@ -2118,8 +2137,8 @@ function nextReceiptNumber(plantId, ds) {
 }
 
 function viewReception() {
-  const q = state.reception.q.trim();
-  let list = todayList();
+  const q = state.reception.q.trim(), ds = state.reception.date;
+  let list = dayList(ds);
   if (q) list = list.filter(p => (p.id + (p.car_number || '') + company(p.company_id).name).includes(q));
   list.sort((a,b) => a.begin_time < b.begin_time ? -1 : 1);
 
@@ -2146,15 +2165,21 @@ function viewReception() {
   return pageHead('計量入力',
     `<button class="btn btn-outline-primary btn-sm" data-act="openSpot">${ic('plus',15)}飛び込み搬入を登録</button>`) +
   `<div class="row g-3 mb-3">
-    <div class="col-6 col-lg-3">${kpi('本日の予定', list.length + ' <small>件</small>')}</div>
+    <div class="col-6 col-lg-3">${kpi('この日の予定', list.length + ' <small>件</small>')}</div>
     <div class="col-6 col-lg-3">${kpi('未計量', yet + ' <small>件</small>', '', yet ? 'alert-kpi' : '')}</div>
     <div class="col-6 col-lg-3">${kpi('計量済', done + ' <small>件</small>')}</div>
-    <div class="col-6 col-lg-3">${kpi('本日の正味重量', num(net) + ' <small>kg</small>')}</div>
+    <div class="col-6 col-lg-3">${kpi('正味重量 合計', num(net) + ' <small>kg</small>')}</div>
   </div>
   <div class="filterbar">
-    <div class="f" style="flex:1"><label>検索</label>
-      <input type="text" class="form-control" data-act="recQ" value="${esc(state.reception.q)}" placeholder="受付番号・車両ナンバー・取引先" autocomplete="off"></div>
-    <div class="align-self-center fw-bold">${fmtJp(D(0))}</div>
+    <div class="d-flex align-items-center gap-2">
+      <button class="btn btn-outline-secondary btn-sm btn-icon" data-act="recShift" data-n="-1" aria-label="前日">${ic('left')}</button>
+      <input type="date" class="form-control form-control-sm" style="width:170px" data-act="recDate" value="${ds}">
+      <button class="btn btn-outline-secondary btn-sm btn-icon" data-act="recShift" data-n="1" aria-label="翌日">${ic('right')}</button>
+      <button class="btn btn-outline-primary btn-sm" data-act="recToday">本日</button>
+    </div>
+    <div class="ms-2 fw-bold">${fmtJp(ds)}${ds === D(0) ? '　<span class="badge b-method b-sq">本日</span>' : ''}</div>
+    <div class="f ms-auto" style="min-width:260px"><label>検索</label>
+      <input type="text" class="form-control form-control-sm" data-act="recQ" value="${esc(state.reception.q)}" placeholder="受付番号・車両ナンバー・取引先" autocomplete="off"></div>
   </div>
   <div class="table-wrap">
     <table class="table table-hover mb-0">
@@ -2169,6 +2194,8 @@ function viewReception() {
 function weighInit(id) {
   return {id, arrived_at:nowHm(), weight:'', items:linesOf(id).map(l => l.item_id), memo:''};
 }
+/* 表示中の日付。過去日の計量漏れもここから入力できる */
+const recDate = () => state.reception.date;
 /* 品目のチェックボックス（申告にあった品目は申告数量を併記） */
 function itemChecks(lines, checked, prefix) {
   return `<div class="itemgrid">${ITEMS.map(it => {
@@ -2317,8 +2344,8 @@ function viewActuals() {
 
 /* =========================================================================
    取引先マスタ
-   社内では情報を登録せず、登録用URLを発行して取引先に渡すだけ。
-   取引先が URL から社名・連絡先・ログイン情報を本登録する。
+   社内では情報を登録せず、登録用URLを取引先に渡すだけ。
+   URLは1本を使い回し、必要なときだけ再発行する（再発行すると旧URLは無効）。
    ========================================================================= */
 const INVITE_BASE = 'https://sanpai.example.jp/invite/';
 const randToken = () => Math.random().toString(36).slice(2,10) + Math.random().toString(36).slice(2,4);
@@ -2339,41 +2366,43 @@ function viewCompanies() {
         <button class="btn btn-outline-danger btn-sm ms-1" data-act="delCompany" data-i="${i}">削除</button></td></tr>`;
   }).join('');
 
-  const invites = INVITES.map(v => `<tr>
-      <td class="mono" style="font-size:12px">${esc(v.issued_at)}</td>
-      <td style="font-size:12px;word-break:break-all">${INVITE_BASE}${esc(v.token)}</td>
-      <td class="text-end text-nowrap">
-        <button class="btn btn-outline-secondary btn-sm" data-act="copyInvite" data-token="${esc(v.token)}">${ic('copy',14)}コピー</button>
-        <button class="btn btn-outline-secondary btn-sm ms-1 mockbtn" data-act="openInvitePage" data-token="${esc(v.token)}">登録画面</button>
-        <button class="btn btn-outline-danger btn-sm ms-1" data-act="delInvite" data-id="${v.id}">失効</button></td></tr>`).join('');
-
   return pageHead('取引先',
-    `<button class="btn btn-primary btn-sm" data-act="newInvite">${ic('link',15)}登録用URLを発行</button>
-     <button class="btn btn-outline-primary btn-sm" data-act="csvCompanies">${ic('download')}CSV出力</button>`) +
-  `<div class="table-wrap mb-4">
+    `<button class="btn btn-outline-primary btn-sm" data-act="csvCompanies">${ic('download')}CSV出力</button>`) +
+  `<div class="card mb-4">
+    <div class="card-head">${ic('link',16)}取引先の登録用URL
+      <span class="sub">このURLを取引先に送ると、取引先が自分で登録できます</span></div>
+    <div class="card-body">
+      <div class="urlbox"><code>${INVITE_BASE}${esc(INVITE_LINK.token)}</code>
+        <button class="btn btn-outline-secondary btn-sm ms-auto text-nowrap" data-act="copyInvite" data-token="${esc(INVITE_LINK.token)}">${ic('copy',14)}コピー</button></div>
+      <div class="d-flex gap-2 mt-3 flex-wrap align-items-center">
+        <button class="btn btn-outline-primary btn-sm mockbtn" data-act="openInvitePage" data-token="${esc(INVITE_LINK.token)}">${ic('login',15)}登録画面を開く</button>
+        <button class="btn btn-outline-danger btn-sm" data-act="openReissue">URLを再発行</button>
+        <span class="text-secondary ms-auto" style="font-size:12px">発行日時 ${esc(INVITE_LINK.issued_at)}</span>
+      </div>
+    </div>
+  </div>
+  <div class="table-wrap">
     <table class="table table-hover mb-0">
       <thead><tr><th style="width:24%">取引先名</th><th style="width:12%">区分</th><th style="width:12%">担当者</th>
         <th style="width:20%">連絡先</th><th style="width:14%">インボイス登録番号</th><th style="width:10%">登録日時</th><th></th></tr></thead>
       <tbody>${rows || `<tr><td colspan="7" class="text-center text-secondary py-4">登録済みの取引先はありません</td></tr>`}</tbody>
     </table>
-  </div>
-  ${INVITES.length ? `<div class="card">
-    <div class="card-head">${ic('link',16)}発行済みの登録用URL<span class="sub">取引先が本登録を完了すると上の一覧に追加されます</span></div>
-    <table class="table mb-0">
-      <thead><tr><th style="width:180px">発行日時</th><th>URL</th><th style="width:300px"></th></tr></thead>
-      <tbody>${invites}</tbody></table>
-  </div>` : ''}`;
+  </div>`;
 }
 
-/* ---------- 登録用URL ---------- */
-var MODALS_INVITE = m => ({
-  title:'登録用URL',
-  body:`<div class="urlbox"><code>${INVITE_BASE}${esc(m.token)}</code>
-      <button class="btn btn-outline-secondary btn-sm ms-auto text-nowrap" data-act="copyInvite" data-token="${esc(m.token)}">${ic('copy',14)}コピー</button></div>
-    <div class="d-flex gap-2 mt-3 flex-wrap">
-      <button class="btn btn-outline-primary btn-sm mockbtn" data-act="openInvitePage" data-token="${esc(m.token)}">${ic('login',15)}登録画面を開く</button>
-    </div>`,
-  foot:`<button class="btn btn-primary" data-act="closeModal">閉じる</button>`
+/* ---------- 登録用URLの再発行 ---------- */
+var MODALS_REISSUE = m => ({
+  title:'登録用URLを再発行',
+  body:`<div class="warnbox danger mb-3">${ic('alert',16)}<span>再発行すると現在のURLは使えなくなります。
+      すでにURLを送付済みで未登録の取引先には、新しいURLを送り直す必要があります。</span></div>
+    ${dl([['現在のURL', `<span style="word-break:break-all;font-size:12px">${INVITE_BASE}${esc(INVITE_LINK.token)}</span>`],
+          ['発行日時', esc(INVITE_LINK.issued_at)]])}
+    <div class="form-check mt-3">
+      <input class="form-check-input" type="checkbox" data-mod="ack" ${m.ack ? 'checked' : ''} data-rerender="1">
+      <label class="form-check-label">上記を確認しました</label></div>
+    ${m.err ? `<div class="text-danger mt-2" style="font-size:13px">${esc(m.err)}</div>` : ''}`,
+  foot:`<button class="btn btn-outline-secondary" data-act="closeModal">キャンセル</button>
+        <button class="btn btn-outline-danger" data-act="doReissue" ${m.ack ? '' : 'disabled'}>再発行する</button>`
 });
 
 /* ---------- 取引先の編集 ---------- */
@@ -2424,8 +2453,8 @@ function viewInvite() {
         <div><button class="btn btn-outline-secondary btn-sm mockbtn" data-act="go" data-route="m_companies">処理業者側の管理画面に戻る</button></div>
       </div></div></div>`;
   }
-  const iv = INVITES.find(x => x.token === state.invite.token);
-  if (!iv) return `<div class="invitewrap"><div class="empty">この登録用URLは無効です。</div></div>`;
+  if (state.invite.token !== INVITE_LINK.token)
+    return `<div class="invitewrap"><div class="empty">この登録用URLは無効です。処理業者にご確認ください。</div></div>`;
   if (!state.invite.form) state.invite.form = {
     name:'', kana:'', is_generator:true, is_transporter:false,
     contact:'', email:'', password:'', password2:'',
@@ -2464,7 +2493,7 @@ function viewInvite() {
         <div class="col-12 col-md-6">${fi('invoice','インボイス登録番号','text','')}</div>
         <div class="col-12 col-md-6">${fi('bank','振込先口座','text','')}</div>
       </div>
-      <button class="btn btn-primary w-100 mt-4" data-act="doInvite" data-token="${esc(iv.token)}">この内容で登録する</button>
+      <button class="btn btn-primary w-100 mt-4" data-act="doInvite" data-token="${esc(INVITE_LINK.token)}">この内容で登録する</button>
     </div></div>
     <div class="text-center mt-3">
       <button class="btn btn-outline-secondary btn-sm mockbtn" data-act="go" data-route="m_companies">処理業者側の管理画面に戻る</button>
@@ -2571,7 +2600,7 @@ const MODALS = {
   changeSlot: MODALS_CHANGESLOT, changeVisit: MODALS_CHANGEVISIT, cancel: MODALS_CANCEL,
   slot: MODALS_SLOT, holiday: MODALS_HOLIDAY, plantFlag: MODALS_PLANTFLAG,
   weigh: MODALS_WEIGH, spot: MODALS_SPOT, refuse: MODALS_REFUSE,
-  invite: MODALS_INVITE, company: MODALS_COMPANY, master: MODALS_MASTER
+  reissue: MODALS_REISSUE, company: MODALS_COMPANY, master: MODALS_MASTER
 };
 
 /* 同じファイルに排出者ポータルが同梱されていれば、その場で切り替える。
@@ -2696,6 +2725,8 @@ document.addEventListener('change', e => {
   if (d.mod) { modBind(d.mod, val); if (structural) renderModal(); return; }
   if (d.inv) { state.invite.form[d.inv] = val; return; }
   if (d.act === 'boardDate')   { state.board.date = val; render(); return; }
+  if (d.act === 'recDate')     { state.reception.date = val; render(); return; }
+  if (d.act === 'boardVoid')   { state.board.showVoid = val; render(); return; }
   if (d.act === 'acFilter')    { state.actuals[d.key] = val; if (structural) render(); return; }
   if (d.act === 'apFilter')    { state.approval[d.key] = val; if (structural) render(); return; }
   if (d.act === 'switchPlant') { state.plantId = val; state.approval.sel = null; render(); return; }
@@ -2737,7 +2768,7 @@ document.addEventListener('click', e => {
       toast(`承認待ち ${pendingCount()} 件（通知チャネルはLINE／LINE WORKS等を想定・要確定）`);
       go('approvals'); break;
 
-    /* ---- 承認キュー ---- */
+    /* ---- 予約の承認 ---- */
     case 'selApproval': state.approval.sel = d.id; render(); break;
     case 'openPickupDetail': openModal('pickup', {id:d.id}); break;
     case 'openApprove': {
@@ -2778,7 +2809,7 @@ document.addEventListener('click', e => {
       render(); break;
     }
 
-    /* ---- 予約一覧ボード ---- */
+    /* ---- 確定した予約 ---- */
     case 'boardShift': state.board.date = dstr(addDays(parseD(state.board.date), Number(d.n))); render(); break;
     case 'boardToday': state.board.date = D(0); render(); break;
     case 'boardTab': state.board.tab = d.tab; render(); break;
@@ -2825,7 +2856,7 @@ document.addEventListener('click', e => {
       toast('CSVを出力しました。'); break;
     }
 
-    /* ---- 代行入力 ---- */
+    /* ---- 予約の代行作成 ---- */
     case 'pxType': state.proxy.type = d.v; state.proxy.slotId = ''; state.proxy.errors = []; render(); break;
     case 'pxAddLine': state.proxy.lines.push(blankLine()); render(); break;
     case 'pxRemoveLine':
@@ -2899,6 +2930,8 @@ document.addEventListener('click', e => {
     }
 
     /* ---- 入場受付・計量 ---- */
+    case 'recShift': state.reception.date = dstr(addDays(parseD(state.reception.date), Number(d.n))); render(); break;
+    case 'recToday': state.reception.date = D(0); render(); break;
     case 'openWeigh': openModal('weigh', weighInit(d.id), 'modal-lg'); break;
     case 'doWeigh': {
       const p = pk(m.id), w = Number(m.weight);
@@ -2928,11 +2961,11 @@ document.addEventListener('click', e => {
       if (!m.items.length) { m.err = '含まれていた品目を1つ以上選んでください。'; renderModal(); return; }
       const id = nextPickupNo();
       PICKUPS.unshift({id, type:'drop', status:'done', company_id:m.company_id, plant_id:m.plant_id,
-        date:D(0), begin_time:m.arrived_at, end_time:m.arrived_at,
+        date:recDate(), begin_time:m.arrived_at, end_time:m.arrived_at,
         car_number:m.car_number || '', driver_name:'', driver_tel:'',
         applied_at:`${D(0)} ${nowHm()}`, via:'飛び込み',
         approved_at:`${D(0)} ${nowHm()}`, approved_by:`${ME.role} ${ME.name.split(' ')[0]}`,
-        arrived_at:m.arrived_at, receipt_number:nextReceiptNumber(m.plant_id, D(0)),
+        arrived_at:m.arrived_at, receipt_number:nextReceiptNumber(m.plant_id, recDate()),
         weight:w, diff:0, weigh_memo:m.memo || ''});
       m.items.forEach(it => PICKUP_ITEMS.push({id:'pi' + (++_pi), pickup_id:id, item_id:it, unit_id:'u2', qty:null}));
       closeModal();
@@ -2959,17 +2992,13 @@ document.addEventListener('click', e => {
     }
 
     /* ---- 取引先マスタ ---- */
-    case 'newInvite': {
-      const v = {id:'iv' + Date.now().toString(36), token:randToken(), issued_at:`${D(0)} ${nowHm()}`};
-      INVITES.push(v);
-      openModal('invite', {token:v.token}, 'modal-md');
-      break;
-    }
-    case 'showInvite': openModal('invite', {token:d.token}, 'modal-md'); break;
-    case 'delInvite': {
-      if (!confirm('この登録用URLを失効させます。よろしいですか？')) return;
-      INVITES = INVITES.filter(x => x.id !== d.id);
-      toast('登録用URLを失効しました。', 'warn'); render(); break;
+    case 'openReissue': openModal('reissue', {ack:false}, 'modal-md'); break;
+    case 'doReissue': {
+      if (!m.ack) { m.err = '内容を確認してチェックを入れてください。'; renderModal(); return; }
+      INVITE_LINK = {token:randToken(), issued_at:`${D(0)} ${nowHm()}`};
+      closeModal();
+      toast('登録用URLを再発行しました。旧URLは使えません。', 'warn');
+      render(); break;
     }
     case 'copyInvite': {
       const url = INVITE_BASE + d.token;
@@ -2981,7 +3010,7 @@ document.addEventListener('click', e => {
       state.invite = {token:d.token, form:null, done:false};
       go('invite'); break;
     case 'doInvite': {
-      const iv = INVITES.find(x => x.token === d.token), f = state.invite.form, e2 = [];
+      const f = state.invite.form, e2 = [];
       if (!f.name.trim()) e2.push('会社名を入力してください。');
       if (!f.is_generator && !f.is_transporter) e2.push('区分を1つ以上選択してください。');
       if (!f.contact.trim()) e2.push('ご担当者名を入力してください。');
@@ -2999,9 +3028,7 @@ document.addEventListener('click', e => {
         contact:f.contact, email:f.email, phone:f.phone,
         postalcode:f.postalcode, pref:f.pref, address:f.address,
         invoice:f.invoice, bank:f.bank, credit:'',
-        status:'active', token:iv.token,
-        invited_at:iv.issued_at, registered_at:`${D(0)} ${nowHm()}`});
-      INVITES = INVITES.filter(x => x.id !== iv.id);
+        status:'active', registered_at:`${D(0)} ${nowHm()}`});
       state.invite.done = true;
       toast('本登録が完了しました。');
       render(); break;
@@ -3014,15 +3041,17 @@ document.addEventListener('click', e => {
     }
     case 'delCompany': {
       const c = COMPANIES[Number(d.i)];
-      if (!confirm(`取引先「${c.name || '未登録'}」を削除します。よろしいですか？`)) return;
+      const used = PICKUPS.filter(p => p.company_id === c.id).length;
+      if (used) { toast(`「${c.name}」には予約・実績が ${used} 件あります。削除できません。`, 'err'); return; }
+      if (!confirm(`取引先「${c.name}」を削除します。よろしいですか？`)) return;
       COMPANIES.splice(Number(d.i), 1);
       toast('削除しました。', 'warn'); render(); break;
     }
     case 'csvCompanies': {
-      const rows = [['取引先名','フリガナ','排出事業者','運搬業者','担当者','メールアドレス','電話番号','郵便番号','都道府県','住所','インボイス登録番号','振込先口座','与信区分','URL発行日時','登録日時']];
+      const rows = [['取引先名','フリガナ','排出事業者','運搬業者','担当者','メールアドレス','電話番号','郵便番号','都道府県','住所','インボイス登録番号','振込先口座','与信区分','登録日時']];
       COMPANIES.filter(c => c.status === 'active').forEach(c => rows.push([c.name, c.kana, c.is_generator ? '○' : '', c.is_transporter ? '○' : '',
         c.contact, c.email, c.phone, c.postalcode, c.pref, c.address, c.invoice, c.bank, c.credit,
-        c.invited_at || '', c.registered_at || '']));
+        c.registered_at || '']));
       downloadCsv('取引先マスタ.csv', rows);
       toast('CSVを出力しました。'); break;
     }
@@ -3036,9 +3065,18 @@ document.addEventListener('click', e => {
     }
     case 'mEdit': openModal('master', {m:d.m, idx:Number(d.i), row:JSON.parse(JSON.stringify(MASTERS[d.m].data()[Number(d.i)]))}); break;
     case 'mDel': {
-      const arr = MASTERS[d.m].data(), i = Number(d.i);
-      if (!confirm(`${MASTERS[d.m].title}の「${arr[i].name}」を削除します。よろしいですか？`)) return;
-      const removed = arr.splice(i, 1)[0];
+      const arr = MASTERS[d.m].data(), i = Number(d.i), row = arr[i];
+      /* 使用中のマスタは削除させない（予約・実績の参照が壊れるため） */
+      const used = d.m === 'm_plants' ? PICKUPS.filter(p => p.plant_id === row.id).length
+                 : d.m === 'm_items'  ? PICKUP_ITEMS.filter(l => l.item_id === row.id).length
+                 : d.m === 'm_units'  ? PICKUP_ITEMS.filter(l => l.unit_id === row.id).length : 0;
+      if (used) { toast(`「${row.name}」は予約・実績で ${used} 件使われています。削除できません。`, 'err'); return; }
+      if (!confirm(`${MASTERS[d.m].title}の「${row.name}」を削除します。よろしいですか？`)) return;
+      arr.splice(i, 1);
+      if (d.m === 'm_plants') {                       /* 選択中の拠点が消えたら戻す */
+        if (state.plantId === row.id) state.plantId = 'all';
+        if (state.hours.plantId === row.id) state.hours.plantId = (PLANTS[0] || {}).id;
+      }
       toast('削除しました。', 'warn'); render(); break;
     }
     case 'mSave': {

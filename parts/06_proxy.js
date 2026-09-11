@@ -1,10 +1,10 @@
 
 /* =========================================================================
-   代行入力（電話で受けた予約・集荷依頼を社内が入力）
+   予約の代行作成（電話で受けた予約・集荷依頼を社内が入力）
    ========================================================================= */
 const blankLine = () => ({item_id:'', qty:'', unit_id:''});
 const blankProxy = () => ({
-  company_id:'', plant_id:'pl1', type:'', date:'', slotId:'',
+  company_id:'', plant_id: state.plantId !== 'all' ? state.plantId : PLANTS[0].id, type:'', date:'', slotId:'',
   begin_time:'', end_time:'',
   lines:[blankLine()],
   car_number:'', driver_name:'', driver_tel:'',
@@ -12,7 +12,7 @@ const blankProxy = () => ({
 });
 function nextPickupNo() {
   const n = PICKUPS.map(p => Number(p.id.slice(-4))).reduce((a,b) => Math.max(a,b), 0);
-  return 'R-2026-' + pad(n + 1);
+  return 'R-2026-' + String(n + 1).padStart(4, '0');
 }
 
 function viewProxy() {
@@ -39,7 +39,7 @@ function viewProxy() {
     </div>
   </div>`).join('');
 
-  return pageHead('代行入力',
+  return pageHead('予約の代行作成',
     `<button class="btn btn-outline-secondary btn-sm" data-act="pxReset">入力内容をクリア</button>`) +
   err +
   `<div style="max-width:860px">
@@ -130,7 +130,7 @@ function pxSubmit() {
     begin_time: d.type === 'drop' ? s.from : d.begin_time,
     end_time:   d.type === 'drop' ? s.to   : d.end_time,
     applied_at:`${D(0)} ${pad(now.getHours())}:${pad(now.getMinutes())}`,
-    via:'電話（代行入力）', note:d.note
+    via:'電話（代行作成）', note:d.note
   };
   if (d.type === 'drop') Object.assign(p, {car_number:d.car_number, driver_name:d.driver_name, driver_tel:d.driver_tel});
   PICKUPS.unshift(p);

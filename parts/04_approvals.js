@@ -1,6 +1,6 @@
 
 /* =========================================================================
-   承認キュー
+   予約の承認
    ========================================================================= */
 /* 変更依頼のときに提示する代替候補（稼働日と受入時間枠から作る） */
 function findAlternatives(p) {
@@ -44,12 +44,12 @@ function viewApprovals() {
       <td style="font-size:13px">${esc(linesText(p.id))}</td>
     </tr>`).join('');
 
-  return pageHead('承認キュー') +
+  return pageHead('予約の承認') +
   `<div class="row g-3 mb-3">
     <div class="col-6 col-lg-3">${kpi('承認待ち', pendingCount() + ' <small>件</small>', urgent ? `うち明日まで ${urgent} 件` : '', urgent ? 'alert-kpi' : '')}</div>
     <div class="col-6 col-lg-3">${kpi('本日の持込', todays.filter(p => p.type === 'drop').length + ' <small>件</small>')}</div>
     <div class="col-6 col-lg-3">${kpi('本日の引取', todays.filter(p => p.type === 'pickup').length + ' <small>件</small>')}</div>
-    <div class="col-6 col-lg-3">${kpi('登録済の取引先', COMPANIES.filter(c => c.status === 'active').length + ' <small>社</small>')}</div>
+    <div class="col-6 col-lg-3">${kpi('差戻し中', PICKUPS.filter(p => p.status === 'rejected' && inScope(p)).length + ' <small>件</small>')}</div>
   </div>
 
   <div class="filterbar">
