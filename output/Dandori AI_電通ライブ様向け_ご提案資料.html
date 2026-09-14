@@ -33,7 +33,7 @@
 *{box-sizing:border-box;margin:0;padding:0;}
 body{
   background:#5A6672;
-  font-family:"Noto Sans JP","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+  font-family:"Noto Sans JP","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,"Noto Sans CJK JP",sans-serif;
   font-feature-settings:"palt" 1;
   -webkit-font-smoothing:antialiased;
 }
@@ -155,38 +155,51 @@ tbody td.key{background:var(--tint2);font-weight:700;width:116px;}
   <div class="rule"></div>
   <p class="lead">月額費用に含まれる月間クレジットを、各アクションの実行時に消費します。</p>
   <div class="body" style="top:158px;">
-    <div class="row">
-      <div style="width:571.5px;">
-        <div class="label">クレジット消費の目安</div>
-        <table style="margin-top:12px;">
+    <div class="row" style="align-items:stretch;">
+      <div class="card" style="width:571.5px;padding:32px 34px;">
+        <div class="label">C R E D I T&nbsp; U S A G E</div>
+        <div style="font-size:16px;font-weight:700;color:var(--ink);margin-top:10px;">クレジット消費の目安</div>
+        <table style="margin-top:22px;font-size:12.6px;">
           <tbody>
-            <tr><td style="font-weight:700;">見積作成</td><td style="text-align:right;">200 cr</td></tr>
-            <tr><td style="font-weight:700;">メール文面生成</td><td style="text-align:right;">3 cr / 回</td></tr>
-            <tr><td style="font-weight:700;">協力会社見積 解析</td><td style="text-align:right;">3 cr / 回</td></tr>
-            <tr><td style="font-weight:700;">協力会社見積 取込</td><td style="text-align:right;">3 cr / 回</td></tr>
-            <tr><td style="font-weight:700;border-bottom:none;">企画伴走チャット</td><td style="text-align:right;border-bottom:none;">100 cr / 回</td></tr>
+            <tr><td style="font-weight:700;padding:15px 4px;">見積作成</td><td style="text-align:right;padding:15px 4px;">200 cr</td></tr>
+            <tr><td style="font-weight:700;padding:15px 4px;">メール文面生成</td><td style="text-align:right;padding:15px 4px;">3 cr / 回</td></tr>
+            <tr><td style="font-weight:700;padding:15px 4px;">協力会社見積 解析</td><td style="text-align:right;padding:15px 4px;">3 cr / 回</td></tr>
+            <tr><td style="font-weight:700;padding:15px 4px;">協力会社見積 取込</td><td style="text-align:right;padding:15px 4px;">3 cr / 回</td></tr>
+            <tr><td style="font-weight:700;padding:15px 4px;border-bottom:none;">企画伴走チャット</td><td style="text-align:right;padding:15px 4px;border-bottom:none;">100 cr / 回</td></tr>
           </tbody>
         </table>
       </div>
       <div style="width:21px;"></div>
-      <div class="card" style="width:571.5px;padding:22px;background:var(--navy);">
-        <div class="label" style="color:var(--on-navy-dim);">クレジットの運用</div>
-        <div class="panel box" style="margin-top:14px;padding:14px 18px;">
-          <div style="font-size:13px;font-weight:700;color:#fff;">残量アラート</div>
-          <div style="font-size:11px;color:var(--on-navy);margin-top:6px;">クレジット残量が減ると管理者に通知</div>
+      <div style="width:571.5px;height:500px;display:flex;flex-direction:column;">
+        <div class="card" style="padding:18px 20px;background:var(--navy);">
+          <div class="label" style="color:var(--on-navy-dim);">C R E D I T&nbsp; O P S</div>
+          <div style="font-size:13px;font-weight:700;color:#fff;margin-top:8px;">クレジットの運用</div>
+          <div style="margin-top:12px;font-size:10.5px;color:var(--on-navy);line-height:1.8;">
+            <div><b style="color:#fff;">残量アラート：</b>クレジット残量が減ると管理者に通知</div>
+            <div style="margin-top:6px;"><b style="color:#fff;">枯渇時の追加：</b>「自動でクレジット追加」か「手動で都度追加」を選択可能</div>
+            <div style="margin-top:6px;"><b style="color:#fff;">月次の扱い：</b>毎月リセット／追加分は翌月へ繰越（消費は月間分から優先）</div>
+          </div>
         </div>
-        <div class="panel box" style="margin-top:12px;padding:14px 18px;">
-          <div style="font-size:13px;font-weight:700;color:#fff;">枯渇時の追加</div>
-          <div style="font-size:11px;color:var(--on-navy);margin-top:6px;">「自動でクレジット追加」か「手動で都度追加」を選択可能</div>
-        </div>
-        <div class="panel box" style="margin-top:12px;padding:14px 18px;">
-          <div style="font-size:13px;font-weight:700;color:#fff;">月次の扱い</div>
-          <div style="font-size:11px;color:var(--on-navy);margin-top:6px;">月間クレジットは毎月リセット／追加分は翌月へ繰越（消費は月間分から優先）</div>
+        <div class="card" style="margin-top:14px;flex:1;padding:22px 24px;border:1.5px solid var(--alert);background:#FFF5F5;">
+          <div style="font-size:13px;font-weight:700;color:var(--alert);">クレジット計算方法 変更のお知らせ</div>
+          <div style="font-size:10.5px;color:var(--body);line-height:1.7;margin-top:8px;">見積作成時のクレジット消費量は、より正確にAIによる計算量を反映した形へ変更させていただきます。</div>
+          <div style="margin-top:14px;">
+            <div style="font-size:9.5px;font-weight:700;color:var(--muted);letter-spacing:.14em;">B E F O R E</div>
+            <div style="font-size:10.5px;color:var(--muted);line-height:1.75;margin-top:5px;">
+              ・基準消費数：200クレジット<br>
+              ・案件作成時にアップロードしたファイル・テキストの総容量が10MBを超える場合、1MBごとに8クレジットを加算
+            </div>
+          </div>
+          <div style="margin-top:12px;">
+            <div style="font-size:9.5px;font-weight:700;color:var(--alert);letter-spacing:.14em;">A F T E R</div>
+            <div style="font-size:10.5px;color:var(--ink);font-weight:700;line-height:1.75;margin-top:5px;">
+              ・基準消費数：200クレジット<br>
+              ・実際のAI計算量に比例して消費クレジットを加算
+            </div>
+            <div style="font-size:9.5px;color:var(--alert);line-height:1.6;margin-top:8px;">※ 参考値として、近日中に実証実験中に貴社が作成された案件での消費クレジットを提示いたします</div>
+          </div>
         </div>
       </div>
-    </div>
-    <div style="margin-top:24px;background:var(--tint);border:1px solid #CFE0F8;border-radius:8px;padding:16px 22px;font-size:13px;font-weight:700;color:var(--blue);text-align:center;">
-      Business Plan には月間 45,000 クレジットが含まれます。不足時は 1,000 cr あたり 7,778 円（税別）で追加いただけます。
     </div>
   </div>
   <div class="foot">xincere</div><div class="foot-c">© Xincere Inc. / Confidential</div><div class="foot-p">P. 02</div>
