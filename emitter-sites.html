@@ -184,16 +184,10 @@ textarea{min-height:88px;resize:vertical;}
 
 const SITES = [
   {id:'s1', name:'大宮第一現場', postalcode:'330-0854', addr:'埼玉県さいたま市大宮区桜木町0-0-0',
-   road:'4m以上', machine:'あり', attend:'不要', contact:'佐藤 健', tel:'090-0000-0000', note:'搬出口は南側ゲート'},
+   note:'搬出口は南側ゲート'},
   {id:'s2', name:'川越倉庫', postalcode:'350-1123', addr:'埼玉県川越市脇田本町0-0-0',
-   road:'3m未満', machine:'なし', attend:'要', contact:'鈴木 花子', tel:'090-1111-2222', note:'2t車まで進入可'}
+   note:'2t車まで進入可'}
 ];
-
-const SITE_OPTS = {
-  road:['4m以上','3m〜4m','3m未満'],
-  machine:['あり','なし'],
-  attend:['不要','要']
-};
 
 /* ===== ユーティリティ ===== */
 
@@ -201,11 +195,7 @@ const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>'
 
 const site = id => SITES.find(s=>s.id===id) || null;
 
-const siteCond = s => s ? `道幅 ${s.road||'—'}／重機 ${s.machine||'—'}／立会 ${s.attend||'—'}` : '';
-
-const optsOnly = (list,cur) => list.map(v=>`<option value="${esc(v)}"${v===cur?' selected':''}>${esc(v)}</option>`).join('');
-
-const blankSite = () => ({id:null, name:'', postalcode:'', addr:'', road:'4m以上', machine:'なし', attend:'不要', contact:'', tel:'', note:''});
+const blankSite = () => ({id:null, name:'', postalcode:'', addr:'', note:''});
 
 /* ===== 画面の状態 ===== */
 const state = { siteForm:null, siteErrors:[], data:{siteId:'', addr:''} };
@@ -216,20 +206,18 @@ function viewSites(){
   const rows = SITES.map(s=>`<tr>
     <td><b>${esc(s.name)}</b>${s.note?`<br><span style="color:var(--ink-sub);font-size:12px;">${esc(s.note)}</span>`:''}</td>
     <td>${s.postalcode?`<span style="color:var(--ink-sub);font-size:12px;">〒${esc(s.postalcode)}</span><br>`:''}${esc(s.addr)}</td>
-    <td style="font-size:13px;">${esc(siteCond(s))}</td>
-    <td style="font-size:13px;">${esc(s.contact||'—')}${s.tel?`<br><span style="color:var(--ink-sub);font-size:12px;">${esc(s.tel)}</span>`:''}</td>
     <td style="text-align:right;white-space:nowrap;">
       <button type="button" class="btn btn-secondary btn-sm" data-act="editSite" data-id="${s.id}">編集</button>
       <button type="button" class="btn btn-secondary btn-sm btn-danger" style="margin-left:6px;" data-act="delSite" data-id="${s.id}">削除</button>
     </td></tr>`).join('');
 
   return `<div class="wrap wide"><h1>引取場所</h1>
-    <p class="lead">引取（集荷）を依頼する現場を登録します。予約の作成時に選ぶだけで、住所と現場条件が入ります。</p>
+    <p class="lead">引取（集荷）を依頼する現場を登録します。予約の作成時に選ぶだけで、住所が入ります。</p>
     <div class="actions" style="margin:0 0 16px;">
       <button type="button" class="btn btn-primary" data-act="addSite">＋ 引取場所を登録</button>
     </div>
     ${SITES.length ? `<table class="tbl">
-      <thead><tr><th>現場名</th><th>住所</th><th>現場条件</th><th>現場担当者</th><th></th></tr></thead>
+      <thead><tr><th>現場名</th><th>住所</th><th></th></tr></thead>
       <tbody>${rows}</tbody></table>`
     : `<div class="emptystate">引取場所がまだ登録されていません。<br>
         <button type="button" class="btn btn-primary" style="margin-top:16px;" data-act="addSite">＋ 引取場所を登録</button></div>`}
@@ -238,9 +226,6 @@ function viewSites(){
 
 function viewSiteDialog(){
   const f = state.siteForm, isNew = !f.id;
-  const sel=(key,label)=>`<div class="field" style="flex:1 1 150px;margin-bottom:0;">
-      <label class="label" for="sf_${key}">${label}</label>
-      <select id="sf_${key}" data-sbind="${key}">${optsOnly(SITE_OPTS[key], f[key])}</select></div>`;
   return `<div class="dialog-back" data-act="cancelSite">
     <div class="dialog" role="dialog" aria-modal="true" aria-label="引取場所">
       <div class="dialog-head"><h2>引取場所を${isNew?'登録':'編集'}</h2></div>
@@ -258,22 +243,7 @@ function viewSiteDialog(){
         <div class="field">
           <label class="label" for="sf_addr">住所<span class="req">必須</span></label>
           <input type="text" id="sf_addr" data-sbind="addr" value="${esc(f.addr)}" placeholder="例：埼玉県さいたま市大宮区桜木町0-0-0"></div>
-        <div class="subblock">
-          <span class="label">現場条件</span>
-          <div class="row">${sel('road','道幅')}${sel('machine','重機')}${sel('attend','立会')}</div>
-        </div>
-        <div class="subblock">
-          <span class="label">現場担当者<span class="opt">任意</span></span>
-          <div class="row">
-            <div class="field" style="flex:1 1 180px;margin-bottom:0;">
-              <label class="label" for="sf_contact" style="font-weight:500;font-size:14px;">氏名</label>
-              <input type="text" id="sf_contact" data-sbind="contact" value="${esc(f.contact)}" placeholder="例：佐藤 健"></div>
-            <div class="field" style="flex:1 1 180px;margin-bottom:0;">
-              <label class="label" for="sf_tel" style="font-weight:500;font-size:14px;">連絡先</label>
-              <input type="tel" id="sf_tel" data-sbind="tel" value="${esc(f.tel)}" placeholder="例：090-0000-0000"></div>
-          </div>
-        </div>
-        <div class="field" style="margin-top:22px;">
+        <div class="field">
           <label class="label" for="sf_note">備考<span class="opt">任意</span></label>
           <input type="text" id="sf_note" data-sbind="note" value="${esc(f.note)}" placeholder="搬出口の位置、進入時の注意など"></div>
       </div>
@@ -295,8 +265,7 @@ function saveSite(){
   state.siteErrors=e;
   if(e.length){ render(); return; }
   const rec={name:f.name.trim(), postalcode:f.postalcode.trim(), addr:f.addr.trim(),
-    road:f.road, machine:f.machine, attend:f.attend,
-    contact:f.contact.trim(), tel:f.tel.trim(), note:f.note.trim()};
+    note:f.note.trim()};
   if(f.id){
     Object.assign(site(f.id), rec);
     if(state.data.siteId===f.id) state.data.addr=rec.addr;   /* 入力中の予約にも反映 */
