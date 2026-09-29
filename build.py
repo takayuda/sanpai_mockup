@@ -19,29 +19,40 @@ js += (SRC / 'assets/core.js').read_text(encoding='utf-8')
 for name in PAGES:
     js += f"\n/* ===== {name} ===== */\n" + (SRC / f'assets/pages/{name}.js').read_text(encoding='utf-8')
 
-# 排出者ポータルは iframe で同梱する（互いのCSS・JSが干渉しないように）
-emitter = (SRC / 'emitter.html').read_text(encoding='utf-8')
-emitter = re.sub(r'\s*<a class="mocklink" href="[^"]*">[^<]*</a>', '', emitter)
-emitter = emitter.replace('</script>', r'<\/script>')
+# 単体で完結しているページ（排出者ポータル・処理業者の追加）は iframe で同梱する
+def embed(name):
+    h = (SRC / name).read_text(encoding='utf-8')
+    h = re.sub(r'\s*<a class="mocklink" href="[^"]*">[^<]*</a>', '', h)
+    return h.replace('</script>', r'<\/script>')
+
+emitter = embed('emitter.html')
+processor_add = embed('processor-add.html')
 
 router = """
 /* =========================================================================
    単一ファイル版のルーティング（分割版ではページ遷移で切り替える）
    ========================================================================= */
-const EMITTER_HTML = (document.getElementById('emitterHtml').textContent || '')
+const unesc = id => (document.getElementById(id).textContent || '')
   .replace(/<\\\\\\/script>/g, '<\\/script>');
+const EMITTER_HTML = unesc('emitterHtml');
+const PROCESSOR_ADD_HTML = unesc('processorAddHtml');
 const VIEWS = {
   index:viewIndex, approvals:viewApprovals, board:viewBoard, proxy:viewProxy,
   hours:viewHours, reception:viewReception, actuals:viewActuals,
   m_companies:viewCompanies, m_plants:() => viewMaster('m_plants'),
   m_items:() => viewMaster('m_items'), m_units:() => viewMaster('m_units'),
   invite:viewInvite,
-  emitter:() => `<iframe id="elEmitFrame" class="emitframe-inline" title="排出者ポータル"></iframe>`
+  emitter:() => `<iframe id="elEmitFrame" class="emitframe-inline" title="排出者ポータル"></iframe>`,
+  processor_add:() => `<iframe id="elAddFrame" class="emitframe-inline" title="処理業者の追加"></iframe>`
 };
 const AFTER = {
   emitter:() => {
     const f = document.getElementById('elEmitFrame');
     if (f && !f.dataset.loaded) { f.srcdoc = EMITTER_HTML; f.dataset.loaded = '1'; }
+  },
+  processor_add:() => {
+    const f = document.getElementById('elAddFrame');
+    if (f && !f.dataset.loaded) { f.srcdoc = PROCESSOR_ADD_HTML; f.dataset.loaded = '1'; }
   }
 };
 function gotoRoute(r) {
@@ -80,9 +91,12 @@ html = f"""<!DOCTYPE html>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- 排出者ポータル（分割版の emitter.html をそのまま同梱） -->
+<!-- 取引先から見える画面（分割版のファイルをそのまま同梱） -->
 <script type="text/html" id="emitterHtml">
 {emitter}
+</script>
+<script type="text/html" id="processorAddHtml">
+{processor_add}
 </script>
 
 <script>

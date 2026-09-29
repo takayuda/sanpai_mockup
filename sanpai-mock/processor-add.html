@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>株式会社エコクリーン埼玉 を取引先に追加｜産廃ナビ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* =========================================================================
+   処理業者の追加（排出元ポータル）
+   /company/processors/add/{token} に相当する画面
+   デザイントークンは排出元ポータルと共通
+   ========================================================================= */
+:root{
+  --blue-900:#000B5F; --blue-800:#0017C1; --blue-100:#E8F1FE;
+  --ink:#1A1A1C; --ink-sub:#626264;
+  --line:#D8D8DB; --line-strong:#767676;
+  --bg:#F2F2F2; --white:#FFFFFF;
+  --error:#CE0000; --error-bg:#FDEEEE;
+  --success:#197A4B; --success-bg:#E6F5EC;
+  --warn:#B75200; --warn-bg:#FDF3E6;
+  --radius:8px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{font-family:"Noto Sans JP","Hiragino Sans","Yu Gothic",sans-serif;color:var(--ink);
+  background:var(--bg);font-size:16px;line-height:1.7;-webkit-font-smoothing:antialiased;}
+:focus-visible{outline:3px solid #FFD43D;outline-offset:0;box-shadow:0 0 0 5px var(--ink);border-radius:2px;}
+.ic{vertical-align:-.18em;flex:none;}
+
+/* ---------- ヘッダー ---------- */
+.appbar{background:var(--white);border-bottom:1px solid var(--line);}
+.appbar-inner{max-width:880px;margin:0 auto;padding:0 24px;display:flex;align-items:center;gap:16px;min-height:64px;}
+.brand{font-weight:700;font-size:18px;white-space:nowrap;line-height:1.3;}
+.brand span{display:block;font-size:11px;font-weight:400;color:var(--ink-sub);}
+.mockswitch{margin-left:auto;display:flex;align-items:center;gap:8px;position:relative;}
+.mockswitch::after{content:"MOCK";position:absolute;top:-9px;right:-6px;background:var(--warn);color:#fff;
+  font-size:9px;font-weight:700;border-radius:3px;padding:0 4px;letter-spacing:.04em;}
+.mockswitch .lbl{font-size:11px;color:var(--ink-sub);}
+.seg{display:flex;border:1px solid var(--line-strong);border-radius:99px;overflow:hidden;background:var(--white);}
+.seg button{font:inherit;font-size:12px;font-weight:700;border:0;background:none;color:var(--ink-sub);
+  padding:5px 12px;cursor:pointer;}
+.seg button[aria-pressed="true"]{background:var(--blue-800);color:#fff;}
+
+/* ---------- レイアウト ---------- */
+.wrap{max-width:880px;margin:0 auto;padding:40px 24px 80px;}
+.eyebrow{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--blue-900);
+  background:var(--blue-100);border:1px solid var(--blue-800);border-radius:99px;padding:3px 12px;}
+h1{font-size:30px;line-height:1.35;font-weight:700;margin:14px 0 8px;}
+.lead{color:var(--ink-sub);font-size:15px;margin:0 0 28px;max-width:46em;}
+.lead b{color:var(--ink);}
+
+.card{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:20px;}
+.card-head{padding:14px 22px;border-bottom:1px solid var(--line);font-weight:700;font-size:15px;
+  display:flex;align-items:center;gap:8px;background:#FAFAFA;border-radius:var(--radius) var(--radius) 0 0;}
+.card-body{padding:22px;}
+
+/* ---------- 処理業者の情報 ---------- */
+.proc{display:flex;gap:18px;align-items:flex-start;padding:22px;border-bottom:1px solid var(--line);}
+.proc .avatar{width:56px;height:56px;border-radius:var(--radius);background:var(--blue-100);color:var(--blue-800);
+  display:grid;place-items:center;flex:none;}
+.proc .name{font-size:20px;font-weight:700;line-height:1.4;}
+.proc .sub{font-size:13px;color:var(--ink-sub);display:flex;align-items:center;gap:6px;margin-top:2px;}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.tag{font-size:12px;font-weight:500;color:var(--ink-sub);border:1px solid var(--line-strong);
+  border-radius:99px;padding:2px 10px;background:var(--white);}
+.tag.on{color:var(--blue-900);border-color:var(--blue-800);background:var(--blue-100);font-weight:700;}
+.dl{display:grid;grid-template-columns:148px 1fr;font-size:14px;}
+.dl dt{color:var(--ink-sub);font-weight:500;padding:11px 22px;border-bottom:1px solid var(--line);margin:0;background:#FCFCFD;}
+.dl dd{padding:11px 22px;border-bottom:1px solid var(--line);margin:0;font-weight:500;}
+.dl dt:last-of-type,.dl dd:last-of-type{border-bottom:0;}
+
+/* ---------- 行動を促すカード ---------- */
+.action{border:2px solid var(--blue-800);background:var(--white);border-radius:var(--radius);
+  padding:26px 26px 24px;margin-bottom:20px;}
+.action h2{font-size:19px;font-weight:700;margin:0 0 6px;}
+.action p.note{font-size:14px;color:var(--ink-sub);margin:0 0 20px;}
+.btns{display:flex;gap:12px;flex-wrap:wrap;}
+.btn{font:inherit;font-weight:700;border-radius:var(--radius);padding:14px 26px;cursor:pointer;
+  border:1px solid transparent;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;
+  gap:8px;font-size:16px;flex:1 1 260px;}
+.btn-primary{background:var(--blue-800);color:var(--white);}
+.btn-primary:hover{background:var(--blue-900);}
+.btn-secondary{background:var(--white);color:var(--blue-800);border-color:var(--blue-800);}
+.btn-secondary:hover{background:var(--blue-100);}
+.helper{font-size:13px;color:var(--ink-sub);margin:18px 0 0;padding-top:16px;border-top:1px solid var(--line);}
+.helper b{color:var(--ink);}
+
+/* ログイン済みのとき */
+.account{display:flex;align-items:center;gap:12px;background:var(--bg);border:1px solid var(--line);
+  border-radius:var(--radius);padding:12px 16px;margin-bottom:20px;font-size:14px;}
+.account .who b{display:block;}
+.account .who span{font-size:12px;color:var(--ink-sub);}
+.account .switch{margin-left:auto;font-size:13px;color:var(--blue-800);}
+
+/* ---------- できること ---------- */
+.benefits{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px;}
+.benefit{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:18px;}
+.benefit .ico{color:var(--blue-800);margin-bottom:8px;display:block;}
+.benefit b{display:block;font-size:15px;margin-bottom:4px;}
+.benefit span{font-size:13px;color:var(--ink-sub);line-height:1.6;}
+
+/* ---------- 手順 ---------- */
+.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.steps li{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--ink-sub);}
+.steps .n{width:24px;height:24px;border-radius:50%;background:var(--blue-800);color:#fff;font-size:12px;
+  font-weight:700;display:grid;place-items:center;flex:none;margin-top:1px;}
+.steps b{display:block;font-size:14px;color:var(--ink);}
+
+/* ---------- 補足・フッター ---------- */
+.notice{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--ink-sub);
+  background:var(--white);border:1px dashed var(--line-strong);border-radius:var(--radius);padding:14px 16px;}
+.notice .ic{color:var(--ink-sub);margin-top:2px;}
+.foot{border-top:1px solid var(--line);background:var(--white);}
+.foot-inner{max-width:880px;margin:0 auto;padding:22px 24px;display:flex;gap:16px;flex-wrap:wrap;
+  align-items:center;font-size:13px;color:var(--ink-sub);}
+.foot a{color:var(--ink-sub);}
+.foot .r{margin-left:auto;}
+h2.sec{font-size:15px;font-weight:700;margin:28px 0 12px;}
+
+/* 状態の出し分け */
+body[data-auth="guest"] .only-member,
+body[data-auth="member"] .only-guest{display:none;}
+
+@media (max-width:760px){
+  .wrap{padding:28px 16px 64px;}
+  h1{font-size:23px;}
+  .benefits,.steps{grid-template-columns:1fr;}
+  .dl{grid-template-columns:1fr;}
+  .dl dt{padding:10px 18px 0;border-bottom:0;background:none;}
+  .dl dd{padding:0 18px 12px;}
+  .proc{padding:18px;}
+  .action{padding:20px;}
+  .btn{flex:1 1 100%;}
+  .appbar-inner{padding:10px 16px;flex-wrap:wrap;gap:10px;}
+  .mockswitch{margin-left:0;}
+}
+</style>
+</head>
+<body data-auth="guest">
+
+<header class="appbar">
+  <div class="appbar-inner">
+    <div class="brand">産廃ナビ<span>排出元ポータル</span></div>
+    <div class="mockswitch">
+      <span class="lbl">表示状態</span>
+      <div class="seg" role="group" aria-label="ログイン状態の切り替え（モック用）">
+        <button type="button" data-auth-btn="guest" aria-pressed="true">未ログイン</button>
+        <button type="button" data-auth-btn="member" aria-pressed="false">ログイン済み</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <span class="eyebrow">
+    <svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+    処理業者から共有されたリンク
+  </span>
+
+  <h1>株式会社エコクリーン埼玉</h1>
+  <p class="lead">この処理業者を<b>取引先に追加</b>すると、搬入予約・集荷依頼を産廃ナビ上で作成できるようになります。</p>
+
+  <!-- 処理業者の情報 -->
+  <section class="card" aria-labelledby="procHead">
+    <div class="proc">
+      <span class="avatar" aria-hidden="true">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V9l6 4V9l6 4V5h2v16"/><line x1="8" y1="17" x2="8" y2="17.01"/><line x1="13" y1="17" x2="13" y2="17.01"/></svg>
+      </span>
+      <div>
+        <div class="name" id="procHead">株式会社エコクリーン埼玉</div>
+        <div class="sub">
+          <svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          埼玉県さいたま市北区宮原町0-0-0
+        </div>
+        <div class="tags">
+          <span class="tag on">持込の受入</span>
+          <span class="tag on">引取（集荷）</span>
+          <span class="tag">廃プラスチック類</span>
+          <span class="tag">木くず</span>
+          <span class="tag">金属くず</span>
+          <span class="tag">がれき類</span>
+          <span class="tag">汚泥</span>
+          <span class="tag">混合廃棄物</span>
+        </div>
+      </div>
+    </div>
+    <dl class="dl">
+      <dt>名称</dt><dd>株式会社エコクリーン埼玉</dd>
+      <dt>所在地</dt><dd>〒331-0812　埼玉県さいたま市北区宮原町0-0-0</dd>
+      <dt>電話番号</dt><dd>048-000-1000</dd>
+      <dt>許可番号</dt><dd>産業廃棄物処分業　第01100000000号<br><span style="font-size:12px;color:var(--ink-sub)">有効期限 2029年3月31日</span></dd>
+      <dt>受付時間</dt><dd>持込　9:00〜12:00／13:00〜16:00　　引取　8:00〜17:00<br><span style="font-size:12px;color:var(--ink-sub)">日曜・臨時休業日を除く</span></dd>
+    </dl>
+  </section>
+
+  <!-- 未ログインのとき -->
+  <section class="action only-guest" aria-labelledby="guestHead">
+    <h2 id="guestHead">追加するには、ログインまたは会員登録が必要です</h2>
+    <p class="note">ログイン後、この処理業者が自動的に取引先へ追加されます。</p>
+    <div class="btns">
+      <a class="btn btn-primary" href="#login">
+        <svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+        ログインして追加する
+      </a>
+      <a class="btn btn-secondary" href="#signup">
+        <svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+        新規会員登録して追加する
+      </a>
+    </div>
+    <p class="helper">
+      <b>すでにアカウントをお持ちの方</b>はログインへ、<b>はじめての方</b>は会員登録へお進みください。
+      会員登録は無料で、メールアドレスとパスワードの設定だけで完了します。
+    </p>
+  </section>
+
+  <!-- ログイン済みのとき -->
+  <section class="action only-member" aria-labelledby="memberHead">
+    <div class="account">
+      <span class="avatar" style="width:38px;height:38px;border-radius:50%;" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </span>
+      <span class="who"><b>株式会社サンプル建設</b><span>yamada@sample-kensetsu.example.jp でログイン中</span></span>
+      <a class="switch" href="#switch">別のアカウントでログイン</a>
+    </div>
+    <h2 id="memberHead">この処理業者を取引先に追加しますか？</h2>
+    <p class="note">追加すると、予約の作成画面で「株式会社エコクリーン埼玉」を選べるようになります。</p>
+    <div class="btns">
+      <a class="btn btn-primary" href="#add">
+        <svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        取引先に追加する
+      </a>
+      <a class="btn btn-secondary" href="#cancel">あとにする</a>
+    </div>
+  </section>
+
+  <h2 class="sec">追加するとできること</h2>
+  <div class="benefits">
+    <div class="benefit">
+      <span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+      <b>搬入予約の申請</b>
+      <span>空いている受入時間枠を選んで、持込の予約を申請できます。</span>
+    </div>
+    <div class="benefit">
+      <span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></span>
+      <b>集荷（引取）の依頼</b>
+      <span>現場まで回収に来てもらう依頼を出し、訪問日時の返答を受け取れます。</span>
+    </div>
+    <div class="benefit">
+      <span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="13" y2="16"/></svg></span>
+      <b>予約状況と実績の確認</b>
+      <span>承認・差戻しの状況や、搬入した実績をいつでも確認できます。</span>
+    </div>
+  </div>
+
+  <h2 class="sec">追加までの流れ</h2>
+  <ol class="steps">
+    <li><span class="n">1</span><span><b>ログイン／会員登録</b>メールアドレスとパスワードを入力します。</span></li>
+    <li><span class="n">2</span><span><b>取引先に追加</b>この処理業者が取引先リストに追加されます。</span></li>
+    <li><span class="n">3</span><span><b>予約を作成</b>搬入予約・集荷依頼を作成できるようになります。</span></li>
+  </ol>
+
+  <div class="notice" style="margin-top:22px">
+    <svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+    <span>このリンクは処理業者から共有されたものです。心当たりがない場合は追加せず、共有元にご確認ください。
+      取引先への追加は、追加後もマイページからいつでも解除できます。</span>
+  </div>
+
+</main>
+
+<footer class="foot">
+  <div class="foot-inner">
+    <span>産廃ナビ</span>
+    <a href="#terms">利用規約</a>
+    <a href="#privacy">プライバシーポリシー</a>
+    <a href="#contact">お問い合わせ</a>
+    <span class="r">© 2026 産廃ナビ</span>
+  </div>
+</footer>
+
+<script>
+/* モック用：未ログイン／ログイン済みの表示を切り替える（本番では不要） */
+document.querySelectorAll('[data-auth-btn]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const v = btn.dataset.authBtn;
+    document.body.dataset.auth = v;
+    document.querySelectorAll('[data-auth-btn]').forEach(b =>
+      b.setAttribute('aria-pressed', String(b.dataset.authBtn === v)));
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+});
+</script>
+</body>
+</html>

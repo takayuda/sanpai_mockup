@@ -58,7 +58,8 @@ const PAGES = {
   m_items:     {file:'items.html',     title:'品目'},
   m_units:     {file:'units.html',     title:'単位'},
   invite:      {file:'invite.html',    title:'取引先アカウントの登録'},
-  emitter:     {file:'emitter.html',   title:'排出者ポータル'}
+  emitter:     {file:'emitter.html',   title:'排出者ポータル'},
+  processor_add:{file:'processor-add.html', title:'処理業者の追加'}
 };
 /* 単一ファイル版ではページ遷移せずハッシュで切り替える */
 const IS_SINGLE = !!window.SINGLE_FILE;

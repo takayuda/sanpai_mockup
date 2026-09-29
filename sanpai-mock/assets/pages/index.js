@@ -23,6 +23,7 @@ const PORTAL = [
   ]},
   {sec:'取引先から見える画面（モック）', items:[
     ['emitter','排出者ポータル','取引先が予約を申請する画面'],
+    ['processor_add','処理業者の追加','処理業者から共有されたリンクを開いたときの画面'],
     ['invite','取引先アカウントの登録','登録用URLを開いたときの画面']
   ]}
 ];
@@ -45,7 +46,7 @@ function viewIndex() {
         const act  = (r === 'invite' && !IS_SINGLE) ? '' : `data-act="go" data-route="${r}"`;
         return `<div class="col-12 col-md-6 col-xl-4">
         <a class="portal-card" href="${href}" ${act}>
-          <span class="ico">${ic((NAV.flatMap(s => s.items).find(x => x.route === r) || {ico:'login'}).ico, 18)}</span>
+          <span class="ico">${ic((NAV.flatMap(s => s.items).find(x => x.route === r) || {ico:r === 'processor_add' ? 'link' : 'login'}).ico, 18)}</span>
           <span><b>${t}</b><small>${desc}</small></span>
         </a></div>`; }).join('')}
     </div>`).join('')}
