@@ -362,11 +362,11 @@ textarea{min-height:88px;resize:vertical;}
 .done-hero p{margin:0;}
 .emptystate{background:var(--white);border:1px dashed var(--line-strong);border-radius:var(--radius);padding:56px 24px;text-align:center;color:var(--ink-sub);}
 .dialog-back{position:fixed;inset:0;background:rgba(0,0,0,.45);display:grid;place-items:center;padding:24px;z-index:50;}
-.dialog{background:var(--white);border-radius:var(--radius);max-width:640px;width:100%;max-height:86vh;overflow:auto;}
-.dialog-head{display:flex;align-items:center;gap:16px;padding:20px 24px;border-bottom:1px solid var(--line);}
+.dialog{background:var(--white);border-radius:var(--radius);max-width:640px;width:100%;max-height:86vh;display:flex;flex-direction:column;}
+.dialog-head{display:flex;align-items:center;gap:16px;padding:20px 24px;border-bottom:1px solid var(--line);flex:none;}
 .dialog-head h2{margin:0;font-size:18px;flex:1;}
-.dialog-body{padding:24px;}
-.dialog-foot{padding:16px 24px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;}
+.dialog-body{padding:24px;overflow:auto;}
+.dialog-foot{padding:16px 24px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;flex:none;background:var(--white);border-radius:0 0 var(--radius) var(--radius);}
 .mocklink{margin-left:auto;font-size:13px;font-weight:700;color:var(--blue-800);border:1px solid var(--blue-800);border-radius:var(--radius);padding:6px 14px;text-decoration:none;white-space:nowrap;position:relative;background:var(--white);}
 .mocklink:hover{background:var(--blue-100);}
 .mocklink::after{content:"MOCK";position:absolute;top:-8px;right:-10px;background:var(--warn);color:#fff;font-size:9px;font-weight:700;border-radius:3px;padding:0 4px;letter-spacing:.04em;}
@@ -409,9 +409,18 @@ const MASTER = {
   vehicleClasses:['軽トラック','2tトラック（平ボディ）','2tトラック（ダンプ）','4tトラック','10tトラック','ユニック車（4t）']
 };
 const SITES = [
-  {id:'s1', name:'大宮第一現場', addr:'埼玉県さいたま市大宮区桜木町0-0-0'},
-  {id:'s2', name:'川越倉庫', addr:'埼玉県川越市脇田本町0-0-0'}
+  {id:'s1', name:'大宮第一現場', postalcode:'330-0854', addr:'埼玉県さいたま市大宮区桜木町0-0-0',
+   road:'4m以上', machine:'あり', attend:'不要', contact:'佐藤 健', tel:'090-0000-0000', note:'搬出口は南側ゲート'},
+  {id:'s2', name:'川越倉庫', postalcode:'350-1123', addr:'埼玉県川越市脇田本町0-0-0',
+   road:'3m未満', machine:'なし', attend:'要', contact:'鈴木 花子', tel:'090-1111-2222', note:'2t車まで進入可'}
 ];
+const SITE_OPTS = {
+  road:['4m以上','3m〜4m','3m未満'],
+  machine:['あり','なし'],
+  attend:['不要','要']
+};
+const site = id => SITES.find(s=>s.id===id) || null;
+const siteCond = s => s ? `道幅 ${s.road||'—'}／重機 ${s.machine||'—'}／立会 ${s.attend||'—'}` : '';
 const SLOT_DEFS = [{id:'am',label:'9:00 〜 12:00'},{id:'pm',label:'13:00 〜 16:00'}];
 const HOURS = Array.from({length:15},(_,i)=>String(i+6).padStart(2,'0')); // 06〜20時
 const MINUTES = ['00','30'];
@@ -447,6 +456,7 @@ function setPath(obj,path,v){
 const lineText = ln => ln.item ? `${ln.item}　${ln.qty?ln.qty+' '+ln.unit:''}${ln.memo?'　／　'+ln.memo:''}` : '';
 const state = {
   page:'input', errors:[], editing:null, snapshot:null, lastNo:null, detailNo:null,
+  siteForm:null, siteErrors:[],
   data:blank(),
   reservations:[
     {no:'R-2026-0148', processorId:'p1', method:'drop', dateLabel:'2026年8月28日（金） 9:00 〜 12:00', status:'approved',
@@ -454,15 +464,16 @@ const state = {
      vClass:'2tトラック（平ボディ）', plate:'大宮 100 あ 12-34'},
     {no:'R-2026-0152', processorId:'p2', method:'pickup', dateLabel:'2026年8月31日（月） 10:00 〜 11:30', status:'pending',
      lines:[{item:'木くず', qty:'1.2', unit:'t', memo:'搬出口は建物裏手'},{item:'金属くず', qty:'80', unit:'kg', memo:''},{item:'混合廃棄物', qty:'2', unit:'m3', memo:''}],
-     addr:'埼玉県さいたま市大宮区桜木町0-0-0', siteName:'大宮第一現場'},
+     addr:'埼玉県さいたま市大宮区桜木町0-0-0', siteName:'大宮第一現場', siteCond:'道幅 4m以上／重機 あり／立会 不要'},
     {no:'R-2026-0155', processorId:'p1', method:'pickup', dateLabel:'2026年9月2日（水） 14:00 〜 15:00', status:'rejected',
      lines:[{item:'混合廃棄物', qty:'3', unit:'m3', memo:''}],
-     rejectReason:'指定日の収集ルートが満車のため。別日での再申請をお願いします。', addr:'埼玉県川越市脇田本町0-0-0', siteName:'川越倉庫'}
+     rejectReason:'指定日の収集ルートが満車のため。別日での再申請をお願いします。', addr:'埼玉県川越市脇田本町0-0-0', siteName:'川越倉庫', siteCond:'道幅 3m未満／重機 なし／立会 要'}
   ]
 };
 const proc = id => PROCESSORS.find(p=>p.id===id) || {};
 const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const opts = (list,cur,ph) => `<option value="">${ph||'選択してください'}</option>`+list.map(v=>`<option value="${esc(v)}"${v===cur?' selected':''}>${esc(v)}</option>`).join('');
+const optsOnly = (list,cur) => list.map(v=>`<option value="${esc(v)}"${v===cur?' selected':''}>${esc(v)}</option>`).join('');
 const timeStr = (h,m) => (h&&m) ? `${h}:${m}` : '';
 const toMin = (h,m) => Number(h)*60+Number(m);
 
@@ -563,6 +574,9 @@ function viewInput(){
           <option value="">選択しない（住所を直接入力）</option>
           ${SITES.map(s=>`<option value="${s.id}" ${d.siteId===s.id?'selected':''}>${esc(s.name)}（${esc(s.addr)}）</option>`).join('')}
         </select>
+        ${d.siteId?`<p class="procinfo">${esc(siteCond(site(d.siteId)))}${site(d.siteId).contact?`／現場担当者 ${esc(site(d.siteId).contact)}`:''}</p>`:''}
+        <p class="hint" style="margin-top:8px;">現場の登録・編集は
+          <button type="button" class="btn btn-secondary btn-sm" data-act="go" data-page="sites">引取場所</button> から行えます。</p>
       </div>
       <div class="field">
         <label class="label" for="elAddr">住所<span class="req">必須</span></label>
@@ -686,7 +700,7 @@ function viewConfirm(){
       ${rrow('plate','車両ナンバー', d.plate, edText('plate',d.plate,'例：大宮 100 あ 12-34'))}
     </table></div>`;
   }else if(d.method==='pickup'){
-    const site = SITES.find(s=>s.id===d.siteId);
+    const sel = site(d.siteId);
     const siteEditor = `<select data-bind="siteId" data-act="pickSite" data-focus="1">
       <option value="">選択しない（住所を直接入力）</option>
       ${SITES.map(s=>`<option value="${s.id}" ${d.siteId===s.id?'selected':''}>${esc(s.name)}</option>`).join('')}</select>
@@ -696,7 +710,9 @@ function viewConfirm(){
       ${rrow('time','引取希望時間', (d.startH&&d.startM&&d.endH&&d.endM)?`${timeStr(d.startH,d.startM)} 〜 ${timeStr(d.endH,d.endM)}`:'', timePicker('c'))}
     </table></div>
     <div class="reviewgroup"><div class="reviewhead">引取場所</div><table class="reviewtable">
-      ${rrow('siteId','現場', site?site.name:'（マスタ未登録）', siteEditor)}
+      ${rrow('siteId','現場', sel?sel.name:'（マスタ未登録）', siteEditor)}
+      ${sel?`<tr><th>現場条件</th><td class="val" colspan="2">${esc(siteCond(sel))}
+        <div style="font-size:12px;color:var(--ink-sub);">変更は「引取場所」画面から行えます。</div></td></tr>`:''}
       ${rrow('addr','住所', d.addr, edText('addr',d.addr,'例：埼玉県さいたま市大宮区桜木町0-0-0'))}
       ${rrow('saveSite','現場マスタへの登録', d.saveSite?`登録する（現場名：${d.siteName||'未入力'}）`:'登録しない',
         `<label class="checkline"><input type="checkbox" data-bind="saveSite" ${d.saveSite?'checked':''} data-focus="1"><span>この住所を現場マスタに登録する</span></label>
@@ -756,7 +772,7 @@ function viewDetailDialog(){
   const [t,c]=STATUS[r.status];
   const line=(k,v)=>`<tr><th>${k}</th><td class="val">${v?esc(v):'<span class="empty-val">—</span>'}</td></tr>`;
   return `<div class="dialog-back" data-act="closeDetail">
-    <div class="dialog" role="dialog" aria-modal="true" aria-label="予約詳細" onclick="event.stopPropagation()">
+    <div class="dialog" role="dialog" aria-modal="true" aria-label="予約詳細">
       <div class="dialog-head"><h2>${esc(r.no)}</h2><span class="badge ${c}">${t}</span></div>
       <div class="dialog-body">
         ${r.status==='rejected'&&r.rejectReason?`<div class="alert error"><h3>差戻しの理由</h3><p style="margin:8px 0 0;font-size:14px;">${esc(r.rejectReason)}</p></div>`:''}
@@ -765,6 +781,7 @@ function viewDetailDialog(){
           ${line('受入方法', r.method==='drop'?'持込':'引取')}
           ${line('日時', r.dateLabel)}
           ${r.method==='pickup'?line('引取場所',(r.siteName?r.siteName+'／':'')+(r.addr||'')):''}
+          ${r.method==='pickup'&&r.siteCond?line('現場条件',r.siteCond):''}
           ${r.lines.map((ln,i)=>line(`品目 ${i+1}`, `${ln.item}　${ln.qty} ${ln.unit}${ln.memo?'　／　'+ln.memo:''}`)).join('')}
           ${r.method==='drop'?line('車格',r.vClass)+line('車両ナンバー',r.plate):''}
         </table></div>
@@ -773,10 +790,88 @@ function viewDetailDialog(){
     </div></div>`;
 }
 
+
+/* ===== 引取場所（現場マスタ） ===== */
+function viewSites(){
+  const rows = SITES.map(s=>`<tr>
+    <td><b>${esc(s.name)}</b>${s.note?`<br><span style="color:var(--ink-sub);font-size:12px;">${esc(s.note)}</span>`:''}</td>
+    <td>${s.postalcode?`<span style="color:var(--ink-sub);font-size:12px;">〒${esc(s.postalcode)}</span><br>`:''}${esc(s.addr)}</td>
+    <td style="font-size:13px;">${esc(siteCond(s))}</td>
+    <td style="font-size:13px;">${esc(s.contact||'—')}${s.tel?`<br><span style="color:var(--ink-sub);font-size:12px;">${esc(s.tel)}</span>`:''}</td>
+    <td style="text-align:right;white-space:nowrap;">
+      <button type="button" class="btn btn-secondary btn-sm" data-act="editSite" data-id="${s.id}">編集</button>
+      <button type="button" class="btn btn-secondary btn-sm btn-danger" style="margin-left:6px;" data-act="delSite" data-id="${s.id}">削除</button>
+    </td></tr>`).join('');
+
+  return `<div class="wrap wide"><h1>引取場所</h1>
+    <div class="actions" style="margin:0 0 16px;">
+      <button type="button" class="btn btn-primary" data-act="addSite">＋ 引取場所を登録</button>
+    </div>
+    ${SITES.length ? `<table class="tbl">
+      <thead><tr><th>現場名</th><th>住所</th><th>現場条件</th><th>現場担当者</th><th></th></tr></thead>
+      <tbody>${rows}</tbody></table>`
+    : `<div class="emptystate">引取場所がまだ登録されていません。<br>
+        <button type="button" class="btn btn-primary" style="margin-top:16px;" data-act="addSite">＋ 引取場所を登録</button></div>`}
+  </div>`;
+}
+
+function viewSiteDialog(){
+  const f = state.siteForm, isNew = !f.id;
+  const sel=(key,label)=>`<div class="field" style="flex:1 1 150px;margin-bottom:0;">
+      <label class="label" for="sf_${key}">${label}</label>
+      <select id="sf_${key}" data-sbind="${key}">${optsOnly(SITE_OPTS[key], f[key])}</select></div>`;
+  return `<div class="dialog-back" data-act="cancelSite">
+    <div class="dialog" role="dialog" aria-modal="true" aria-label="引取場所">
+      <div class="dialog-head"><h2>引取場所を${isNew?'登録':'編集'}</h2></div>
+      <div class="dialog-body">
+        ${state.siteErrors.length?`<div class="alert error" role="alert"><h3>入力内容を確認してください</h3>
+          <ul>${state.siteErrors.map(e=>`<li>${esc(e)}</li>`).join('')}</ul></div>`:''}
+        <div class="field">
+          <label class="label" for="sf_name">現場名<span class="req">必須</span></label>
+          <input type="text" id="sf_name" data-sbind="name" value="${esc(f.name)}" placeholder="例：大宮第一現場"></div>
+        <div class="row">
+          <div class="field" style="flex:0 0 160px;">
+            <label class="label" for="sf_post">郵便番号<span class="opt">任意</span></label>
+            <input type="text" id="sf_post" data-sbind="postalcode" value="${esc(f.postalcode)}" placeholder="330-0854"></div>
+        </div>
+        <div class="field">
+          <label class="label" for="sf_addr">住所<span class="req">必須</span></label>
+          <input type="text" id="sf_addr" data-sbind="addr" value="${esc(f.addr)}" placeholder="例：埼玉県さいたま市大宮区桜木町0-0-0"></div>
+        <div class="subblock">
+          <span class="label">現場条件</span>
+          <div class="row">${sel('road','道幅')}${sel('machine','重機')}${sel('attend','立会')}</div>
+        </div>
+        <div class="subblock">
+          <span class="label">現場担当者<span class="opt">任意</span></span>
+          <div class="row">
+            <div class="field" style="flex:1 1 180px;margin-bottom:0;">
+              <label class="label" for="sf_contact" style="font-weight:500;font-size:14px;">氏名</label>
+              <input type="text" id="sf_contact" data-sbind="contact" value="${esc(f.contact)}" placeholder="例：佐藤 健"></div>
+            <div class="field" style="flex:1 1 180px;margin-bottom:0;">
+              <label class="label" for="sf_tel" style="font-weight:500;font-size:14px;">連絡先</label>
+              <input type="tel" id="sf_tel" data-sbind="tel" value="${esc(f.tel)}" placeholder="例：090-0000-0000"></div>
+          </div>
+        </div>
+        <div class="field" style="margin-top:22px;">
+          <label class="label" for="sf_note">備考<span class="opt">任意</span></label>
+          <input type="text" id="sf_note" data-sbind="note" value="${esc(f.note)}" placeholder="搬出口の位置、進入時の注意など"></div>
+      </div>
+      <div class="dialog-foot" style="justify-content:space-between;">
+        ${isNew?'<span></span>':`<button type="button" class="btn btn-secondary btn-danger" data-act="delSite" data-id="${f.id}">削除</button>`}
+        <span>
+          <button type="button" class="btn btn-secondary" data-act="cancelSite">キャンセル</button>
+          <button type="button" class="btn btn-primary" style="margin-left:8px;" data-act="saveSite">保存</button>
+        </span>
+      </div>
+    </div></div>`;
+}
+const blankSite = () => ({id:null, name:'', postalcode:'', addr:'', road:'4m以上', machine:'なし', attend:'不要', contact:'', tel:'', note:''});
+
 function viewSettings(){
   return `<div class="wrap"><h1>設定</h1>
-    <p class="lead">アカウントとマスタの設定を行います。</p>
-    <div class="emptystate">この画面は未実装です。</div></div>`;
+    <p class="lead">アカウント情報とマスタの設定を行います。</p>
+    <div class="emptystate">この画面は未実装です。<br>
+      引取場所の登録は<button type="button" class="btn btn-secondary btn-sm" style="margin:0 4px;" data-act="go" data-page="sites">引取場所</button>から行えます。</div></div>`;
 }
 
 /* ===== バリデーション ===== */
@@ -813,13 +908,14 @@ function validate(){
 /* ===== 描画 ===== */
 function render(){
   const y = window.scrollY;
-  const pages={input:'予約作成', list:'予約一覧', settings:'設定'};
+  const pages={input:'予約作成', list:'予約一覧', sites:'引取場所', settings:'設定'};
   const current = (state.page==='confirm'||state.page==='done') ? 'input' : state.page;
   document.getElementById('elGnav').innerHTML = Object.entries(pages)
     .map(([k,v])=>`<button type="button" data-act="go" data-page="${k}" ${current===k?'aria-current="page"':''}>${v}</button>`).join('');
-  const views={input:viewInput, confirm:viewConfirm, done:viewDone, list:viewList, settings:viewSettings};
+  const views={input:viewInput, confirm:viewConfirm, done:viewDone, list:viewList, sites:viewSites, settings:viewSettings};
   document.getElementById('elMain').innerHTML = views[state.page]();
-  document.getElementById('elDialog').innerHTML = state.detailNo ? viewDetailDialog() : '';
+  document.getElementById('elDialog').innerHTML =
+    state.detailNo ? viewDetailDialog() : (state.siteForm ? viewSiteDialog() : '');
 
   if(state.errors.length){
     const b=document.getElementById('elErrors'); if(b){ b.scrollIntoView({block:'center'}); b.focus(); }
@@ -835,6 +931,8 @@ function render(){
 
 /* ===== イベント ===== */
 document.addEventListener('input', e=>{
+  const sk=e.target.dataset.sbind;
+  if(sk){ state.siteForm[sk]=e.target.value; return; }   /* 引取場所フォーム（再描画しない） */
   const key=e.target.dataset.bind; if(!key) return;
   const val = e.target.type==='checkbox' ? e.target.checked : e.target.value;
   if(key.indexOf('.')>=0){ setPath(state.data,key,val); return; }
@@ -852,6 +950,8 @@ document.addEventListener('input', e=>{
   }
 });
 document.addEventListener('change', e=>{
+  const sk=e.target.dataset.sbind;
+  if(sk){ state.siteForm[sk]=e.target.value; return; }
   if(e.target.dataset.act==='pickSite'){
     const s=SITES.find(x=>x.id===e.target.value);
     state.data.siteId=e.target.value;
@@ -861,6 +961,8 @@ document.addEventListener('change', e=>{
 });
 document.addEventListener('click', e=>{
   const el=e.target.closest('[data-act]'); if(!el) return;
+  /* ダイアログは背景そのものをクリックしたときだけ閉じる（内側のクリックでは閉じない） */
+  if(el.classList.contains('dialog-back') && e.target!==el) return;
   switch(el.dataset.act){
     case 'go':
       if(el.dataset.page==='input') state.data=blank();
@@ -892,9 +994,42 @@ document.addEventListener('click', e=>{
       state.editing=null; state.snapshot=null; state.keepScroll=true; render(); break;
     case 'submit': state.editing=null; state.snapshot=null; submit(); break;
     case 'detail': state.detailNo=el.dataset.no; render(); break;
+
+    /* --- 引取場所（現場マスタ） --- */
+    case 'addSite': state.siteForm=blankSite(); state.siteErrors=[]; render(); break;
+    case 'editSite': state.siteForm=Object.assign(blankSite(), site(el.dataset.id)); state.siteErrors=[]; render(); break;
+    case 'cancelSite': state.siteForm=null; state.siteErrors=[]; render(); break;
+    case 'saveSite': saveSite(); break;
+    case 'delSite': {
+      const t=site(el.dataset.id); if(!t) break;
+      if(!confirm(`引取場所「${t.name}」を削除します。よろしいですか？`)) break;
+      SITES.splice(SITES.indexOf(t),1);
+      if(state.data.siteId===t.id){ state.data.siteId=''; }
+      state.siteForm=null; state.siteErrors=[]; render(); break;
+    }
     case 'closeDetail': state.detailNo=null; render(); break;
   }
 });
+
+function saveSite(){
+  const f=state.siteForm, e=[];
+  if(!f.name.trim()) e.push('現場名を入力してください。');
+  if(!f.addr.trim()) e.push('住所を入力してください。');
+  if(SITES.some(s=>s.name.trim()===f.name.trim() && s.id!==f.id)) e.push('同じ現場名がすでに登録されています。');
+  state.siteErrors=e;
+  if(e.length){ render(); return; }
+  const rec={name:f.name.trim(), postalcode:f.postalcode.trim(), addr:f.addr.trim(),
+    road:f.road, machine:f.machine, attend:f.attend,
+    contact:f.contact.trim(), tel:f.tel.trim(), note:f.note.trim()};
+  if(f.id){
+    Object.assign(site(f.id), rec);
+    if(state.data.siteId===f.id) state.data.addr=rec.addr;   /* 入力中の予約にも反映 */
+  }else{
+    let n=SITES.length+1; while(SITES.some(s=>s.id==='s'+n)) n++;
+    SITES.push(Object.assign({id:'s'+n}, rec));
+  }
+  state.siteForm=null; state.siteErrors=[]; render();
+}
 
 function submit(){
   if(!validate()){ render(); return; }
@@ -906,12 +1041,16 @@ function submit(){
   const rec={no, processorId:d.processorId, method:d.method, dateLabel, lines:clone(d.lines), status:'pending'};
   if(d.method==='drop') Object.assign(rec,{vClass:d.vClass,plate:d.plate});
   else{
-    let siteName=(SITES.find(s=>s.id===d.siteId)||{}).name||'';
+    const sel=site(d.siteId);
+    let siteName=sel?sel.name:'';
+    let cond=sel?siteCond(sel):'';
     if(d.saveSite && d.siteName.trim()){
       siteName=d.siteName.trim();
-      SITES.push({id:'s'+(SITES.length+1), name:siteName, addr:d.addr});
+      let n=SITES.length+1; while(SITES.some(s=>s.id==='s'+n)) n++;
+      SITES.push({id:'s'+n, name:siteName, postalcode:'', addr:d.addr,
+        road:'', machine:'', attend:'', contact:'', tel:'', note:''});
     }
-    Object.assign(rec,{addr:d.addr, siteName});
+    Object.assign(rec,{addr:d.addr, siteName, siteCond:cond});
   }
   state.reservations.unshift(rec);
   state.lastNo=no; state.page='done'; state.errors=[];
