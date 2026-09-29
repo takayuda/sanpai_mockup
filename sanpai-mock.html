@@ -1007,10 +1007,11 @@ h1{font-size:30px;line-height:1.35;font-weight:700;margin:14px 0 8px;}
 .plant .tag{font-size:11px;padding:0 8px;}
 .plant-addr{font-size:14px;color:var(--ink-sub);display:flex;align-items:flex-start;gap:6px;margin:4px 0 12px;}
 .plant-addr .ic{margin-top:4px;}
-.hours{width:100%;border-collapse:collapse;font-size:14px;}
+.hours{width:100%;border-collapse:collapse;font-size:14px;table-layout:fixed;}
 .hours th,.hours td{border:1px solid var(--line);padding:7px 12px;text-align:left;vertical-align:top;}
+.hours thead th:first-child{width:92px;}
 .hours thead th{background:#FAFAFA;font-size:12px;color:var(--ink-sub);font-weight:700;}
-.hours tbody th{width:92px;font-weight:700;white-space:nowrap;background:#FCFCFD;}
+.hours tbody th{font-weight:700;white-space:nowrap;background:#FCFCFD;}
 .hours td.off{color:var(--ink-sub);}
 .hours .slot{display:inline-block;margin-right:14px;white-space:nowrap;}
 .plant-meta{font-size:12px;color:var(--ink-sub);margin-top:8px;display:flex;flex-wrap:wrap;gap:4px 16px;}
@@ -1076,7 +1077,7 @@ body[data-auth="member"] .only-guest{display:none;}
   .benefits,.steps{grid-template-columns:1fr;}
   .plant,.plants-head,.plants-note{padding-left:18px;padding-right:18px;}
   .hours th,.hours td{padding:6px 8px;}
-  .hours tbody th{width:64px;}
+  .hours thead th:first-child{width:64px;}
   .proc{padding:18px;}
   .action{padding:20px;}
   .btn{flex:1 1 100%;}
@@ -1198,7 +1199,7 @@ body[data-auth="member"] .only-guest{display:none;}
       <div class="plant-top">
         <span class="plant-name">川口ヤード</span>
         <span class="tag on">持込</span>
-        <span class="tag">引取は対応なし</span>
+        <span class="tag">引取非対応</span>
       </div>
       <div class="plant-addr"><svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span>〒332-0034　埼玉県川口市並木0-0-0</span></div>
       <table class="hours">
