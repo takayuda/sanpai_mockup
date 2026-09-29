@@ -183,6 +183,46 @@ body[data-auth="member"] .only-guest{display:none;}
   <h1>株式会社エコクリーン埼玉</h1>
   <p class="lead">この処理業者を<b>取引先に追加</b>すると、搬入予約・集荷依頼を産廃ナビ上で作成できるようになります。</p>
 
+  <!-- 未ログインのとき -->
+  <section class="action only-guest" aria-labelledby="guestHead">
+    <h2 id="guestHead">追加するには、ログインまたは会員登録が必要です</h2>
+    <p class="note">ログイン後、この処理業者が自動的に取引先へ追加されます。</p>
+    <div class="btns">
+      <a class="btn btn-primary" href="#login">
+        <svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+        ログインして追加する
+      </a>
+      <a class="btn btn-secondary" href="#signup">
+        <svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+        新規会員登録して追加する
+      </a>
+    </div>
+    <p class="helper">
+      <b>すでにアカウントをお持ちの方</b>はログインへ、<b>はじめての方</b>は会員登録へお進みください。
+      会員登録は無料で、メールアドレスとパスワードの設定だけで完了します。
+    </p>
+  </section>
+
+  <!-- ログイン済みのとき -->
+  <section class="action only-member" aria-labelledby="memberHead">
+    <div class="account">
+      <span class="avatar" style="width:38px;height:38px;border-radius:50%;" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </span>
+      <span class="who"><b>株式会社サンプル建設</b><span>yamada@sample-kensetsu.example.jp でログイン中</span></span>
+      <a class="switch" href="#switch">別のアカウントでログイン</a>
+    </div>
+    <h2 id="memberHead">この処理業者を取引先に追加しますか？</h2>
+    <p class="note">追加すると、予約の作成画面で「株式会社エコクリーン埼玉」を選べるようになります。</p>
+    <div class="btns">
+      <a class="btn btn-primary" href="#add">
+        <svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        取引先に追加する
+      </a>
+      <a class="btn btn-secondary" href="#cancel">あとにする</a>
+    </div>
+  </section>
+
   <!-- 処理業者の情報 -->
   <section class="card" aria-labelledby="procHead">
     <div class="proc">
@@ -246,46 +286,6 @@ body[data-auth="member"] .only-guest{display:none;}
     </div>
 
     <p class="plants-note">臨時休業日や、日ごとの受付状況は予約の作成画面のカレンダーでご確認いただけます。</p>
-  </section>
-
-  <!-- 未ログインのとき -->
-  <section class="action only-guest" aria-labelledby="guestHead">
-    <h2 id="guestHead">追加するには、ログインまたは会員登録が必要です</h2>
-    <p class="note">ログイン後、この処理業者が自動的に取引先へ追加されます。</p>
-    <div class="btns">
-      <a class="btn btn-primary" href="#login">
-        <svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-        ログインして追加する
-      </a>
-      <a class="btn btn-secondary" href="#signup">
-        <svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-        新規会員登録して追加する
-      </a>
-    </div>
-    <p class="helper">
-      <b>すでにアカウントをお持ちの方</b>はログインへ、<b>はじめての方</b>は会員登録へお進みください。
-      会員登録は無料で、メールアドレスとパスワードの設定だけで完了します。
-    </p>
-  </section>
-
-  <!-- ログイン済みのとき -->
-  <section class="action only-member" aria-labelledby="memberHead">
-    <div class="account">
-      <span class="avatar" style="width:38px;height:38px;border-radius:50%;" aria-hidden="true">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      </span>
-      <span class="who"><b>株式会社サンプル建設</b><span>yamada@sample-kensetsu.example.jp でログイン中</span></span>
-      <a class="switch" href="#switch">別のアカウントでログイン</a>
-    </div>
-    <h2 id="memberHead">この処理業者を取引先に追加しますか？</h2>
-    <p class="note">追加すると、予約の作成画面で「株式会社エコクリーン埼玉」を選べるようになります。</p>
-    <div class="btns">
-      <a class="btn btn-primary" href="#add">
-        <svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        取引先に追加する
-      </a>
-      <a class="btn btn-secondary" href="#cancel">あとにする</a>
-    </div>
   </section>
 
   <h2 class="sec">追加するとできること</h2>
