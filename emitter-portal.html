@@ -587,6 +587,7 @@ function viewSites(){
     </td></tr>`).join('');
 
   return `<div class="wrap wide"><h1>引取場所</h1>
+    <p class="lead">引取（集荷）を依頼する現場を登録します。予約の作成時に選ぶだけで、住所と現場条件が入ります。</p>
     <div class="actions" style="margin:0 0 16px;">
       <button type="button" class="btn btn-primary" data-act="addSite">＋ 引取場所を登録</button>
     </div>
@@ -650,13 +651,6 @@ function viewSiteDialog(){
 }
 const blankSite = () => ({id:null, name:'', postalcode:'', addr:'', road:'4m以上', machine:'なし', attend:'不要', contact:'', tel:'', note:''});
 
-function viewSettings(){
-  return `<div class="wrap"><h1>設定</h1>
-    <p class="lead">アカウント情報とマスタの設定を行います。</p>
-    <div class="emptystate">この画面は未実装です。<br>
-      引取場所の登録は<button type="button" class="btn btn-secondary btn-sm" style="margin:0 4px;" data-act="go" data-page="sites">引取場所</button>から行えます。</div></div>`;
-}
-
 /* ===== バリデーション ===== */
 function validate(){
   const d=state.data, e=[];
@@ -691,11 +685,11 @@ function validate(){
 /* ===== 描画 ===== */
 function render(){
   const y = window.scrollY;
-  const pages={input:'予約作成', list:'予約一覧', sites:'引取場所', settings:'設定'};
+  const pages={input:'予約作成', list:'予約一覧', sites:'引取場所'};
   const current = (state.page==='confirm'||state.page==='done') ? 'input' : state.page;
   document.getElementById('elGnav').innerHTML = Object.entries(pages)
     .map(([k,v])=>`<button type="button" data-act="go" data-page="${k}" ${current===k?'aria-current="page"':''}>${v}</button>`).join('');
-  const views={input:viewInput, confirm:viewConfirm, done:viewDone, list:viewList, sites:viewSites, settings:viewSettings};
+  const views={input:viewInput, confirm:viewConfirm, done:viewDone, list:viewList, sites:viewSites};
   document.getElementById('elMain').innerHTML = views[state.page]();
   document.getElementById('elDialog').innerHTML =
     state.detailNo ? viewDetailDialog() : (state.siteForm ? viewSiteDialog() : '');

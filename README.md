@@ -22,7 +22,7 @@ sanpai-mock/
   items.html          品目
   units.html          単位
   invite.html         取引先アカウントの登録（取引先側の画面。?t=<トークン> で開く）
-  emitter.html        排出者ポータル（取引先側の画面。予約作成／予約一覧／引取場所／設定）
+  emitter.html        排出者ポータル（取引先側の画面。予約作成／予約一覧／引取場所）
   processor-add.html  処理業者の追加（処理業者から共有されたリンクを開いた画面・単体で完結）
   assets/
     app.css           全画面共通のスタイル
@@ -33,7 +33,8 @@ sanpai-mock/
 
 - `sanpai-mock.html` … 上記を1ファイルにまとめた版（メール添付などで手軽に渡したいとき用）。
   `python3 build.py` で `sanpai-mock/` から生成します。
-- `emitter-portal.html` … 排出者ポータルの原本（いただいたワイヤーフレームのまま）。
+- `emitter-portal.html` … 排出者ポータルの原本。
+- `emitter-sites.html` … 排出者ポータルの「引取場所」画面だけを取り出した単体HTML（1ファイルで完結）。
 
 Bootstrap 5.3.3 と Google Fonts を CDN から読み込むため、表示にはインターネット接続が必要です。
 
